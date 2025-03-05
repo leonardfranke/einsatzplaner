@@ -1,0 +1,60 @@
+﻿@page "/login"
+@inherits LoginBase
+
+<AuthorizeView>
+    <NotAuthorized>
+        <div class="container">
+            <ul class="nav nav-pills justify-content-center" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="login" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">Einloggen</button>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link disabled" aria-disabled="true">oder</a>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="register" data-bs-toggle="tab" data-bs-target="#register-pane" type="button" role="tab">Registrieren</button>
+                </li>
+            </ul>
+            <div class="tab-content mt-5" id="myTabContent">
+                <div class="tab-pane fade show active" id="login-pane" role="tabpanel" tabindex="0">
+                    <EditForm EditContext="@EditContextLogin" Context="editContext" OnSubmit="SubmitLogin">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-Mail-Adresse</label>
+                            <InputText @bind-Value="@LoginData.Email" type="email" class="form-control" id="email" aria-describedby="emailHelp" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Passwort</label>
+                            <InputText @bind-Value="@LoginData.Password" type="password" class="form-control" id="password" />
+                        </div>
+                        <a class="btn btn-link mb-2" onclick="@ForgotPassword">Password vergessen?</a>
+                        <br/>
+                        <button type="submit" class="btn btn-primary">Einloggen</button>
+                    </EditForm>
+                </div>
+                <div class="tab-pane fade" id="register-pane" role="tabpanel" tabindex="0">
+                    <EditForm EditContext="@EditContextLogin" Context="editContext" OnSubmit="SubmitRegister">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="surname" class="form-label">Vorname</label>
+                                <InputText @bind-Value="@RegisterData.FirstName" class="form-control" id="surname" aria-describedby="emailHelp" />
+                            </div>
+                            <div class="col">
+                                <label for="lastname" class="form-label">Nachname</label>
+                                <InputText @bind-Value="@RegisterData.LastName" class="form-control" id="lastname" aria-describedby="emailHelp" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-Mail-Adresse</label>
+                            <InputText @bind-Value="@RegisterData.Email" type="email" class="form-control" id="email" aria-describedby="emailHelp" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Passwort</label>
+                            <InputText @bind-Value="@RegisterData.Password" type="password" class="form-control" id="password" />
+                        </div>
+                        <button type="submit" class="btn btn-primary">Registrieren</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </NotAuthorized>
+</AuthorizeView>

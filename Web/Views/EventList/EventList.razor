@@ -1,0 +1,90 @@
+﻿@inherits EventListBase
+
+@{
+    var helperCategories = Events
+        .SelectMany(GetHelpers)
+        .Select(GetCategory)
+        .DistinctBy(category => category.Id);
+}
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            @if(ShowGroup)
+            {
+                <th scope="col">Gruppe</th>
+            }
+            @if (ShowEventCategory)
+            {
+                <th scope="col">Eventkategorie</th>
+            }
+            <th scope="col">Datum</th>
+            @foreach (var category in helperCategories)
+            {
+                <th scope="col">@category.Name</th>
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var eventObj in Events.OrderBy(@event => @event.GameDate))
+        {
+            <tr @onmouseenter="() => HoveredEventId = eventObj.Id" @onmouseleave="() => HoveredEventId = null">
+                @if (ShowGroup)
+                {
+                    var name = GetGroupById(eventObj.GroupId)?.Name;
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        <td scope="col"><i>-</i></td>
+                    }
+                    else
+                    {
+                        <td scope="col">@name</td>
+                    }
+                }
+                @if (ShowEventCategory)
+                {
+                    var name = GetEventCategoryById(eventObj.EventCategoryId)?.Name;
+                    if(string.IsNullOrEmpty(name))
+                    {
+                        <td scope="col"><i>-</i></td>
+                    }
+                    else
+                    {
+                        <td scope="col">@name</td>
+                    }                        
+                }
+                <td>@eventObj.GameDate.ToString("dd.MM.yyyy HH:mm")</td>
+                @foreach (var category in helperCategories)
+                {
+                    var helpers = GetHelpers(eventObj);
+                    var helper = helpers.Find(helper => helper.RoleId == category.Id);
+                    <td>
+                        @if(helper != null)
+                        {
+                            <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member"/>
+                        }
+                    </td>
+                }
+                <td>
+                    <div class="btn-group" role="group">
+                        <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
+                                type="button" @onclick="() => OpenGame(eventObj)"
+                                class="btn btn-outline-dark">
+                            <i class="bi bi-search"></i>
+                        </button>
+                        <AuthorizeView Roles="IsAdmin">
+                            <Authorized>
+                                <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
+                                        type="button" @onclick="() => EditGame(eventObj)"
+                                        class="btn btn-outline-dark">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                            </Authorized>
+                        </AuthorizeView>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

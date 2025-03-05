@@ -1,0 +1,42 @@
+﻿@page "/eventCategory"
+@using BlazorBootstrap
+@using Web.Extensions
+@inherits EventCategoryPageBase
+
+@if (EventCategories?.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Bezeichnung</th>
+                <th scope="col" />
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var (category, index) in EventCategories.Select((category, index) => (category, index)))
+            {
+                <tr @onmouseenter="() => HoveredIndex = index" @onmouseleave="() => HoveredIndex = null">
+                    <td>
+                        @if (string.IsNullOrEmpty(category.Name))
+                        {
+                            <i>ohne Bezeichnung</i>
+                        }
+                        else
+                        {
+                            @category.Name
+                        }
+                    </td>
+                    <td>
+                        <button @onclick="() => EditOrCreateEventCategory(category)"
+                                class="btn btn-outline-dark"
+                                style="visibility: @(HoveredIndex == index ? "visible" : "hidden")">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-primary" @onclick="() => EditOrCreateEventCategory(null)">Eventkategorie hinzufügen</button>

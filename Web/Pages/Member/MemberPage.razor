@@ -1,0 +1,111 @@
+﻿@page "/member"
+@using BlazorBootstrap
+@inherits MemberPageBase
+
+<h1>Mitglieder</h1>
+
+@if(Members?.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Gruppen</th>
+                <th scope="col">Rollen</th>
+                <th scope="col" />
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var (member, index) in Members.Select((member, index) => (member, index)))
+            {                
+                <tr @onmouseenter="() => HoveredIndex = index" @onmouseleave="() => HoveredIndex = null">
+                    <td>
+                        @if(string.IsNullOrEmpty(member.Name))
+                        {
+                            <i>ohne Name</i>
+                        }
+                        else
+                        {
+                            @member.Name
+                        }
+                    </td>
+                    <td>
+                        @{
+                            var groupName = GetGroupNamesByIds(member.GroupIds);
+                        }
+                        @if (string.IsNullOrEmpty(groupName))
+                        {
+                            <i>ohne Gruppen</i>
+                        }
+                        else
+                        {
+                            @groupName
+                        }
+                    </td>
+                    <td>
+                        @{
+                            var roleNames = GetRoleNamesByIds(member.RoleIds);
+                        }
+                        @if (string.IsNullOrEmpty(roleNames))
+                        {
+                            <i>ohne Rollen</i>
+                        }
+                        else
+                        {
+                            @roleNames
+                        }
+                    </td>
+                    <td>
+                        <button @onclick="() => EditMember(member)"
+                                class="btn btn-outline-dark"
+                                style="visibility: @(HoveredIndex == index ? "visible" : "hidden")">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+<h2>Beitrittsanfragen:</h2>
+
+@if (MembershipRequests?.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col" />
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in MembershipRequests)
+            {
+                <tr>
+                    <td>@request.UserName</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-success" @onclick="() => AnswerRequest(request.Id, true)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg" viewBox="0 0 16 16">
+                                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z" />
+                                </svg>
+                            </button>
+                            <button class="btn btn-danger" @onclick="() => AnswerRequest(request.Id, false)">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                                    <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Keine Anfragen</p>
+}

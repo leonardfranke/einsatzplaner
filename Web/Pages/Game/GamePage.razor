@@ -1,0 +1,52 @@
+﻿@page "/Game/{gameId}"
+@inherits GamePageBase
+
+@if(GameTask == null || !GameTask.IsCompleted)
+    return;
+
+@if(Game == null)
+{
+    <div>No game found</div>
+    return;
+}
+
+<p class="fs-3">
+    @GetPageTitle()
+</p>
+
+
+<p class="fs-3">Termin: @Game.GameDate.ToString("dd.MM.yyyy HH:mm") Uhr</p>
+<p class="fs-3">Helfer:</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Kategorie</th>
+            <th scope="col">Bedarf</th>
+            <AuthorizeView>
+
+            </AuthorizeView>
+            <th scope="col">Warteschlange</th>
+            <th scope="col">Gesetzter Spieler</th>
+            <th scope="col">Gesetzte Gruppen</th>
+            <th scope="col">Sperrzeitpunkt</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var help in Helpers)
+        {
+            var category = GetRoleById(help.RoleId);
+            <tr>
+                <th>@category.Name</th>
+                <th>@help.RequiredAmount</th>
+                <th>@GetDisplayMemberNames(help.QueuedMemberIds)</th>
+                <th>@GetDisplayMemberNames(help.SetMemberIds)</th>
+                <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
+                <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
+            </tr>            
+        }        
+    </tbody>
+</table>
+
+
+

@@ -1,0 +1,21 @@
+# https://hub.docker.com/_/microsoft-dotnet
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY *.sln .
+COPY Api/*.csproj Api/
+COPY DTO/*.csproj DTO/
+COPY Web/*.csproj Web/
+RUN dotnet restore
+
+#COPY . .
+# copy everything else and build app
+COPY Api/. Api/
+COPY DTO/. DTO/
+RUN dotnet publish Api/Api.csproj -c Release -o /out --no-restore
+
+# final stage/image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /out ./
+ENTRYPOINT ["dotnet", "Api.dll"]

@@ -1,0 +1,21 @@
+﻿@typeparam ItemType
+@inherits DropdownBase<ItemType>
+
+<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">@Title</button>
+    <ul class="dropdown-menu">
+        @{
+            if (Items != null && Items.Count() > 0)
+            {
+                foreach (var item in Items)
+                {
+                    <li><button @onclick="() => ItemClickFunc(item)" type="button" class="dropdown-item" href="#">@ItemDisplayFunc(item)</button></li>
+                }
+            }
+            else
+            {
+                <p>@EmptyListText</p>
+            }
+        }
+    </ul>
+</div>

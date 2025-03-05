@@ -1,0 +1,20 @@
+﻿@inherits ChangeGroupBase
+@using Web.Extensions
+@using Web.Views.MemberSelection
+
+<EditForm EditContext="EditContext" OnValidSubmit="SafeGroup">
+    <label class="form-label">Name</label>
+    <InputText @bind-Value="GroupData.Name" class="form-control mb-3"/>    
+
+    <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
+
+    <hr />
+    @if (IsUpdate)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteGroup">Rolle löschen</button>
+    }
+    <div class="float-end">
+        <button class="btn btn-secondary" type="button" @onclick="CloseModal">Abbrechen</button>
+        <button class="btn btn-primary" type="submit">Rolle speichern</button>
+    </div>
+</EditForm>

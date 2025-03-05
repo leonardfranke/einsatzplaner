@@ -1,0 +1,48 @@
+﻿@inherits ChangeHelperCategoryGroupBase
+@using Web.Extensions
+
+<EditForm EditContext="EditContext" OnValidSubmit="SaveHelperCategoryGroup">
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Hinzufügen</button>
+        <ul class="dropdown-menu">
+            @{
+                var dropdownList = Roles.Where(category => HelperCategoryGroupData.Requirements?.ContainsKey(category.Id) == false);
+                if (dropdownList.Count() == 0)
+                {
+                    <div class="text-body-secondary p-4">
+                        <p>Keine weiteren Rollen</p>
+                    </div>
+                }
+                else
+                {
+                    foreach (var category in dropdownList)
+                    {
+                        <li><button @onclick="() => AddRequirement(category.Id)" type="button" class="dropdown-item" href="#">@category.Name</button></li>
+                    }
+                }
+            }
+        </ul>
+    </div>
+
+    @if (HelperCategoryGroupData.Requirements != null)
+    {
+        @foreach (var pair in HelperCategoryGroupData.Requirements)
+        {
+            var category = GetCategoryById(pair.Key);
+            <label class="form-label">@category.Name</label>
+            <div class="input-group mb-3">
+                <input class="form-control" type="number" min="1" value="@pair.Value" @onchange="value => SetRequirement(category.Id, (string)value.Value)" />
+                <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveRequirement(category.Id)"><i class="bi bi-x-lg"></i></button>
+            </div>
+        }
+    }
+
+    <hr />
+    @if(IsUpdate)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteHelperCategoryGroup">Löschen</button>
+    }
+    <div class="float-end">
+        <button class="btn btn-primary" type="submit">Speichern</button>
+    </div>
+</EditForm>

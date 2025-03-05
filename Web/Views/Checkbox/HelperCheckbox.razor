@@ -1,0 +1,15 @@
+﻿@inherits HelperCheckboxBase
+
+@if (!IsMemberPermitted)
+    return;
+
+@if(Helper.LockingTime < DateTime.Now)
+{
+    <InputCheckbox disabled="@(IsPlayerLocked)" @onmousedown="PromptLockingHelper" @onclick:preventDefault @bind-Value="IsHelping"/>
+}
+else
+{
+    <InputCheckbox @bind-Value="IsHelping" />
+}
+
+

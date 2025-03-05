@@ -1,0 +1,23 @@
+﻿@inherits ChangeRoleBase
+@using Web.Extensions
+@using Web.Views.MemberSelection
+
+<EditForm EditContext="EditContext" OnValidSubmit="SaveRole">
+    <label class="form-label">Name</label>
+    <InputText @bind-Value="RoleData.Name" class="form-control mb-3" />
+
+    <label class="form-label">Sperrzeitraum</label>
+    <InputNumber class="form-control" @bind-Value="@RoleData.LockingPeriod" />
+
+    <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
+     
+    <hr />
+    @if (IsUpdate)
+    {
+        <button class="btn btn-danger" type="button" @onclick="DeleteRole">Rolle löschen</button>
+    }
+    <div class="float-end">
+        <button class="btn btn-secondary" type="button" @onclick="CloseModal">Abbrechen</button>
+        <button class="btn btn-primary" type="submit">Rolle speichern</button>
+    </div>
+</EditForm>
