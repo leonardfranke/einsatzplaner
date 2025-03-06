@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+COPY *.sln .
+COPY Api/*.csproj Api/
+COPY DTO/*.csproj DTO/
+COPY Web/*.csproj Web/
+RUN dotnet restore
+
+COPY DTO/. DTO/
+COPY Web/. Web/
+RUN dotnet publish Web/Web.csproj -c Release -o /out --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /out ./
+ENTRYPOINT ["dotnet", "Web.dll"]
