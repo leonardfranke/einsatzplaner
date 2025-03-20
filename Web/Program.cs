@@ -15,6 +15,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 var apiBaseUrl = Environment.GetEnvironmentVariable("API_BASE_URL");
+Console.WriteLine("Env: " + apiBaseUrl);
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IBackendManager, BackendManager>();
