@@ -23,7 +23,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud storage cp -r /workspace/out/wwwroot/* gs://einsatzplaner-wasm/
+        gcloud storage cp -r /workspace/out/* gs://einsatzplaner-wasm/
 
 options:
   logging: CLOUD_LOGGING_ONLY
