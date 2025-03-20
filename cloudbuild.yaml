@@ -3,6 +3,14 @@ steps:
     id: 'restore'
     entrypoint: 'dotnet'
     args: ['restore']
+
+  - name: 'bash'
+    id: 'set-backend-address'
+    entrypoint: 'sed'
+    args:
+    - '-i'
+    - 's/{BACKEND_ADDRESS}/${BACKEND_ADDRESS}/'
+    - 'Web/wwwroot/appsettings.json'
   
   - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
     id: 'publish'
