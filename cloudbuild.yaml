@@ -1,0 +1,21 @@
+steps:
+  - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
+    id: 'restore'
+    entrypoint: 'dotnet'
+    args: ['restore']
+  
+  - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
+    id: 'publish'
+    entrypoint: 'dotnet'
+    args: ['publish', 'Web/Web.csproj', '-c', 'Release', '-o', '/out', '--no-restore']
+    
+  - name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:489.0.0-stable'
+    id: 'upload'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud storage cp -r /out/wwwroot/* gs://einsatzplaner-wasm/
+
+options:
+  logging: CLOUD_LOGGING_ONLY
