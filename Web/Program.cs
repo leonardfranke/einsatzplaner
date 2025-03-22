@@ -14,17 +14,20 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+using var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
+var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+var configFile = $"appsettings.{env}.json";
+using var response = await http.GetAsync(configFile);
+using var stream = await response.Content.ReadAsStreamAsync();
+var config = new ConfigurationBuilder()
+    .AddJsonStream(stream)
+    .Build();
+builder.Configuration.AddConfiguration(config);
+
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<AuthManager>());
 builder.Services.AddScoped<IAuthManager>(provider => provider.GetRequiredService<AuthManager>());
-builder.Services.AddScoped(sp => {
-    var backendAddress = sp.GetRequiredService<IConfiguration>()["BACKEND_ADDRESS"];
-    return new HttpClient
-    {
-        BaseAddress = new Uri(backendAddress)
-    };
-});
 builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IHelperService, HelperService>();
@@ -35,6 +38,8 @@ builder.Services.AddScoped<IRequirementGroupService, RequirementsGroupService>()
 builder.Services.AddScoped<ILoginCheck, LoginCheck>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IUserRepository, FileUserRepository>(serviceProvider => new FileUserRepository("localUser"));
+
+builder.Services.AddHttpClient(builder.Configuration["BACKEND_ADDRESS"], client => client.BaseAddress = new Uri(builder.Configuration["BACKEND_ADDRESS"]));
 
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();

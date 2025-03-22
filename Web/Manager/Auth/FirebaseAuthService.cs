@@ -1,8 +1,6 @@
-﻿using Firebase.Auth.Requests;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using static Web.Manager.Auth.IFirebaseAuthService;
-using Web.Manager.Auth;
 using ResetPasswordRequest = Web.Manager.Auth.IFirebaseAuthService.ResetPasswordRequest;
 using ResetPasswordResponse = Web.Manager.Auth.IFirebaseAuthService.ResetPasswordResponse;
 
