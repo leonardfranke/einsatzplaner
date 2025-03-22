@@ -2,18 +2,17 @@
 using System.Net.Http.Json;
 using Web.Converter;
 using Web.Helper;
-using Web.Manager;
 using Web.Models;
 
 namespace Web.Services
 {
     public class RoleService : IRoleService
     {
-        private IBackendManager _backendManager;
+        private HttpClient _httpClient;
 
-        public RoleService(IBackendManager backendManager) 
+        public RoleService(HttpClient httpClient) 
         {
-            _backendManager = backendManager;
+            _httpClient = httpClient;
         }
 
         public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string name, int lockingPeriod)
@@ -26,26 +25,26 @@ namespace Web.Services
                 LockingPeriod = lockingPeriod
             };
             var content = JsonContent.Create(updateCategoryDTO);
-            var response = await _backendManager.HttpClient.PostAsync(new Uri($"/api/Role", UriKind.Relative), content);
+            var response = await _httpClient.PostAsync(new Uri($"/api/Role", UriKind.Relative), content);
             return await response.Content.ReadAsStringAsync();
         }
 
         public Task Delete(string departmentId, string roleId)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId), ("roleId", roleId));
-            return _backendManager.HttpClient.DeleteAsync(new Uri($"/api/Role/{query}", UriKind.Relative));
+            return _httpClient.DeleteAsync(new Uri($"/api/Role/{query}", UriKind.Relative));
         }
 
         public async Task<List<Role>> GetAll(string departmentId)
         {
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/Role/{departmentId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Role/{departmentId}", UriKind.Relative));
             var roleDTOs = await response.Content.ReadFromJsonAsync<List<RoleDTO>>();
             return RoleConverter.Convert(roleDTOs);
         }
 
         public async Task<Role?> GetById(string departmentId, string roleId)
         {
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/Role/{departmentId}/{roleId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Role/{departmentId}/{roleId}", UriKind.Relative));
             var roleDTO = await response.Content.ReadFromJsonAsync<RoleDTO>();
             return RoleConverter.Convert(roleDTO);
         }
@@ -58,7 +57,7 @@ namespace Web.Services
                 FormerMembers = formerMembers
             };
             var content = JsonContent.Create(updateMembersListDTO);
-            return _backendManager.HttpClient.PatchAsync(new Uri($"/api/Role/{departmentId}/{roleId}", UriKind.Relative), content);
+            return _httpClient.PatchAsync(new Uri($"/api/Role/{departmentId}/{roleId}", UriKind.Relative), content);
         }
     }
 }

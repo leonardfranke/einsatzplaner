@@ -2,18 +2,17 @@
 using System.Net.Http.Json;
 using Web.Converter;
 using Web.Helper;
-using Web.Manager;
 
 namespace Web.Services
 {
     public class EventService : IEventService
     {
 
-        private IBackendManager _backendManager;
+        private HttpClient _httpClient;
 
-        public EventService(IBackendManager backendManager)
+        public EventService(HttpClient httpClient)
         {
-            _backendManager = backendManager;
+            _httpClient = httpClient;
         }
 
         public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers)
@@ -50,7 +49,7 @@ namespace Web.Services
                 }
 
                 var content = JsonContent.Create(updateEventDTO);
-                var response = await _backendManager.HttpClient.PostAsync(new Uri($"/api/Event", UriKind.Relative), content);
+                var response = await _httpClient.PostAsync(new Uri($"/api/Event", UriKind.Relative), content);
                 var ret = await response.Content.ReadAsStringAsync();
                 var parsed = bool.TryParse(ret, out bool result);
                 if (parsed)
@@ -66,20 +65,20 @@ namespace Web.Services
 
         public Task DeleteGame(string departmentId, string gameId)
         {
-            return _backendManager.HttpClient.DeleteAsync(new Uri($"/api/Event/{departmentId}/{gameId}", UriKind.Relative));
+            return _httpClient.DeleteAsync(new Uri($"/api/Event/{departmentId}/{gameId}", UriKind.Relative));
         }
 
         public async Task<List<Models.Event>> GetAll(string departmentId)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId));
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/Event{query}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Event{query}", UriKind.Relative));
             var gameDTOs = await response.Content.ReadFromJsonAsync<List<EventDTO>>();
             return EventConverter.Convert(gameDTOs);
         }
 
         public async Task<Models.Event?> GetEvent(string gameId)
         {
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/Event/{gameId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Event/{gameId}", UriKind.Relative));
             try
             {
                 var gameDTO = await response.Content.ReadFromJsonAsync<EventDTO>();

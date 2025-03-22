@@ -2,36 +2,35 @@
 using System.Net.Http.Json;
 using Web.Converter;
 using Web.Helper;
-using Web.Manager;
 using Web.Models;
 
 namespace Web.Services
 {
     public class EventCategoryService : IEventCategoryService
     {
-        private IBackendManager _backendManager;
+        private HttpClient _httpClient;
 
-        public EventCategoryService(IBackendManager backendManager) 
+        public EventCategoryService(HttpClient httpClient) 
         {
-            _backendManager = backendManager;
+            _httpClient = httpClient;
         }
 
         public Task Delete(string departmentId, string eventCategoryId)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId), ("eventCategoryId", eventCategoryId));
-            return _backendManager.HttpClient.DeleteAsync(new Uri($"/api/EventCategory{query}", UriKind.Relative));
+            return _httpClient.DeleteAsync(new Uri($"/api/EventCategory{query}", UriKind.Relative));
         }
 
         public async Task<List<EventCategory>> GetAll(string departmentId)
         {
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/EventCategory/{departmentId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/EventCategory/{departmentId}", UriKind.Relative));
             var categoryDTOs = await response.Content.ReadFromJsonAsync<List<EventCategoryDTO>>();
             return EventCategoryConverter.Convert(categoryDTOs);
         }
 
         public async Task<EventCategory> GetById(string departmentId, string eventCategoryId)
         {
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/EventCategory/{departmentId}/{eventCategoryId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/EventCategory/{departmentId}/{eventCategoryId}", UriKind.Relative));
             var categoryDTOs = await response.Content.ReadFromJsonAsync<EventCategoryDTO>();
             return EventCategoryConverter.Convert(categoryDTOs);
         }
@@ -39,7 +38,7 @@ namespace Web.Services
         public Task UpdateOrCreate(string departmentId, string? eventCategoryId, string name)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId), ("eventCategoryId", eventCategoryId), ("name", name));
-            return _backendManager.HttpClient.PostAsync(new Uri($"/api/EventCategory{query}", UriKind.Relative), null);
+            return _httpClient.PostAsync(new Uri($"/api/EventCategory{query}", UriKind.Relative), null);
         }
     }
 }

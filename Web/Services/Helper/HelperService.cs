@@ -2,24 +2,23 @@
 using System.Net.Http.Json;
 using Web.Converter;
 using Web.Helper;
-using Web.Manager;
 
 namespace Web.Services
 {
     public class HelperService : IHelperService
     {
 
-        private IBackendManager _backendManager;
+        private HttpClient _httpClient;
 
-        public HelperService(IBackendManager backendManager)
+        public HelperService(HttpClient httpClient)
         {
-            _backendManager = backendManager;
+            _httpClient = httpClient;
         }
 
         public async Task<List<Models.Helper>> GetAll(string departmentId, string? eventId = null)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId), ("eventId", eventId));
-            var response = await _backendManager.HttpClient.GetAsync(new Uri($"/api/Helper{query}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Helper{query}", UriKind.Relative));
             var helperDTOs = await response.Content.ReadFromJsonAsync<List<HelperDTO>>();
             return HelperConverter.Convert(helperDTOs);
         }
@@ -27,7 +26,7 @@ namespace Web.Services
         public async Task<bool> SetIsHelping(string departmentId, string eventId, string helperCategoryId, string memberId, bool isHelping)
         {
             var query = QueryBuilder.Build(("isHelpingString", isHelping.ToString()));
-            var response = await _backendManager.HttpClient.PostAsync(
+            var response = await _httpClient.PostAsync(
                 new Uri($"/api/Helper/SetIsHelping/{departmentId}/{eventId}/{helperCategoryId}/{memberId}{query}", UriKind.Relative), null);
             var ret = await response.Content.ReadAsStringAsync();
             var parsed = bool.TryParse(ret, out bool result);
