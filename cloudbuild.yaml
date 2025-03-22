@@ -10,7 +10,7 @@ steps:
     args:
     - '-i'
     - 's|{BACKEND_ADDRESS}|${_BACKEND_ADDRESS}|'
-    - 'Web/wwwroot/appsettings.json'
+    - 'Web/wwwroot/appsettings.Production.json'
   
   - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
     id: 'publish'
