@@ -87,7 +87,7 @@ namespace Web.Views
 
         protected void OpenGame(Models.Event @event)
         {
-            _navigationManager.NavigateTo($"/game/{@event.Id}");
+            _navigationManager.NavigateTo($"./game/{@event.Id}");
         }
 
         public async Task EditGame(Event? @event)

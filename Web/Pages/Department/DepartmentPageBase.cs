@@ -72,7 +72,7 @@ namespace Web.Pages
                 await _authManager.SetLocalDepartmentId(selectedDepartment.Id);
                 var navigated = _navigationManager.TryNavigateToReturnUrl();
                 if (!navigated)
-                    _navigationManager.NavigateTo("/");
+                    _navigationManager.NavigateTo("./");
             }
             else
             {

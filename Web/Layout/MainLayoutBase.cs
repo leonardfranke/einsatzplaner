@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Web.Manager;
 
 namespace Web.Layout
@@ -19,12 +18,12 @@ namespace Web.Layout
 
         public async Task NavigateToLogin()
         {
-            _navigationManager.NavigateTo("/login");
+            _navigationManager.NavigateTo("./login");
         }
 
         public void NavigateToDepartment()
         {
-            _navigationManager.NavigateTo("/department");
+            _navigationManager.NavigateTo("./department");
         }
     }
 }

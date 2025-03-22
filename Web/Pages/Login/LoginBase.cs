@@ -126,7 +126,7 @@ namespace Web.Pages
         public void SignOut()
         {
             _authManager.SignOut();
-            NavigationManager.NavigateTo("/");
+            NavigationManager.NavigateTo("./");
         }
 
         private async Task<bool> LoginUser()

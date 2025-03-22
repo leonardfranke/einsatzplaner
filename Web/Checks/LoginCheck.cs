@@ -60,17 +60,17 @@ namespace Web.Checks
 
         private void NavigateToVerification()
         {
-            _navigationManager.NavigateToLogin("/verification");
+            _navigationManager.NavigateToLogin("./verification");
         }
 
         private void NavigateToLogin()
         {
-            _navigationManager.NavigateToLogin("/login");
+            _navigationManager.NavigateToLogin("./login");
         }
 
         private void NavigateToDepartment()
         {
-            _navigationManager.NavigateToLogin("/department");
+            _navigationManager.NavigateToLogin("./department");
         }
     }
 }
