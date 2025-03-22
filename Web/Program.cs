@@ -15,10 +15,16 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-builder.Services.AddScoped<IBackendManager, BackendManager>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<AuthManager>());
 builder.Services.AddScoped<IAuthManager>(provider => provider.GetRequiredService<AuthManager>());
+builder.Services.AddScoped(sp => {
+    var backendAddress = sp.GetRequiredService<IConfiguration>()["BACKEND_ADDRESS"];
+    return new HttpClient
+    {
+        BaseAddress = new Uri(backendAddress)
+    };
+});
 builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IHelperService, HelperService>();
