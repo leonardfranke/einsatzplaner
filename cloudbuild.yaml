@@ -11,6 +11,8 @@ steps:
     - '-i'
     - 's|{BACKEND_ADDRESS}|${_BACKEND_ADDRESS}|'
     - 'Web/wwwroot/appsettings.Production.json'
+    - 's|{BASE_PATH}|${_BASE_PATH}|'
+    - 'Web/wwwroot/appsettings.Production.json'
   
   - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
     id: 'publish'
