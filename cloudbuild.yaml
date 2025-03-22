@@ -9,8 +9,9 @@ steps:
     entrypoint: 'sed'
     args:
     - '-i'
+    - '-e'
     - 's|{BACKEND_ADDRESS}|${_BACKEND_ADDRESS}|'
-    - 'Web/wwwroot/appsettings.Production.json'
+    - '-e'
     - 's|{BASE_PATH}|${_BASE_PATH}|'
     - 'Web/wwwroot/appsettings.Production.json'
   
