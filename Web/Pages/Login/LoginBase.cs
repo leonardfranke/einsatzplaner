@@ -15,6 +15,9 @@ namespace Web.Pages
         [CascadingParameter]
         public Modal Modal { get; set; }
 
+        [Parameter]
+        public string DepartmentUrl { get; set; }
+
         [Inject]
         private NavigationManager NavigationManager { get; set; }
         [Inject]

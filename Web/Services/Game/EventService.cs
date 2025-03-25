@@ -76,7 +76,7 @@ namespace Web.Services
             return EventConverter.Convert(gameDTOs);
         }
 
-        public async Task<Models.Event?> GetEvent(string gameId)
+        public async Task<Models.Event?> GetEvent(string departmentId, string gameId)
         {
             var response = await _httpClient.GetAsync(new Uri($"/api/Event/{gameId}", UriKind.Relative));
             try

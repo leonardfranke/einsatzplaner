@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
@@ -8,6 +9,9 @@ namespace Web.Views
 {
     public class ChangeGroupBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentId { get; set; }
+
         [Parameter]
         public Group Group { get; set; }
 
@@ -22,6 +26,8 @@ namespace Web.Views
 
         [Inject]
         private IAuthManager _authManager { get; set; }
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         [Parameter]
         public Func<string, string, IEnumerable<string>, IEnumerable<string>, Task> UpdateGroupFunc { get; set; }
@@ -68,8 +74,7 @@ namespace Web.Views
                 return;
             }
 
-            var departmentId = await _authManager.GetLocalDepartmentId();
-            Members = await _memberService.GetAll(departmentId);
+            Members = await _memberService.GetAll(DepartmentId);
             _oldSelectedMembers = Members.Where(member => member.GroupIds.Contains(Group.Id)).Select(member => member.Id).ToList();
             SelectedMembers = new(_oldSelectedMembers);
             GroupData.Name = Group.Name;

@@ -1,7 +1,9 @@
-﻿namespace Web.Checks
+﻿using Web.Models;
+
+namespace Web.Checks
 {
     public interface ILoginCheck
     {
-        public Task<bool> CheckLogin(bool needDepartment = false, string departmentId = null);
+        public Task<bool> CheckLogin(Department department = null);
     }
 }

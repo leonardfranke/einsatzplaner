@@ -34,7 +34,21 @@ namespace Web.Services
 
         public async Task<Department> GetById(string departmentId)
         {
-            var response = await _httpClient.GetAsync(new Uri($"/api/Department/{departmentId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Department/Id/{departmentId}", UriKind.Relative));
+            try
+            {
+                var departmentDTO = await response.Content.ReadFromJsonAsync<DepartmentDTO>();
+                return DepartmentConverter.Convert(departmentDTO);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<Department> GetByUrl(string departmentUrl)
+        {
+            var response = await _httpClient.GetAsync(new Uri($"/api/Department/Url/{departmentUrl}", UriKind.Relative));
             try
             {
                 var departmentDTO = await response.Content.ReadFromJsonAsync<DepartmentDTO>();

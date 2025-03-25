@@ -99,34 +99,7 @@ namespace Web.Manager
             if (userDTO.IsEmailVerified)
                 claims.Add(new Claim(IAuthManager.EmailVerifiedClaim, true.ToString(), ClaimValueTypes.Boolean));
 
-            var departmentId = await GetLocalDepartmentId();
-            if(string.IsNullOrEmpty(departmentId))
-                return claims;
-
-            var inDepartment = await _departmentService.IsMemberInDepartment(user.Id, departmentId);
-            if (!inDepartment)
-                return claims;
-            claims.Add(new Claim(ClaimTypes.Role, "InDepartment"));
-
-            var member = await _memberService.GetMember(departmentId, user.Id);
-            if(member.IsAdmin)
-                claims.Add(new Claim(ClaimTypes.Role, "IsAdmin"));
-
             return claims;
-        }
-
-        public async Task<string> GetLocalDepartmentId()
-        {
-            return await _localStorage.GetItemAsync<string>(departmentKey);
-        }
-
-        public async Task<Department> GetLocalDepartment()
-        {
-            var departmentId = await GetLocalDepartmentId();
-            if (string.IsNullOrEmpty(departmentId))
-                return null;
-
-            return await _departmentService.GetById(departmentId);
         }
 
         public async Task SetLocalDepartmentId(string departmentId)

@@ -12,9 +12,5 @@ namespace Web.Manager
         Task SendVerificationMail(string idToken);
         Task SignOut();
         Task<User?> GetLocalUser();
-
-        public Task<string?> GetLocalDepartmentId();
-        public Task<Department> GetLocalDepartment();
-        public Task SetLocalDepartmentId(string departmentId);
     }
 }

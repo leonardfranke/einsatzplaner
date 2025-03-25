@@ -8,6 +8,8 @@ namespace Web.Pages
 {
     public class GamePageBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentUrl { get; set; }
 
         [Parameter]
         public string GameId { get; set; }
@@ -38,6 +40,8 @@ namespace Web.Pages
 
         [Inject]
         private IGroupService _groupService { get; set; }
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         private List<Models.Member> _members;
         private List<Group> _groups;
@@ -47,24 +51,26 @@ namespace Web.Pages
 
         protected override async Task OnParametersSetAsync()
         {
-            GameTask = _gameService.GetEvent(GameId);
+            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
+                return;
+
+            GameTask = _gameService.GetEvent(department.Id, GameId);
             Game = await GameTask;
             if (Game == null)
                 return;
 
-            var departmentId = Game.DepartmentId;
-            if (!await _loginCheck.CheckLogin(true, departmentId))
+            if (!await _loginCheck.CheckLogin(department))
                 return;
 
-            var helpersTask = _helperService.GetAll(departmentId, Game.Id);
-            var groupsTask = _groupService.GetAll(departmentId);
-            var rolesTask = _roleService.GetAll(departmentId);
-            var membersTask = _memberService.GetAll(departmentId);
+            var helpersTask = _helperService.GetAll(department.Id, Game.Id);
+            var groupsTask = _groupService.GetAll(department.Id);
+            var rolesTask = _roleService.GetAll(department.Id);
+            var membersTask = _memberService.GetAll(department.Id);
             _groups = await groupsTask;
             _group = _groups?.Find(group => group.Id == Game.GroupId);
             if (!string.IsNullOrEmpty(Game.EventCategoryId))
             {
-                var eventCategoriesTask = _eventCategoryService.GetById(departmentId, Game.EventCategoryId);
+                var eventCategoriesTask = _eventCategoryService.GetById(department.Id, Game.EventCategoryId);
                 _eventCategory = await eventCategoriesTask;
             }            
 

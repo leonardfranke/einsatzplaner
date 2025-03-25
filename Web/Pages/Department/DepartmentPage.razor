@@ -1,22 +1,6 @@
-﻿@page "/department"
+﻿@page "/{departmentUrl}/membership"
 @using Web.Checks
 @inherits DepartmentPageBase;
-
-<EditForm EditContext="@EditContext" OnValidSubmit="SubmitChangeDepartment">
-    <div class="mb-3">
-        <label class="form-label">Abteilung:</label>
-            <InputSelect @bind-Value="@DepartmentData.DepartmentId" class="form-select">
-                <option hidden />
-                @foreach (var department in Departments)
-                {
-                    <option Value="@department.Id">@department.Name</option>
-                }
-            </InputSelect>
-    </div>
-    <div>
-        <button class="btn btn-primary" type="submit">Speichern</button>
-    </div>
-</EditForm>
 
 <div class="modal" tabindex="-1" id="enterDepartmentModal">
     <div class="modal-dialog modal-dialog-centered">
@@ -31,7 +15,7 @@
                 }
                 else
                 {
-                    <p>Du bist nicht Teil dieser Abteilung. Möchtest du eine Beitrittsanfrage für "@(DepartmentRequest?.Name)" absenden?</p>
+                    <p>Du bist nicht Teil dieser Abteilung. Möchtest du eine Beitrittsanfrage für "@(Department?.Name)" absenden?</p>
                 }                
             </div>
             <div class="modal-footer">

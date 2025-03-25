@@ -16,6 +16,9 @@ namespace Web.Pages
 
         public Dictionary<Group, List<Models.Member>> GroupMembersDict { get; set; } = new();
 
+        [Parameter]
+        public Models.Department Department { private get; set; }
+
         [Inject]
         private IGroupService _groupService { get; set; }
 
@@ -35,9 +38,9 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(true))
-                return;
-            _departmentId = await _authManager.GetLocalDepartmentId();
+            if (!await _loginCheck.CheckLogin(Department))
+                return;            
+            _departmentId = Department.Id;
 
             await LoadGroups();
         }
@@ -51,7 +54,7 @@ namespace Web.Pages
                 GroupMembersDict[group] = _members.Where(member => member.GroupIds.Contains(group.Id)).ToList();
         }
 
-        public async Task EditOrCreateGroup(Models.Group? group)
+        public async Task EditOrCreateGroup(Group? group)
         {
             var closeModalFunc = Modal.HideAsync;
             var deleteGroupFunc = DeleteGroup;
@@ -63,7 +66,7 @@ namespace Web.Pages
                 { nameof(ChangeGroup.DeleteGroupFunc), deleteGroupFunc },
                 { nameof(ChangeGroup.UpdateGroupFunc), updateGroupFunc }
             };
-            var title = group == null ? "Group erstellen" : "Group bearbeiten";
+            var title = group == null ? "Gruppe erstellen" : "Gruppe bearbeiten";
             await Modal.ShowAsync<ChangeGroup>(title: title, parameters: parameters);
         }
 

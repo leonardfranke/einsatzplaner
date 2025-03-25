@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
@@ -8,6 +9,9 @@ namespace Web.Views
 {
     public class ChangeMemberBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentUrl { get; set; }
+
         [Parameter]
         public Member Member { get; set; }
 
@@ -26,6 +30,8 @@ namespace Web.Views
 
         [Inject]
         public IRoleService _roleService { private get; set; }
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         [Inject]
         public IGroupService _groupService { private get; set; }
@@ -59,9 +65,10 @@ namespace Web.Views
 
         protected override async Task OnInitializedAsync()
         {
-            var departmentId = await _authManager.GetLocalDepartmentId();
-            Roles = await _roleService.GetAll(departmentId);
-            Groups = await _groupService.GetAll(departmentId);
+            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Department department)
+                return;
+            Roles = await _roleService.GetAll(department.Id);
+            Groups = await _groupService.GetAll(department.Id);
         }
 
         private void ValidateForm(object? sender, ValidationRequestedEventArgs e)

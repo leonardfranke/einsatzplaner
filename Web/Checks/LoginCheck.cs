@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Web.Manager;
+using Web.Models;
 using Web.Services;
 namespace Web.Checks
 {
@@ -23,54 +24,48 @@ namespace Web.Checks
             _departmentService = departmentService;
         }
 
-        public async Task<bool> CheckLogin(bool needDepartment = false, string departmentId = null)
+        public async Task<bool> CheckLogin(Department department = null)
         {
             var authState = await _authStateProvider.GetAuthenticationStateAsync();
 
             var authenticated = authState?.User?.Identity?.IsAuthenticated == true;
             if (!authenticated)
             {
-                NavigateToLogin();
+                NavigateToLogin(department);
                 return false;
             }
 
             var verified = authState.User.HasClaim(IAuthManager.EmailVerifiedClaim, true.ToString());
             if (!verified)
             {
-                NavigateToLogin();
+                NavigateToLogin(department);
                 return false;
             }
 
-            if (needDepartment == false && string.IsNullOrWhiteSpace(departmentId))
+            if (department == null)
                 return true;
 
             var currentUser = await _authManager.GetLocalUser();
-            var currentDepartmentId = await _authManager.GetLocalDepartmentId();
-
-            if (needDepartment == true && string.IsNullOrEmpty(currentDepartmentId) ||
-                !string.IsNullOrWhiteSpace(departmentId) && departmentId != currentDepartmentId ||
-                !string.IsNullOrEmpty(currentDepartmentId) && !(await _departmentService.IsMemberInDepartment(currentUser.Id, currentDepartmentId)))
+            if (await _departmentService.IsMemberInDepartment(currentUser.Id, department.Id) == false)
             {
-                NavigateToDepartment();
+                NavigateToMembership(department);
                 return false;
             }
 
             return true;
         }
 
-        private void NavigateToVerification()
+        private void NavigateToLogin(Department department)
         {
-            _navigationManager.NavigateToLogin("./verification");
+            if(department == null)
+                _navigationManager.NavigateToLogin("./login");
+            else
+                _navigationManager.NavigateToLogin($"./{department.URL}/login");
         }
 
-        private void NavigateToLogin()
+        private void NavigateToMembership(Department department)
         {
-            _navigationManager.NavigateToLogin("./login");
-        }
-
-        private void NavigateToDepartment()
-        {
-            _navigationManager.NavigateToLogin("./department");
+            _navigationManager.NavigateToLogin($"./{department.URL}/membership");
         }
     }
 }

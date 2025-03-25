@@ -1,11 +1,9 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
-using System.Text.RegularExpressions;
 using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
-using Web.Services.Member;
 using Web.Views.ChangeHelperCategoryGroup;
 using Web.Views.ChangeRole;
 
@@ -13,11 +11,13 @@ namespace Web.Pages
 {
     public class RoleViewBase : ComponentBase
     {
-        private string _departmentId;
         private List<Models.Member> _members;
         private List<Role> _roles;
 
         public Dictionary<Role, List<Models.Member>> RoleMembersDict { get; set; } = new();
+
+        [Parameter]
+        public Models.Department Department { private get; set; }
 
         [Inject]
         private IRoleService _roleService { get; set; }
@@ -43,11 +43,10 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(true))
+            if (!await _loginCheck.CheckLogin(Department))
                 return;
-            _departmentId = await _authManager.GetLocalDepartmentId();
 
-            var membersTask = _memberService.GetAll(_departmentId);
+            var membersTask = _memberService.GetAll(Department.Id);
             var rolesTask = LoadRoles();
             var requirementGroupsTask = LoadRequirementGroups();
 
@@ -63,14 +62,14 @@ namespace Web.Pages
 
         private async Task LoadRequirementGroups()
         {
-            var helperCategoryGroupsTask = _requirementGroupService.GetAll(_departmentId);
+            var helperCategoryGroupsTask = _requirementGroupService.GetAll(Department.Id);
             RequirementGroups = await helperCategoryGroupsTask;
         }
 
         private async Task LoadRoles()
         {
-            _members = await _memberService.GetAll(_departmentId);
-            _roles = await _roleService.GetAll(_departmentId);
+            _members = await _memberService.GetAll(Department.Id);
+            _roles = await _roleService.GetAll(Department.Id);
             RoleMembersDict.Clear();
             foreach (var role in _roles)
                 RoleMembersDict[role] = _members.Where(member => member.RoleIds.Contains(role.Id)).ToList();
@@ -109,15 +108,15 @@ namespace Web.Pages
 
         private async Task DeleteRole(string roleId)
         {
-            await _roleService.Delete(_departmentId, roleId);
+            await _roleService.Delete(Department.Id, roleId);
             await LoadRoles();
         }
 
         private async Task UpdateRole(string roleId, string name, int lockingPeriod, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
         {
-            var newRoleId = await _roleService.UpdateOrCreate(_departmentId, roleId, name, lockingPeriod);
+            var newRoleId = await _roleService.UpdateOrCreate(Department.Id, roleId, name, lockingPeriod);
             if (newMembers.Any() || formerMembers.Any())
-                await _roleService.UpdateRoleMembers(_departmentId, newRoleId, newMembers.ToList(), formerMembers.ToList());            
+                await _roleService.UpdateRoleMembers(Department.Id, newRoleId, newMembers.ToList(), formerMembers.ToList());            
             await LoadRoles();
         }
 
@@ -140,13 +139,13 @@ namespace Web.Pages
 
         private async Task DeleteRequirementGroup(string helperCategoryGroupId)
         {
-            await _requirementGroupService.Delete(_departmentId, helperCategoryGroupId);
+            await _requirementGroupService.Delete(Department.Id, helperCategoryGroupId);
             await LoadRequirementGroups();
         }
 
         private async Task SaveRequirementGroup(string helperCategoryId, Dictionary<string, uint> requirements)
         {
-            await _requirementGroupService.UpdateOrCreate(_departmentId, helperCategoryId, requirements);
+            await _requirementGroupService.UpdateOrCreate(Department.Id, helperCategoryId, requirements);
             await LoadRequirementGroups();
         }
     }

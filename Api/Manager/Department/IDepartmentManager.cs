@@ -9,6 +9,8 @@ namespace Api.Manager
 
         public Task<DepartmentDTO> GetById(string departmentId);
 
+        public Task<DepartmentDTO> GetByUrl(string departmentUrl);
+
         public Task<bool> IsMemberInDepartment(string memberId, string departmentId);
 
         public Task RemoveMember(string departmentId, string memberId);

@@ -11,6 +11,9 @@ namespace Web.Pages
     {
         private string _departmentId;
 
+        [Parameter]
+        public string DepartmentUrl { get; set; }
+
         public List<Models.EventCategory> EventCategories { get; set; }
 
         [Inject]
@@ -21,6 +24,8 @@ namespace Web.Pages
 
         [Inject]
         private IAuthManager _authManager { get; set; }
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         public int? HoveredIndex { get; set; }
 
@@ -31,9 +36,11 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(true))
+            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
                 return;
-            _departmentId = await _authManager.GetLocalDepartmentId();
+            if (!await _loginCheck.CheckLogin(department))
+                return;
+            _departmentId = department.Id;
             await LoadEventCategories();
         }
 

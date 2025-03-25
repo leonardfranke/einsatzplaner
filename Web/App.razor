@@ -1,9 +1,4 @@
 ﻿@using Web.Pages
-@inject IConfiguration Config
-
-<HeadContent>
-    <base href="/@(Config.GetValue<string>("BASE_PATH"))" />
-</HeadContent>
 
 <CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">

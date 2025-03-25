@@ -41,6 +41,15 @@ namespace Api.Manager
             return DepartmentConverter.Convert(department);
         }
 
+        public async Task<DepartmentDTO> GetByUrl(string departmentUrl)
+        {
+            var snapshots = await _firestoreDb.Collection(path).WhereEqualTo(nameof(Department.URL), departmentUrl).Limit(1).GetSnapshotAsync();
+            if (!snapshots.Any())
+                return null;
+            var department = snapshots.First().ConvertTo<Department>();
+            return DepartmentConverter.Convert(department);
+        }
+
         public async Task<bool> IsMemberInDepartment(string memberId, string departmentId)
         {
             var memberSnapshot = await _firestoreDb

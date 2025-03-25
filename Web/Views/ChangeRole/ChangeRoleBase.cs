@@ -10,6 +10,9 @@ namespace Web.Views
     public class ChangeRoleBase : ComponentBase
     {
         [Parameter]
+        public string DepartmentId { get; set; }
+
+        [Parameter]
         public Role Role { private get; set; }
 
         [Parameter]
@@ -72,8 +75,7 @@ namespace Web.Views
                 return;
             }
 
-            var departmentId = await _authManager.GetLocalDepartmentId();
-            Members = await _memberService.GetAll(departmentId);
+            Members = await _memberService.GetAll(DepartmentId);
             RoleData.Name = Role.Name;
             _oldName = RoleData.Name;
             RoleData.LockingPeriod = Role.LockingPeriod;

@@ -16,7 +16,8 @@ namespace Api.Converter
             return new DepartmentDTO
             {
                 Id = department.Id,
-                Name = department.Name
+                Name = department.Name,
+                URL = department.URL
             };
         }
     }

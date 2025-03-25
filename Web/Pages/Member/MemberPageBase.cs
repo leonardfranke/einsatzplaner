@@ -10,7 +10,13 @@ namespace Web.Pages
 {
     public class MemberPageBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentUrl { get; set; }
+
         private string _departmentId;
+
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         [Inject]
         private IDepartmentService _departmentService { get; set; }
@@ -45,9 +51,11 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(true))
+            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
                 return;
-            _departmentId = await _authManager.GetLocalDepartmentId();
+            _departmentId = department.Id;
+            if (!await _loginCheck.CheckLogin(department))
+                return;
             var groupTask = _groupService.GetAll(_departmentId);
             var rolesTask = _roleService.GetAll(_departmentId);
             var membersTask = LoadMembers();

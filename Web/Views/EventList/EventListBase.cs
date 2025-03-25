@@ -12,6 +12,8 @@ namespace Web.Views
         [CascadingParameter]
         public Modal Modal { get; set; }
 
+        [Parameter] 
+        public string DepartmentId { get; set; }
 
         [Parameter]
         public IEnumerable<Event> Events { get; set; }
@@ -58,16 +60,13 @@ namespace Web.Views
 
         [Inject]
         private IHelperService _helperService { get; set; }
-        
-        public string _departmentId;
 
         protected override async Task OnInitializedAsync()
         {
-            _departmentId = await _authManager.GetLocalDepartmentId();
-            Roles = await _rolesService.GetAll(_departmentId);
-            Helpers = await _helperService.GetAll(_departmentId);
-            Groups = await _groupService.GetAll(_departmentId);
-            EventCategories = await _eventCategoryService.GetAll(_departmentId);
+            Roles = await _rolesService.GetAll(DepartmentId);
+            Helpers = await _helperService.GetAll(DepartmentId);
+            Groups = await _groupService.GetAll(DepartmentId);
+            EventCategories = await _eventCategoryService.GetAll(DepartmentId);
         }
 
         protected Role GetCategory(Models.Helper helper) => Roles.FirstOrDefault(category => category.Id == helper.RoleId);
@@ -107,13 +106,13 @@ namespace Web.Views
 
         private async Task DeleteGame(string gameId)
         {
-            await _eventService.DeleteGame(_departmentId, gameId);
+            await _eventService.DeleteGame(DepartmentId, gameId);
             await ReloadPage();
         }
 
         private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers)
         {
-            await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, helpers);
+            await _eventService.UpdateOrCreate(DepartmentId, eventId, groupId, eventCategoryId, gameDate, helpers);
             await ReloadPage();
         }
     }

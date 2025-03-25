@@ -69,12 +69,11 @@ namespace Web.Views
 
         protected override async Task OnParametersSetAsync()
         {
-            var departmentId = await _authManager.GetLocalDepartmentId();
-            Roles = await _roleService.GetAll(departmentId);
-            Groups = await _groupService.GetAll(departmentId);
-            Roles = await _roleService.GetAll(departmentId);
-            EventCategories = await _eventCategoryService.GetAll(departmentId);
-            RequirementGroups = await _requirementGroupService.GetAll(departmentId);
+            Roles = await _roleService.GetAll(Event.DepartmentId);
+            Groups = await _groupService.GetAll(Event.DepartmentId);
+            Roles = await _roleService.GetAll(Event.DepartmentId);
+            EventCategories = await _eventCategoryService.GetAll(Event.DepartmentId);
+            RequirementGroups = await _requirementGroupService.GetAll(Event.DepartmentId);
 
             CreateFormContext();
             IsUpdate = Event != null;
@@ -83,7 +82,7 @@ namespace Web.Views
                 EventData.GroupId = Event.GroupId;
                 EventData.EventCategoryId = Event.EventCategoryId;
                 EventData.Date = Event.GameDate;
-                var helpers = await _helperService.GetAll(departmentId, Event.Id);
+                var helpers = await _helperService.GetAll(Event.DepartmentId, Event.Id);
                     
                 foreach (var helper in helpers)
                 {

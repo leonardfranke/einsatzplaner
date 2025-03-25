@@ -14,8 +14,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 using var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
-var configFile = $"appsettings.{env}.json";
+var configFile = $"appsettings.json";
 using var response = await http.GetAsync(configFile);
 using var stream = await response.Content.ReadAsStreamAsync();
 var config = new ConfigurationBuilder()
@@ -23,6 +22,7 @@ var config = new ConfigurationBuilder()
     .Build();
 builder.Configuration.AddConfiguration(config);
 
+builder.Services.AddScoped<IDepartmentUrlCheck, DepartmentUrlCheck>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<AuthManager>());

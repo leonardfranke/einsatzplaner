@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Web.Checks;
 using Web.Manager;
@@ -11,9 +10,14 @@ namespace Web.Pages
 {
     public class DepartmentPageBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentUrl { get; set; }
 
         [Inject]
         private ILoginCheck _loginCheck { get; set; }
+
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
         [Inject]
         private IAuthManager _authManager { get; set; }
         [Inject]
@@ -23,61 +27,32 @@ namespace Web.Pages
         [Inject]
         private IJSRuntime _javaScript { get; set; }
 
-        private ValidationMessageStore _messageStore;
         private User currentUser;
-
-        [SupplyParameterFromForm]
-        public FormModel DepartmentData { get; set; }
-        public EditContext EditContext { get; set; }
-        public string RequestModalText { get; private set; }
-        public Models.Department DepartmentRequest { get; private set; }
+        public Models.Department Department { get; set; }
         public bool AlreadyRequested { get; private set; }
 
-
-        public List<Models.Department> Departments { get; set; } = new();
-
         protected override async Task OnInitializedAsync()
-        {            
-            DepartmentData = new();
-            EditContext = new(DepartmentData);
-            EditContext.OnValidationRequested += ValidateForm;
-            _messageStore = new(EditContext);
-
+        {
+            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
+                return;
+            Department = department;
             if (!await _loginCheck.CheckLogin())
                 return;
 
             currentUser = await _authManager.GetLocalUser();
             if(currentUser == null || string.IsNullOrWhiteSpace(currentUser.Id))
                 throw new NullReferenceException("Currently authenticated user is null");
-            Departments = await _departmentService.GetAll();
-            await base.OnInitializedAsync();
-        }
 
-        private void ValidateForm(object? sender, ValidationRequestedEventArgs e)
-        {
-            _messageStore.Clear();
-
-            if (string.IsNullOrEmpty(DepartmentData.DepartmentId))
-                _messageStore.Add(() => DepartmentData.DepartmentId, "Wähle eine Abteilung aus.");
-        }
-
-        public async Task SubmitChangeDepartment()
-        {
-            var selectedDepartment = Departments.Find(department => DepartmentData.DepartmentId == department.Id);
-            if (selectedDepartment == null)
-                throw new NullReferenceException("Internal error: selectedDepartment is null");
-            var isInDepartment = await _departmentService.IsMemberInDepartment(currentUser.Id, selectedDepartment.Id);
+            var isInDepartment = await _departmentService.IsMemberInDepartment(currentUser.Id, Department.Id);
             if (isInDepartment)
             {
-                await _authManager.SetLocalDepartmentId(selectedDepartment.Id);
                 var navigated = _navigationManager.TryNavigateToReturnUrl();
                 if (!navigated)
-                    _navigationManager.NavigateTo("./");
+                    _navigationManager.NavigateTo($"./{DepartmentUrl}");
             }
             else
             {
-                DepartmentRequest = selectedDepartment;
-                AlreadyRequested = await _departmentService.MembershipRequested(DepartmentRequest.Id, currentUser.Id);
+                AlreadyRequested = await _departmentService.MembershipRequested(Department.Id, currentUser.Id);
                 await _javaScript.InvokeVoidAsync("openModal");
             }
         }
@@ -92,7 +67,7 @@ namespace Web.Pages
             var currentUser = await _authManager.GetLocalUser();
             if (currentUser == null)
                 return;
-            await _departmentService.RequestMembership(DepartmentRequest.Id, currentUser.Id);
+            await _departmentService.RequestMembership(Department.Id, currentUser.Id);
             await CloseModal();
         }
 

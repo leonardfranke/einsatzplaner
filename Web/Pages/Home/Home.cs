@@ -23,10 +23,13 @@ namespace Web.Pages
         public List<IGrouping<object, Event>> GroupEventGrouping { get => _groupEventGrouping.Value; }
         public List<IGrouping<object, Event>> CategoryEventGrouping { get => _categoryEventGrouping.Value; }
 
-        [SupplyParameterFromQuery(Name = "department")]
-        public string? DepartmentParameter { get; set; }
+        [Parameter]
+        public string DepartmentUrl { get; set; }
 
         public string? HoveredGameId { get; set; }
+
+        [Inject]
+        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         [Inject]
         private ILoginCheck _loginCheck { get; set; }
@@ -54,6 +57,9 @@ namespace Web.Pages
 
         [Inject]
         private IEventService _eventService { get; set; }
+
+        [Inject]
+        private IDepartmentService _departmentService { get; set; }
 
         [Inject]
         private IGroupService _groupService { get; set; }
@@ -107,7 +113,7 @@ namespace Web.Pages
         private List<Models.EventCategory> eventCategories;
         private List<Models.Member> members;
         private List<string> _memberRoleIds;
-        private List<Models.RequirementGroup> helperCategoryGroups;
+        private List<RequirementGroup> helperCategoryGroups;
         private string _departmentId;
         private Lazy<List<IGrouping<object, Event>>> _bothEventGrouping;
         private Lazy<List<IGrouping<object, Event>>> _groupEventGrouping;
@@ -118,9 +124,11 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(true, DepartmentParameter))
+            if(await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
                 return;
-            _departmentId = await _authManager.GetLocalDepartmentId();
+            _departmentId = department.Id;
+            if (!await _loginCheck.CheckLogin(department))
+                return;
             var user = await _authManager.GetLocalUser();
 
             var rolesTask = _roleService.GetAll(_departmentId);

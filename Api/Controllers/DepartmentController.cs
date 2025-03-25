@@ -22,10 +22,16 @@ namespace Api.Controllers
             return _departmentManager.GetAll();
         }
 
-        [HttpGet("{departmentId}")]
+        [HttpGet("Id/{departmentId}")]
         public Task<DepartmentDTO> GetById(string departmentId) 
         {
             return _departmentManager.GetById(departmentId);
+        }
+
+        [HttpGet("Url/{departmentUrl}")]
+        public Task<DepartmentDTO> GetByUrl(string departmentUrl)
+        {
+            return _departmentManager.GetByUrl(departmentUrl);
         }
 
         [HttpGet("IsMemberInDepartment")]

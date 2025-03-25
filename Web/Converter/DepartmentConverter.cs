@@ -18,7 +18,8 @@ namespace Web.Converter
             return new Department
             {
                 Id = department.Id,
-                Name = department.Name
+                Name = department.Name,
+                URL = department.URL
             };
         }
     }

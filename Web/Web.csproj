@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\HelperCategory\**" />
+    <Content Remove="Pages\HelperCategory\**" />
+    <EmbeddedResource Remove="Pages\HelperCategory\**" />
+    <None Remove="Pages\HelperCategory\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Pages\Login.razor" />
   </ItemGroup>
 
@@ -40,10 +47,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DTO\DTO.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Pages\HelperCategory\" />
   </ItemGroup>
 
 </Project>

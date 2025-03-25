@@ -7,5 +7,8 @@ namespace Api.Models
     {        
         [FirestoreProperty]
         public string Name { get; set; }
+
+        [FirestoreProperty]
+        public string URL { get; set; }
     }
 }

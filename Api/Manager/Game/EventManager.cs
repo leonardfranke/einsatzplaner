@@ -143,18 +143,18 @@ namespace Api.Manager
             return EventConverter.Convert(events, departmentId);
         }
 
-        public async Task<EventDTO?> GetEvent(string eventId)
+        public async Task<EventDTO?> GetEvent(string departmentId, string eventId)
         {
             var snapshot = await _firestoreDb
-                .CollectionGroup(Paths.EVENT).WhereEqualTo(nameof(Event.IdProperty), eventId)
+                .Collection(Paths.DEPARTMENT).Document(departmentId)
+                .Collection(Paths.EVENT).WhereEqualTo(nameof(Event.IdProperty), eventId)
                 .Limit(1).GetSnapshotAsync();
 
-            if (snapshot.Count == 0)
+            if (snapshot.Count() == 0)
                 return null;
 
             var eventModel = snapshot.First();
             var @event = eventModel.ConvertTo<Event>();
-            var departmentId = eventModel.Reference.Parent.Parent.Id;
             return EventConverter.Convert(@event, departmentId);            
         }
     }

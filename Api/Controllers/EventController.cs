@@ -21,10 +21,10 @@ namespace Api.Controllers
             return _eventManager.GetAll(departmentId);
         }
 
-        [HttpGet("{eventId}")]
-        public Task<EventDTO> GetEvent(string eventId)
+        [HttpGet("{departmentId}/{eventId}")]
+        public Task<EventDTO> GetEvent(string departmentId, string eventId)
         {
-            return _eventManager.GetEvent(eventId);
+            return _eventManager.GetEvent(departmentId, eventId);
         }
 
         [HttpPost()]
