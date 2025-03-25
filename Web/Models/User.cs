@@ -1,4 +1,4 @@
-﻿namespace Web.Manager.Auth
+﻿namespace Web.Models
 {
     public class User
     {

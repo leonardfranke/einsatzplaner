@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Web.Checks;
 using Web.Manager;
-using Web.Manager.Auth;
+using Web.Models;
 using Web.Navigation;
 using Web.Services;
 

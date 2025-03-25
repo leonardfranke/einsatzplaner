@@ -10,9 +10,9 @@ namespace Web.Services
     {
         private HttpClient _httpClient;
 
-        public EventCategoryService(HttpClient httpClient) 
+        public EventCategoryService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public Task Delete(string departmentId, string eventCategoryId)

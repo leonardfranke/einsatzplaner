@@ -10,9 +10,9 @@ namespace Web.Services
     {
         private HttpClient _httpClient;
 
-        public GroupService(HttpClient httpClient) 
+        public GroupService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public async Task<string> UpdateOrCreateGroup(string departmentId, string? groupId, string name)

@@ -1,14 +1,15 @@
 ﻿using Blazored.LocalStorage;
+using DTO;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Web.Models;
 using Web.Services;
 
-namespace Web.Manager.Auth
+namespace Web.Manager
 {
     public class AuthManager : AuthenticationStateProvider, IAuthManager
     {
-        private IFirebaseAuthService _authService;
+        private IAuthService _authService;
         private ILocalStorageService _localStorage;
         private IMemberService _memberService;
         private IGroupService _groupService;
@@ -16,7 +17,7 @@ namespace Web.Manager.Auth
         private string loggedInUserKey = "LoggedInUser";
         private string departmentKey = "Department";
 
-        public AuthManager(IFirebaseAuthService authService, 
+        public AuthManager(IAuthService authService, 
             ILocalStorageService localStorage, 
             IGroupService groupService, 
             IDepartmentService departmentService,
@@ -29,42 +30,19 @@ namespace Web.Manager.Auth
             _memberService = memberService;
         }
 
-        public async Task<User> SignUp(string email, string password, string displayName)
+        public async Task<User> Authenticate(string email, string password, string displayName, bool isSignUp)
         {
-            var serviceResponse = await _authService.SignUpUser(email, password, displayName);
-            if (serviceResponse.ErrorCode == null) 
-            {
-                if (string.IsNullOrEmpty(serviceResponse.localId))
-                    throw new NullReferenceException("Uid of user is null after sign up.");
-                var user = new User()
-                {
-                    Id = serviceResponse.localId,
-                    IdToken = serviceResponse.idToken
-                };
-                await InsertLocalUser(user);
-                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-                return user;
-            }
-            throw new Exception();           
-        }
+            var tokenDTOTask = isSignUp ? _authService.SignUpUser(email, password, displayName) : _authService.SignInUser(email, password);
+            var tokenDTO = await tokenDTOTask;
 
-        public async Task<User> SignIn(string email, string password)
-        {
-            var serviceResponse = await _authService.SignInUser(email, password);
-            if (serviceResponse.ErrorCode == null)
+            var user = new User()
             {
-                if (string.IsNullOrEmpty(serviceResponse.localId))
-                    throw new NullReferenceException("Uid of user is null after sign in.");
-                var user = new User()
-                {
-                    Id = serviceResponse.localId,
-                    IdToken = serviceResponse.idToken
-                };
-                await InsertLocalUser(user);
-                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
-                return user;
-            }
-            throw new Exception();
+                Id = tokenDTO.Uid,
+                IdToken = tokenDTO.IdToken
+            };
+            await InsertLocalUser(user);
+            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            return user;
         }
 
         public async Task SignOut()
@@ -93,28 +71,32 @@ namespace Web.Manager.Auth
         {
             var authState = new AuthenticationState(new ClaimsPrincipal());
 
-            if (user == null)
+            if (string.IsNullOrEmpty(user?.Id))
                 return authState;
 
-            var getUserDataResponse = await _authService.GetUserData(user.IdToken);
-            if (getUserDataResponse.ErrorCode != null)                
+            try
+            {
+                var userDTO = await _authService.GetUserData(user.Id);
+                var identity = new ClaimsIdentity("FirebaseAuth");
+                var claims = await CreateClaims(user, userDTO);
+                identity.AddClaims(claims);
+                authState.User.AddIdentity(identity);
                 return authState;
-
-            var identity = new ClaimsIdentity("FirebaseAuth");
-            var claims = await CreateClaims(user, getUserDataResponse);
-            identity.AddClaims(claims);
-            authState.User.AddIdentity(identity);
-            return authState;
+            }
+            catch
+            {
+                return authState;
+            }
         }
 
-        private async Task<List<Claim>> CreateClaims(User user, IFirebaseAuthService.GetUserDataResponse getUserDataResponse)
+        private async Task<List<Claim>> CreateClaims(User user, UserDTO userDTO)
         {
             var claims = new List<Claim>();
 
-            if (!getUserDataResponse.users.First().disabled)
+            if (!userDTO.IsDisabled)
                 claims.Add(new Claim(IAuthManager.IsActiveClaim, true.ToString(), ClaimValueTypes.Boolean));
 
-            if (getUserDataResponse.users.First().emailVerified)
+            if (userDTO.IsEmailVerified)
                 claims.Add(new Claim(IAuthManager.EmailVerifiedClaim, true.ToString(), ClaimValueTypes.Boolean));
 
             var departmentId = await GetLocalDepartmentId();
@@ -153,22 +135,14 @@ namespace Web.Manager.Auth
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-        public async Task ResetPassword(string email)
+        public Task ResetPassword(string email)
         {
-            var response = await _authService.ResetPassword(email);
-            if (response.ErrorCode != null)
-            {
-                throw new Exception();
-            }
+            return _authService.ResetPassword(email);
         }
 
-        public async Task SendVerificationMail(string idToken)
+        public Task SendVerificationMail(string idToken)
         {
-            var response = await _authService.SendVerificationMail(idToken);
-            if (response.ErrorCode != null)
-            {
-                throw new Exception();
-            }
+            return _authService.SendVerificationMail(idToken);
         }
     }
 }

@@ -10,9 +10,9 @@ namespace Web.Services
 
         private HttpClient _httpClient;
 
-        public RequirementsGroupService(HttpClient httpClient)
+        public RequirementsGroupService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public Task Delete(string departmentId, string helperCategoryGroupId)

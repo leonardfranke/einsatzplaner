@@ -11,9 +11,9 @@ namespace Web.Services
     {
         private HttpClient _httpClient;
 
-        public DepartmentService(HttpClient httpClient)
+        public DepartmentService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public async Task<List<Department>> GetAll()

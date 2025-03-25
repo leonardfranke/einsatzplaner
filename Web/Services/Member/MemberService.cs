@@ -9,9 +9,9 @@ namespace Web.Services.Member
     {
         private HttpClient _httpClient;
 
-        public MemberService(HttpClient httpClient)
+        public MemberService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public async Task<List<Models.Member>> GetAll(string departmentId)

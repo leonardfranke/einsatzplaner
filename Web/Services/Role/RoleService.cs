@@ -10,9 +10,9 @@ namespace Web.Services
     {
         private HttpClient _httpClient;
 
-        public RoleService(HttpClient httpClient) 
+        public RoleService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string name, int lockingPeriod)

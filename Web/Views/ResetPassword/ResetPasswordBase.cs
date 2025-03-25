@@ -1,8 +1,6 @@
-﻿using DTO;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Web.Manager;
-using Web.Manager.Auth;
 
 namespace Web.Views
 {

@@ -22,11 +22,12 @@ builder.Services.AddCors(options =>
     });
 });
 
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = GoogleCredential.GetApplicationDefault(),
-    ProjectId = "354508921695",
-});
+var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
+var configFile = $"appsettings.{env}.json";
+var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
+builder.Configuration.AddConfiguration(config);
+
+var credentialsTask = GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
 
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
@@ -37,8 +38,10 @@ builder.Services.AddSingleton<IGroupManager, GroupManager>();
 builder.Services.AddSingleton<IRoleManager, RoleManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
+builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -56,5 +59,11 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = await credentialsTask,
+    ProjectId = "1077768805408",
+});
 
 app.Run();

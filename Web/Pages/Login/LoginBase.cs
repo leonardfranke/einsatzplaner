@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Components.Forms;
 using Web.Manager;
 using Web.Navigation;
 using Web.Pages.Login;
-using Web.Views.ChangeEvent;
 using Web.Views.ResetPassword;
 
 namespace Web.Pages
@@ -133,7 +132,7 @@ namespace Web.Pages
         {
             try
             {
-                var credetials = await _authManager.SignIn(LoginData.Email, LoginData.Password);
+                var credetials = await _authManager.Authenticate(LoginData.Email, LoginData.Password, null, false);
                 return true;
             }
             catch (Exception ex)
@@ -148,7 +147,7 @@ namespace Web.Pages
         {
             try
             {
-                var credentials = await _authManager.SignUp(RegisterData.Email, RegisterData.Password, $"{RegisterData.FirstName} {RegisterData.LastName}");
+                var credentials = await _authManager.Authenticate(RegisterData.Email, RegisterData.Password, $"{RegisterData.FirstName} {RegisterData.LastName}", true);
                 return true;
             }
             catch (Exception ex)

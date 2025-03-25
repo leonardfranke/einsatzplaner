@@ -1,7 +1,6 @@
 ﻿using Api.Manager;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Api.Controllers
 {

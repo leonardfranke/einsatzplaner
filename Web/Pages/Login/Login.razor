@@ -19,12 +19,12 @@
                 <div class="tab-pane fade show active" id="login-pane" role="tabpanel" tabindex="0">
                     <EditForm EditContext="@EditContextLogin" Context="editContext" OnSubmit="SubmitLogin">
                         <div class="mb-3">
-                            <label for="email" class="form-label">E-Mail-Adresse</label>
-                            <InputText @bind-Value="@LoginData.Email" type="email" class="form-control" id="email" aria-describedby="emailHelp" />
+                            <label for="emailLogin" class="form-label">E-Mail-Adresse</label>
+                            <InputText @bind-Value="@LoginData.Email" type="email" class="form-control" id="emailLogin" aria-describedby="emailHelp" />
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Passwort</label>
-                            <InputText @bind-Value="@LoginData.Password" type="password" class="form-control" id="password" />
+                            <label for="passwordLogin" class="form-label">Passwort</label>
+                            <InputText @bind-Value="@LoginData.Password" type="password" class="form-control" id="passwordLogin" />
                         </div>
                         <a class="btn btn-link mb-2" onclick="@ForgotPassword">Password vergessen?</a>
                         <br/>
@@ -44,12 +44,12 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="email" class="form-label">E-Mail-Adresse</label>
-                            <InputText @bind-Value="@RegisterData.Email" type="email" class="form-control" id="email" aria-describedby="emailHelp" />
+                            <label for="emailRegistration" class="form-label">E-Mail-Adresse</label>
+                            <InputText @bind-Value="@RegisterData.Email" type="email" class="form-control" id="emailRegistration" aria-describedby="emailHelp" />
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Passwort</label>
-                            <InputText @bind-Value="@RegisterData.Password" type="password" class="form-control" id="password" />
+                            <label for="passwordRegistration" class="form-label">Passwort</label>
+                            <InputText @bind-Value="@RegisterData.Password" type="password" class="form-control" id="passwordRegistration" />
                         </div>
                         <button type="submit" class="btn btn-primary">Registrieren</button>
                     </EditForm>

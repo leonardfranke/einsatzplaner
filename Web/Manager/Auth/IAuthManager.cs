@@ -1,5 +1,4 @@
-﻿using Web.Manager.Auth;
-using Web.Models;
+﻿using Web.Models;
 
 namespace Web.Manager
 {
@@ -8,8 +7,7 @@ namespace Web.Manager
         public static readonly string IsActiveClaim = "IsActive";
         public static readonly string EmailVerifiedClaim = "EmailVerified";
 
-        Task<User> SignUp(string email, string password, string displayName);
-        Task<User> SignIn(string email, string password);
+        Task<User> Authenticate(string email, string password, string displayName, bool isSignUp);
         Task ResetPassword(string email);
         Task SendVerificationMail(string idToken);
         Task SignOut();

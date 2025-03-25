@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Web;
 using Web.Checks;
 using Web.Manager;
-using Web.Manager.Auth;
 using Web.Services;
 using Web.Services.Member;
 
@@ -28,7 +27,7 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<AuthManager>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.GetRequiredService<AuthManager>());
 builder.Services.AddScoped<IAuthManager>(provider => provider.GetRequiredService<AuthManager>());
-builder.Services.AddScoped<IFirebaseAuthService, FirebaseAuthService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IHelperService, HelperService>();
 builder.Services.AddScoped<IEventCategoryService, EventCategoryService>();
@@ -39,7 +38,7 @@ builder.Services.AddScoped<ILoginCheck, LoginCheck>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 builder.Services.AddScoped<IUserRepository, FileUserRepository>(serviceProvider => new FileUserRepository("localUser"));
 
-builder.Services.AddHttpClient(builder.Configuration["BACKEND_ADDRESS"], client => client.BaseAddress = new Uri(builder.Configuration["BACKEND_ADDRESS"]));
+builder.Services.AddHttpClient("BACKEND", client => client.BaseAddress = new Uri(builder.Configuration["BACKEND_ADDRESS"]));
 
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();

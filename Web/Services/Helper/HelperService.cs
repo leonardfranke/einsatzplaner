@@ -10,9 +10,9 @@ namespace Web.Services
 
         private HttpClient _httpClient;
 
-        public HelperService(HttpClient httpClient)
+        public HelperService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
         public async Task<List<Models.Helper>> GetAll(string departmentId, string? eventId = null)

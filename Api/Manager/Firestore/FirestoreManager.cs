@@ -8,7 +8,7 @@ namespace Api.Manager
 
         public FirestoreManager()
         {
-            Database = FirestoreDb.Create("heimspielplaner");
+            Database = FirestoreDb.Create("einsatzplaner");
         }
     }
 }
