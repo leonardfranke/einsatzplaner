@@ -4,6 +4,6 @@ namespace Web.Checks
 {
     public interface IDepartmentUrlCheck
     {
-        public Task<Department> CheckDepartmentUrl(string departmentId);
+        public Task<Department> LogIntoDepartment(string departmentId);
     }
 }

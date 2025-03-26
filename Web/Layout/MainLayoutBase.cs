@@ -13,7 +13,8 @@ namespace Web.Layout
 
         public async Task Logout()
         {
-            await _authManager.SignOut();
+            await _authManager.RemoveLocalUser();
+            _navigationManager.Refresh();
         }
 
         public async Task NavigateToLogin()

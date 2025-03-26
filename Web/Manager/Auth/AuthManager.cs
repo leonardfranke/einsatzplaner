@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using Blazored.SessionStorage;
 using DTO;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
@@ -11,6 +12,7 @@ namespace Web.Manager
     {
         private IAuthService _authService;
         private ILocalStorageService _localStorage;
+        private ISessionStorageService _sessionStorage;
         private IMemberService _memberService;
         private IGroupService _groupService;
         private IDepartmentService _departmentService;
@@ -18,7 +20,8 @@ namespace Web.Manager
         private string departmentKey = "Department";
 
         public AuthManager(IAuthService authService, 
-            ILocalStorageService localStorage, 
+            ILocalStorageService localStorage,
+            ISessionStorageService sessionStorage,
             IGroupService groupService, 
             IDepartmentService departmentService,
             IMemberService memberService)
@@ -28,6 +31,7 @@ namespace Web.Manager
             _groupService = groupService;
             _departmentService = departmentService;
             _memberService = memberService;
+            _sessionStorage = sessionStorage;
         }
 
         public async Task<User> Authenticate(string email, string password, string displayName, bool isSignUp)
@@ -45,10 +49,15 @@ namespace Web.Manager
             return user;
         }
 
-        public async Task SignOut()
+        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
+        {
+            var user = await GetLocalUser();
+            return await CreateAuthStateFromUser(user);
+        }
+
+        public async Task RemoveLocalUser()
         {
             await _localStorage.RemoveItemAsync(loggedInUserKey);
-            await SetLocalDepartmentId(null);
         }
 
         private async Task InsertLocalUser(User user)
@@ -60,12 +69,6 @@ namespace Web.Manager
         {
             return await _localStorage.GetItemAsync<User>(loggedInUserKey);
         }  
-
-        public override async Task<AuthenticationState> GetAuthenticationStateAsync()
-        {
-            var user = await GetLocalUser();
-            return await CreateAuthStateFromUser(user);
-        }
 
         private async Task<AuthenticationState> CreateAuthStateFromUser(User? user)
         {
@@ -99,13 +102,25 @@ namespace Web.Manager
             if (userDTO.IsEmailVerified)
                 claims.Add(new Claim(IAuthManager.EmailVerifiedClaim, true.ToString(), ClaimValueTypes.Boolean));
 
+            var departmentId = await GetCurrentDepartment();
+            if(!string.IsNullOrEmpty(departmentId))
+            {
+                var member = await _memberService.GetMember(departmentId, user.Id);
+                if (member != null && member.IsAdmin)
+                    claims.Add(new Claim(ClaimTypes.Role, "IsAdmin"));
+            }
+
             return claims;
         }
 
-        public async Task SetLocalDepartmentId(string departmentId)
+        public async Task SetCurrentDepartment(string departmentId)
         {
-            await _localStorage.SetItemAsync(departmentKey, departmentId);
-            NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            await _sessionStorage.SetItemAsync(departmentKey, departmentId);
+        }
+
+        public async Task<string> GetCurrentDepartment()
+        {
+            return await _sessionStorage.GetItemAsync<string>(departmentKey);
         }
 
         public Task ResetPassword(string email)

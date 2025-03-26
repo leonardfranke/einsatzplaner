@@ -127,7 +127,7 @@ namespace Web.Pages
 
         public void SignOut()
         {
-            _authManager.SignOut();
+            _authManager.RemoveLocalUser();
             NavigationManager.NavigateTo("./");
         }
 

@@ -51,7 +51,7 @@ namespace Web.Pages
 
         protected override async Task OnParametersSetAsync()
         {
-            if (await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
+            if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
 
             GameTask = _gameService.GetEvent(department.Id, GameId);

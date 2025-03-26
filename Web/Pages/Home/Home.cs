@@ -124,7 +124,7 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if(await _departmentUrlCheck.CheckDepartmentUrl(DepartmentUrl) is not Models.Department department)
+            if(await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             _departmentId = department.Id;
             if (!await _loginCheck.CheckLogin(department))
