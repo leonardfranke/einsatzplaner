@@ -96,6 +96,7 @@ namespace Web.Views
             var saveGameFunc = SaveGame;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeEvent.ChangeEvent.DepartmentId), DepartmentId },
                 { nameof(ChangeEvent.ChangeEvent.Event), @event },
                 { nameof(ChangeEvent.ChangeEvent.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeEvent.ChangeEvent.DeleteGameFunc), deleteGameFunc },

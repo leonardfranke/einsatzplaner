@@ -267,6 +267,7 @@ namespace Web.Pages
             var saveGameFunc = SaveGame;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeEvent.DepartmentId), _departmentId},
                 { nameof(ChangeEvent.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeEvent.SaveEventFunc), saveGameFunc },
                 { nameof(ChangeEvent.Event), null }
@@ -292,6 +293,7 @@ namespace Web.Pages
             var saveGameFunc = SaveGame;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeEvent.DepartmentId), _departmentId },
                 { nameof(ChangeEvent.Event), @event },
                 { nameof(ChangeEvent.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeEvent.DeleteGameFunc), deleteGameFunc },

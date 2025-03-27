@@ -9,6 +9,9 @@ namespace Web.Views
 {
     public class ChangeEventBase : ComponentBase
     {
+        [Parameter]
+        public string DepartmentId { get; set; }
+
         [Inject]
         private IJSRuntime js { get; set; }
 
@@ -62,20 +65,19 @@ namespace Web.Views
 
         private ValidationMessageStore _messageStore;
 
-        protected override void OnInitialized()
+        protected override void OnParametersSet()
         {
             CreateFormContext();
         }
 
         protected override async Task OnParametersSetAsync()
         {
-            Roles = await _roleService.GetAll(Event.DepartmentId);
-            Groups = await _groupService.GetAll(Event.DepartmentId);
-            Roles = await _roleService.GetAll(Event.DepartmentId);
-            EventCategories = await _eventCategoryService.GetAll(Event.DepartmentId);
-            RequirementGroups = await _requirementGroupService.GetAll(Event.DepartmentId);
-
-            CreateFormContext();
+            Roles = await _roleService.GetAll(DepartmentId);
+            Groups = await _groupService.GetAll(DepartmentId);
+            Roles = await _roleService.GetAll(DepartmentId);
+            EventCategories = await _eventCategoryService.GetAll(DepartmentId);
+            RequirementGroups = await _requirementGroupService.GetAll(DepartmentId);
+            
             IsUpdate = Event != null;
             if (IsUpdate)
             {
@@ -101,7 +103,6 @@ namespace Web.Views
         {
             EventData = new();
             EditContext = new(EventData);
-            EditContext.OnValidationRequested += ValidateForm;
             _messageStore = new(EditContext);
         }
 
@@ -125,17 +126,6 @@ namespace Web.Views
         }
 
         public Task CloseModal() => CloseModalFunc();
-
-        private void ValidateForm(object? sender, ValidationRequestedEventArgs e)
-        {
-            _messageStore.Clear();
-
-            foreach(var helper in EventData.Helpers)
-            {
-                if(helper.RequiredGroups.Count == 0)
-                    _messageStore.Add(() => EventData.Date, "Mindestens eine Gruppe muss gesetzt sein.");
-            }
-        }
 
         public Role GetCategoryById(string id) => Roles.Find(category => category.Id == id);
 
