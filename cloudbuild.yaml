@@ -26,7 +26,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud storage rsync -r /workspace/out/* gs://einsatzplaner-wasm/
+        gcloud storage rsync /workspace/out gs://einsatzplaner-wasm/ -r --delete-unmatched-destination-objects
 
 options:
   logging: CLOUD_LOGGING_ONLY
