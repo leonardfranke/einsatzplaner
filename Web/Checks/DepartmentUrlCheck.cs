@@ -25,7 +25,7 @@ namespace Web.Checks
         {
             var department = await _departmentService.GetByUrl(departmentUrl);
             if (department == null)
-                _navigationManager.NavigateTo("/404");
+                _navigationManager.NavigateTo("./404");
             else
                 await _authManager.SetCurrentDepartment(department.Id);
 
