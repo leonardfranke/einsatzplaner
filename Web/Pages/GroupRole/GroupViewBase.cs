@@ -61,6 +61,7 @@ namespace Web.Pages
             var updateGroupFunc = UpdateGroup;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeGroup.DepartmentId), Department.Id },
                 { nameof(ChangeGroup.Group), group },
                 { nameof(ChangeGroup.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeGroup.DeleteGroupFunc), deleteGroupFunc },

@@ -97,6 +97,7 @@ namespace Web.Pages
             var updateRoleFunc = UpdateRole;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeRole.DepartmentId), Department.Id },
                 { nameof(ChangeRole.Role), role },
                 { nameof(ChangeRole.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeRole.DeleteRoleFunc), deleteRoleFunc },
