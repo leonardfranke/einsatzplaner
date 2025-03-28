@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Category:
-    Id : str
+    EventId : str
     HelperCategoryId : str
     RequiredAmount : int
     LockedMembers : list[str]
@@ -11,7 +11,8 @@ class Category:
 
 @dataclass
 class FilledCategory:
-    Id : str
+    EventId : str
+    HelperCategoryId : str
     SetMembers : list[str]
 
 def Optimize(categories : list[Category]) -> list[FilledCategory]:
@@ -26,11 +27,11 @@ def Optimize(categories : list[Category]) -> list[FilledCategory]:
             setMembers = category.LockedMembers.copy()
             setMembers.extend(category.AvailableMembers)
             
-            filledCategories.append(FilledCategory(category.Id, setMembers))
+            filledCategories.append(FilledCategory(category.EventId, category.HelperCategoryId, setMembers))
             for member in setMembers:
                 fixedMemberAssignments[(member, category.HelperCategoryId)] = fixedMemberAssignments.get((member, category.HelperCategoryId), 0) + 1
         elif category.RequiredAmount == 0:
-            filledCategories.append(FilledCategory(category.Id, []))
+            filledCategories.append(FilledCategory(category.EventId, category.HelperCategoryId, []))
         else:
             for member in category.LockedMembers:
                 fixedMemberAssignments[(member, category.HelperCategoryId)] = fixedMemberAssignments.get((member, category.HelperCategoryId), 0) + 1
@@ -51,7 +52,7 @@ def OptimizeOverfilled(categories : list[Category], fixedMemberAssignments : dic
     for category in categories:
         categoryVars : list[tuple[mathopt.Variable, str]] = []
         for availabledMember in category.AvailableMembers:
-            X_mc = model.add_binary_variable(name=f"{category.Id}: {availabledMember}")
+            X_mc = model.add_binary_variable(name=f"{category.EventId}: {availabledMember}")
             categoryVars.append((X_mc, availabledMember))
 
             groupedAssignments[(availabledMember, category.HelperCategoryId)].append(X_mc)
@@ -69,7 +70,7 @@ def OptimizeOverfilled(categories : list[Category], fixedMemberAssignments : dic
 
     filledCategories : list[FilledCategory] = []
     for category, variableTuples in categoryData:
-        filledCategory = FilledCategory(category.Id, category.LockedMembers.copy())
+        filledCategory = FilledCategory(category.EventId, category.LockedMembers.copy())
         for variableTuple in variableTuples:
             if result.variable_values(variableTuple[0]) == 1:
                 filledCategory.SetMembers.append(variableTuple[1])
