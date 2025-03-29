@@ -5,7 +5,7 @@ steps:
     args: ['restore']
 
   - name: 'bash'
-    id: 'set-backend-address'
+    id: 'set-base-path'
     entrypoint: 'sed'
     args:
     - '-i'
