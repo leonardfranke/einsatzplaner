@@ -1,79 +1,101 @@
 from ortools.math_opt.python import mathopt
 from dataclasses import dataclass
+from collections import defaultdict
+
 
 @dataclass
-class Category:
+class Helper:
+    Id: str
     EventId : str
-    HelperCategoryId : str
+    RoleId : str
     RequiredAmount : int
     LockedMembers : list[str]
     AvailableMembers : list[str]
 
 @dataclass
-class FilledCategory:
+class Event:
+    Helpers: list[Helper]
+
+@dataclass
+class FilledHelper:
+    Id: str
     EventId : str
-    HelperCategoryId : str
     SetMembers : list[str]
+    RemainingMembers : list[str]
 
-def Optimize(categories : list[Category]) -> list[FilledCategory]:
-
-    filledCategories : list[FilledCategory] = []
-    fixedMemberAssignments : dict[tuple[str, str], int] = {}
-    categoriesForOptimizer : list[Category] = []
+def Optimize(events : list[Event]) -> list[FilledHelper]:
     
-    for category in categories:
+    for event in events:
+        lockedMembers = set().union(*[category.LockedMembers for category in event.Helpers])
+        for category in event.Helpers:
+            category.AvailableMembers = set(category.AvailableMembers).difference(lockedMembers)
+
+    filledCategories : list[FilledHelper] = []
+    fixedMemberAssignments : dict[tuple[str, str], int] = {}
+    categoriesForOptimizer : list[Helper] = []
+    
+    for category in [category for event in events for category in event.Helpers]:
         openRequiredAmount = category.RequiredAmount - len(category.LockedMembers)
-        if len(category.AvailableMembers) <= openRequiredAmount:
-            setMembers = category.LockedMembers.copy()
-            setMembers.extend(category.AvailableMembers)
-            
-            filledCategories.append(FilledCategory(category.EventId, category.HelperCategoryId, setMembers))
-            for member in setMembers:
-                fixedMemberAssignments[(member, category.HelperCategoryId)] = fixedMemberAssignments.get((member, category.HelperCategoryId), 0) + 1
-        elif category.RequiredAmount == 0:
-            filledCategories.append(FilledCategory(category.EventId, category.HelperCategoryId, []))
+        if openRequiredAmount == 0 or len(category.AvailableMembers) == 0:
+            filledCategories.append(FilledHelper(category.Id, category.EventId, category.LockedMembers, category.AvailableMembers))
         else:
             for member in category.LockedMembers:
-                fixedMemberAssignments[(member, category.HelperCategoryId)] = fixedMemberAssignments.get((member, category.HelperCategoryId), 0) + 1
+                fixedMemberAssignments[(member, category.RoleId)] = fixedMemberAssignments.get((member, category.RoleId), 0) + 1
             categoriesForOptimizer.append(category)
 
-    filledCategories.extend(OptimizeOverfilled(categoriesForOptimizer, fixedMemberAssignments))
+    filledCategories.extend(OptimizeOverfilled(categoriesForOptimizer, fixedMemberAssignments, None))
     return filledCategories
 
-def OptimizeOverfilled(categories : list[Category], fixedMemberAssignments : dict[tuple[str, str], int]) -> list[FilledCategory]: 
+def OptimizeOverfilled(categories : list[Helper], fixedMemberAssignments : dict[tuple[str, str], int], max_V_er: float) -> list[FilledHelper]: 
     model = mathopt.Model()
-    groupedAssignments : dict[tuple[str, str], list[mathopt.Variable]] = {}
-    categoryData : list[tuple[Category, list[tuple[mathopt.Variable, str]]]] = []
-    
+
+    X_mer_dict = defaultdict[list[mathopt.Variable]](list)
+    X_me_dict = defaultdict[list[mathopt.Variable]](list)
+    X_mr_dict = defaultdict[list[mathopt.Variable]](list)
+    X_er_dict = defaultdict[list[mathopt.Variable]](list)
+    V_er_sum = mathopt.LinearSum([])
+
     for category in categories:
+        X_er = []
         for member in category.AvailableMembers:
-            groupedAssignments.setdefault((member, category.HelperCategoryId), [])
-    
-    for category in categories:
-        categoryVars : list[tuple[mathopt.Variable, str]] = []
-        for availabledMember in category.AvailableMembers:
-            X_mc = model.add_binary_variable(name=f"{category.EventId}: {availabledMember}")
-            categoryVars.append((X_mc, availabledMember))
-
-            groupedAssignments[(availabledMember, category.HelperCategoryId)].append(X_mc)
-        
+            X = model.add_binary_variable(name=f"{category.EventId}, {category.RoleId}: {member}")
+            X_er.append(X)
+            X_mer_dict[(member, category.EventId, category.RoleId)].append(X)
+            X_me_dict[(member, category.EventId)].append(X)
+            X_mr_dict[(member, category.RoleId)].append(X)
+            X_er_dict[(category.EventId, category.RoleId)].append((X, member))
         openRequiredAmount = category.RequiredAmount - len(category.LockedMembers)
-        model.add_linear_constraint(mathopt.LinearSum([var[0] for var in categoryVars]) == openRequiredAmount)
-        categoryData.append((category, categoryVars))
+        V_er = openRequiredAmount - mathopt.LinearSum(X_er)
+        V_er_sum += V_er
+        model.add_linear_constraint(V_er >= 0)
 
-    counts = [mathopt.LinearSum(variables) + fixedMemberAssignments.get(assignment, 0) for assignment, variables in groupedAssignments.items()]
-    squaredCounts = [count*count for count in counts]
+    for X_me in X_me_dict.values():
+        model.add_linear_constraint(mathopt.LinearSum(X_me) <= 1)
+
+
+    if max_V_er is None:
+        model.minimize_quadratic_objective(V_er_sum)
+        result = mathopt.solve(model, mathopt.SolverType.GSCIP)
+        max_V_er = result.objective_value()
+        return OptimizeOverfilled(categories, fixedMemberAssignments, max_V_er)
+        
+        
+    model.add_linear_constraint(V_er_sum == max_V_er)        
+    E_mr_list = [mathopt.LinearSum(variables) + fixedMemberAssignments.get(assignment, 0) for assignment, variables in X_mr_dict.items()]
+    squaredCounts = [E_mr*E_mr for E_mr in E_mr_list]
     squaredCountsSum = mathopt.QuadraticSum(squaredCounts)
-
     model.minimize_quadratic_objective(squaredCountsSum)
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
 
-    filledCategories : list[FilledCategory] = []
-    for category, variableTuples in categoryData:
-        filledCategory = FilledCategory(category.EventId, category.LockedMembers.copy())
-        for variableTuple in variableTuples:
-            if result.variable_values(variableTuple[0]) == 1:
-                filledCategory.SetMembers.append(variableTuple[1])
+    filledCategories : list[FilledHelper] = []
+    for category in categories:
+        filledCategory = FilledHelper(category.Id, category.EventId, category.LockedMembers.copy(), [])
+        X_er = X_er_dict[(category.EventId, category.RoleId)]
+        for (X, member) in X_er:
+            if result.variable_values(X) == 1:
+                filledCategory.SetMembers.append(member)
+            else:
+                filledCategory.RemainingMembers.append(member)
         filledCategories.append(filledCategory)
 
     return filledCategories
