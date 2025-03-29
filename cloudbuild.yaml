@@ -9,11 +9,16 @@ steps:
     entrypoint: 'sed'
     args:
     - '-i'
-    - '-e'
-    - 's|{BACKEND_ADDRESS}|${_BACKEND_ADDRESS}|'
-    - '-e'
     - 's|<base href=".*"|<base href="${_BASE_PATH}"|'
     - 'Web/wwwroot/index.html'
+
+  - name: 'bash'
+    id: 'set-backend-address'
+    entrypoint: 'sed'
+    args:
+    - '-i'
+    - 's|"BACKEND_ADDRESS": ".*"|"BACKEND_ADDRESS": "${_BACKEND_ADDRESS}"'
+    - 'Web/wwwroot/appsettings.json'
   
   - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
     id: 'publish'
