@@ -17,7 +17,7 @@ steps:
     entrypoint: 'sed'
     args:
     - '-i'
-    - 's|"BACKEND_ADDRESS": ".*"|"BACKEND_ADDRESS": "${_BACKEND_ADDRESS}"'
+    - 's|"BACKEND_ADDRESS": ".*"|"BACKEND_ADDRESS": "${_BACKEND_ADDRESS}"|'
     - 'Web/wwwroot/appsettings.json'
   
   - name: 'mcr.microsoft.com/dotnet/sdk:8.0'
