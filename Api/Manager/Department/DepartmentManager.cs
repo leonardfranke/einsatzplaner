@@ -1,7 +1,6 @@
 ﻿using Api.Converter;
 using Api.Models;
 using DTO;
-using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using Google.Cloud.Firestore;
 
