@@ -106,6 +106,7 @@ namespace Web.Pages
             var saveMemberFunc = SaveMember;
             var parameters = new Dictionary<string, object>
             {
+                { nameof(ChangeMember.DepartmentId), _departmentId },
                 { nameof(ChangeMember.Member), member },
                 { nameof(ChangeMember.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeMember.DeleteMemberFunc), deleteMemberFunc },

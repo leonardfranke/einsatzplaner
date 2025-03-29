@@ -10,7 +10,7 @@ namespace Web.Views
     public class ChangeMemberBase : ComponentBase
     {
         [Parameter]
-        public string DepartmentUrl { get; set; }
+        public string DepartmentId { get; set; }
 
         [Parameter]
         public Member Member { get; set; }
@@ -65,10 +65,8 @@ namespace Web.Views
 
         protected override async Task OnInitializedAsync()
         {
-            if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Department department)
-                return;
-            Roles = await _roleService.GetAll(department.Id);
-            Groups = await _groupService.GetAll(department.Id);
+            Roles = await _roleService.GetAll(DepartmentId);
+            Groups = await _groupService.GetAll(DepartmentId);
         }
 
         private void ValidateForm(object? sender, ValidationRequestedEventArgs e)

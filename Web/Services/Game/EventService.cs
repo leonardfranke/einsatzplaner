@@ -78,7 +78,7 @@ namespace Web.Services
 
         public async Task<Models.Event?> GetEvent(string departmentId, string gameId)
         {
-            var response = await _httpClient.GetAsync(new Uri($"/api/Event/{gameId}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/Event/{departmentId}/{gameId}", UriKind.Relative));
             try
             {
                 var gameDTO = await response.Content.ReadFromJsonAsync<EventDTO>();
