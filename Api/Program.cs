@@ -22,22 +22,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-var env = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
-var configFile = $"appsettings.{env}.json";
-var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
-builder.Configuration.AddConfiguration(config);
-
-var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = credentials,
-    ProjectId = "1077768805408",
-});
-if(FirebaseApp.DefaultInstance == null)
-{
-    throw new Exception("FirebaseApp.DefaultInstance is null");
-}
-
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
@@ -62,6 +46,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+var configFile = $"appsettings.{app.Environment.EnvironmentName}.json";
+var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
+builder.Configuration.AddConfiguration(config);
+
+var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = credentials,
+    ProjectId = "1077768805408",
+});
 
 app.UseHttpsRedirection();
 
