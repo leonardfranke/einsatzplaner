@@ -1,0 +1,12 @@
+steps:    
+  - name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:489.0.0-stable'
+    id: 'upload'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud run deploy optimizer --source . --function optimize --base-image python312
+        gcloud storage rsync /workspace/out gs://einsatzplaner-wasm/ -r --delete-unmatched-destination-objects
+
+options:
+  logging: CLOUD_LOGGING_ONLY
