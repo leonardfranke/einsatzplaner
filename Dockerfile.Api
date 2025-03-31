@@ -16,6 +16,6 @@ RUN dotnet publish Api/Api.csproj -c Release -o /out --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
-WORKDIR /app
+WORKDIR /
 COPY --from=build /out ./
 ENTRYPOINT ["dotnet", "Api.dll"]
