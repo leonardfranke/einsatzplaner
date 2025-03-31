@@ -13,10 +13,9 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName);
 });
 
-var _myPolicy = "Policy";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(_myPolicy, policy =>
+    options.AddDefaultPolicy(policy =>
     {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
@@ -37,8 +36,7 @@ builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
-
-app.UseCors(_myPolicy);
+app.UseCors();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
