@@ -1,5 +1,5 @@
 steps:    
-  - name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:489.0.0-stable'
+  - name: 'gcr.io/google.com/cloudsdktool/google-cloud-cli:latest'
     id: 'upload'
     entrypoint: 'bash'
     args:
