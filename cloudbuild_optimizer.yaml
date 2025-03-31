@@ -5,7 +5,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud run deploy optimizer --source . --function optimize --base-image python312
+        gcloud functions deploy optimizer --source . --entry-point optimize --runtime python312 --trigger-http
 
 options:
   logging: CLOUD_LOGGING_ONLY
