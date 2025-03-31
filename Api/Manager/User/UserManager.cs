@@ -12,7 +12,11 @@ namespace Api.Manager
         public UserManager(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient();
-            _apiKey = Environment.GetEnvironmentVariable("FIREBASE_API_KEY", EnvironmentVariableTarget.Machine);        
+            _apiKey = Environment.GetEnvironmentVariable("FIREBASE_API_KEY", EnvironmentVariableTarget.Machine); 
+            if(string.IsNullOrEmpty(_apiKey))
+            {
+                throw new Exception("FIREBASE_API_KEY is not set.");
+            }
         }
 
         public async Task<UserDTO> GetUserData(string uid)
