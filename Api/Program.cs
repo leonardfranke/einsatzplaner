@@ -23,7 +23,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
-builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
 builder.Services.AddSingleton<IDepartmentManager, DepartmentManager>();
 builder.Services.AddSingleton<IGroupManager, GroupManager>();
