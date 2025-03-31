@@ -27,7 +27,16 @@ var configFile = $"appsettings.{env}.json";
 var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
 builder.Configuration.AddConfiguration(config);
 
-var credentialsTask = GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
+var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = credentials,
+    ProjectId = "1077768805408",
+});
+if(FirebaseApp.DefaultInstance == null)
+{
+    throw new Exception("FirebaseApp.DefaultInstance is null");
+}
 
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
@@ -59,11 +68,5 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = await credentialsTask,
-    ProjectId = "1077768805408",
-});
 
 app.Run();
