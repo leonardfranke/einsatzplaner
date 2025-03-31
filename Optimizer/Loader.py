@@ -1,13 +1,15 @@
 import firebase_admin
+import functions_framework
 from firebase_admin import firestore_async
-from optimizer import Event, Helper, FilledHelper, Optimize
+import flask
+from optimizer import Event, Helper, Optimize
 import asyncio
 
 app = firebase_admin.initialize_app()
 db = firestore_async.client()
 
-async def fetch_events():
-	eventsRef = db.collection("Department").document("v87avboSu7Dc74ZJpJFk").collection("Event")
+async def fetch_events(departmentId : str):
+	eventsRef = db.collection("Department").document(departmentId).collection("Event")
 
 	events = []
 	async for eventRef in eventsRef.list_documents():
@@ -33,4 +35,9 @@ async def fetch_events():
 			"QueuedMembers": filledHelper.RemainingMembers,
 		})
 
-asyncio.run(fetch_events())
+@functions_framework.http
+def http_wrapper(request : flask.Request):
+	departmentId = request.args.get("departmentId")
+	if not departmentId:
+		return "DepartmentId is required", 400
+	asyncio.run(fetch_events(departmentId))
