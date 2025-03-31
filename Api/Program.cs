@@ -3,15 +3,6 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.CustomSchemaIds(type => type.FullName);
-});
 
 builder.Services.AddCors(options =>
 {
@@ -19,6 +10,14 @@ builder.Services.AddCors(options =>
     {
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
+});
+
+builder.Services.AddControllers();
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.CustomSchemaIds(type => type.FullName);
 });
 
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
@@ -35,8 +34,9 @@ builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
-app.UseCors();
+app.UseHttpsRedirection();
 app.UseRouting();
+app.UseCors();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -56,7 +56,6 @@ FirebaseApp.Create(new AppOptions()
     ProjectId = "1077768805408",
 });
 
-app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
