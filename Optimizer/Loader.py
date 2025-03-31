@@ -8,7 +8,7 @@ import asyncio
 app = firebase_admin.initialize_app()
 db = firestore_async.client()
 
-async def fetch_events(departmentId : str):
+async def optimizeDepartment(departmentId : str):
 	eventsRef = db.collection("Department").document(departmentId).collection("Event")
 
 	events = []
@@ -36,8 +36,8 @@ async def fetch_events(departmentId : str):
 		})
 
 @functions_framework.http
-def http_wrapper(request : flask.Request):
+def optimize(request : flask.Request):
 	departmentId = request.args.get("departmentId")
 	if not departmentId:
 		return "DepartmentId is required", 400
-	asyncio.run(fetch_events(departmentId))
+	asyncio.run(optimizeDepartment(departmentId))
