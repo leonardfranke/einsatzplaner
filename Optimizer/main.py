@@ -36,9 +36,9 @@ async def optimizeDepartment(departmentId : str):
 		})
 
 @functions_framework.http
-def optimize(request : flask.Request):
+async def optimize(request : flask.Request):
 	departmentId = request.args.get("departmentId")
 	if not departmentId:
 		return "DepartmentId is required", 400
 	
-	return asyncio.run(optimizeDepartment(departmentId))
+	return await optimizeDepartment(departmentId)
