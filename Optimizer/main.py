@@ -40,5 +40,8 @@ def optimize(request : flask.Request):
 	departmentId = request.args.get("departmentId")
 	if not departmentId:
 		return "DepartmentId is required", 400
-	asyncio.create_task(optimizeDepartment(departmentId))
+	
+	loop = asyncio.get_event_loop()
+	loop.create_task(optimizeDepartment(departmentId)) 
+
 	return "Optimization started", 200
