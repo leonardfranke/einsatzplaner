@@ -4,17 +4,19 @@ from firebase_admin import firestore
 import flask
 from flask import jsonify
 from optimizer import Event, Helper, Optimize
-import asyncio
 
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
 db = firestore.client()
 
 def optimizeDepartment(departmentId : str):
-	eventsRef = db.collection("Department").document(departmentId).collection("Event")
+	eventRefs = db.collection("Department").document(departmentId).collection("Event").list_documents()
+
+	if len(eventRefs) == 0:
+		return "No events found", 404
 
 	events = []
-	for eventRef in eventsRef.list_documents():
+	for eventRef in eventRefs:
 		helpers = eventRef.collection("Helper").get()
 		event = Event([])
 		for helperRef in helpers:
@@ -43,5 +45,7 @@ def optimize(request : flask.Request):
 	if not departmentId:
 		return "DepartmentId is required", 400
 	
-	optimizeDepartment(departmentId)
+	result = optimizeDepartment(departmentId)
+	if result:
+		return result
 	return "Optimization completed", 200
