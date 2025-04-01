@@ -2,6 +2,7 @@ import firebase_admin
 import functions_framework
 from firebase_admin import firestore_async
 import flask
+from flask import jsonify
 from optimizer import Event, Helper, Optimize
 import asyncio
 
@@ -10,6 +11,7 @@ if not firebase_admin._apps:
 db = firestore_async.client()
 
 async def optimizeDepartment(departmentId : str):
+	return {"status": "success", "optimized_helpers": len(filledHelpers)}
 	eventsRef = db.collection("Department").document(departmentId).collection("Event")
 
 	events = []
@@ -42,5 +44,5 @@ async def optimize(request : flask.Request):
 	if not departmentId:
 		return "DepartmentId is required", 400
 	
-	await optimizeDepartment(departmentId)
-	return "Optimization completed", 200
+	result = await optimizeDepartment(departmentId)
+	return jsonify(result), 200
