@@ -5,7 +5,8 @@ import flask
 from optimizer import Event, Helper, Optimize
 import asyncio
 
-app = firebase_admin.initialize_app()
+if not firebase_admin._apps:
+    firebase_admin.initialize_app()
 db = firestore_async.client()
 
 async def optimizeDepartment(departmentId : str):
@@ -19,7 +20,7 @@ async def optimizeDepartment(departmentId : str):
 			helperSnapshot = helperRef.to_dict()
 			if helperRef.read_time < helperSnapshot["LockingTime"]:
 				lockedMembers = []
-				availableMembers = helperSnapshot["SetMembers"].append(helperSnapshot["QueuedMembers"])
+				availableMembers = helperSnapshot["SetMembers"] + helperSnapshot["QueuedMembers"]
 			else:
 				lockedMembers = helperSnapshot["SetMembers"]
 				availableMembers = helperSnapshot["QueuedMembers"]
@@ -41,4 +42,5 @@ async def optimize(request : flask.Request):
 	if not departmentId:
 		return "DepartmentId is required", 400
 	
-	return await optimizeDepartment(departmentId)
+	await optimizeDepartment(departmentId)
+	return "Optimization completed", 200
