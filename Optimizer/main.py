@@ -4,11 +4,15 @@ from firebase_admin import firestore_async
 import flask
 from optimizer import Event, Helper, Optimize
 import asyncio
+import sys
 
 app = firebase_admin.initialize_app()
 db = firestore_async.client()
 
 async def optimizeDepartment(departmentId : str):
+	if not departmentId:
+		return
+	
 	eventsRef = db.collection("Department").document(departmentId).collection("Event")
 
 	events = []
@@ -40,4 +44,11 @@ def optimize(request : flask.Request):
 	departmentId = request.args.get("departmentId")
 	if not departmentId:
 		return "DepartmentId is required", 400
+	main(departmentId)
+
+def main(departmentId : str):
 	asyncio.run(optimizeDepartment(departmentId))
+	
+if __name__ == "__main__":
+	departmentId = sys.argv[1] if len(sys.argv) > 1 else None
+	main(departmentId)
