@@ -5,7 +5,7 @@ steps:
     args:
       - '-c'
       - |
-        gcloud beta run deploy optimizer --source Optimizer --function optimize --base-image python312
+        gcloud beta run deploy optimizer --source Optimizer --function optimize --base-image python312 --region europe-west1
 
 options:
   logging: CLOUD_LOGGING_ONLY
