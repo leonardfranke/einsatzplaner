@@ -61,27 +61,15 @@ namespace Api.Manager
                 return;
             var helper = helperSnapshot.ConvertTo<Helper>();
 
-            if (isHelping && !helper.SetMembers.Union(helper.QueuedMembers).Contains(memberId))
+            if (isHelping)
             {
-                if(helper.SetMembers.Count < helper.RequiredAmount)
-                    await helperReference.UpdateAsync(nameof(Helper.SetMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
-                else
+                if (!helper.SetMembers.Union(helper.QueuedMembers).Contains(memberId))
                     await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
             }
             else
             {
                 if(helper.QueuedMembers.Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
-                else if(helper.SetMembers.Contains(memberId) && helperSnapshot.ReadTime.ToDateTime() < helper.LockingTime.ToUniversalTime())
-                {
-                    await helperReference.UpdateAsync(nameof(Helper.SetMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
-                    if(helper.QueuedMembers.Count == 1)
-                    {
-                        var fillingMember = helper.QueuedMembers.FirstOrDefault();
-                        await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayRemove(fillingMember), Precondition.MustExist);
-                        await helperReference.UpdateAsync(nameof(Helper.SetMembers), FieldValue.ArrayUnion(fillingMember), Precondition.MustExist);
-                    }
-                }
+                    await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
             }
         }
     }
