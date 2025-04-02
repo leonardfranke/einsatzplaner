@@ -2,7 +2,6 @@ import firebase_admin
 import functions_framework
 from firebase_admin import firestore
 import flask
-from flask import jsonify
 from optimizer import Event, Helper, Optimize
 
 if not firebase_admin._apps:
@@ -10,11 +9,12 @@ if not firebase_admin._apps:
 db = firestore.client()
 
 def optimizeDepartment(departmentId : str):
-	eventRefs = db.collection("Department").document(departmentId).collection("Event").list_documents()
+	eventsRef = db.collection("Department").document(departmentId).collection("Event")
+	eventDocuments = eventsRef.list_documents()
 
 	no_events = True
 	events = []
-	for eventRef in eventRefs:
+	for eventRef in eventDocuments:
 		no_events = False
 		helpers = eventRef.collection("Helper").get()
 		event = Event([])
@@ -36,7 +36,7 @@ def optimizeDepartment(departmentId : str):
 	filledHelpers = Optimize(events)
 	
 	for filledHelper in filledHelpers:
-		eventRef.collection("Helper").document(filledHelper.Id).update({
+		eventsRef.document(filledHelper.EventId).collection("Helper").document(filledHelper.Id).update({
 			"SetMembers": filledHelper.SetMembers,
 			"QueuedMembers": filledHelper.RemainingMembers,
 		})
