@@ -8,11 +8,11 @@ namespace Web.Views
         public Func<Task> CloseModalFunc { get; set; }
 
         [Parameter]
-        public Action ConfirmModalAction { private get; set; }
+        public Func<Task> ConfirmModalAction { private get; set; }
 
         protected async Task ConfirmModal()
         {
-            ConfirmModalAction();
+            await ConfirmModalAction();
             await CloseModalFunc();
         }
     }

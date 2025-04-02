@@ -23,11 +23,11 @@ namespace Web.Services
             return HelperConverter.Convert(helperDTOs);
         }
 
-        public async Task<bool> SetIsHelping(string departmentId, string eventId, string helperCategoryId, string memberId, bool isHelping)
+        public async Task<bool> SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable)
         {
-            var query = QueryBuilder.Build(("isHelpingString", isHelping.ToString()));
+            var query = QueryBuilder.Build(("isAvailableString", isAvailable.ToString()));
             var response = await _httpClient.PostAsync(
-                new Uri($"/api/Helper/SetIsHelping/{departmentId}/{eventId}/{helperCategoryId}/{memberId}{query}", UriKind.Relative), null);
+                new Uri($"/api/Helper/SetIsHelping/{departmentId}/{eventId}/{helperId}/{memberId}{query}", UriKind.Relative), null);
             var ret = await response.Content.ReadAsStringAsync();
             var parsed = bool.TryParse(ret, out bool result);
             if (parsed)

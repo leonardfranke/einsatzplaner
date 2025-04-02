@@ -12,11 +12,12 @@ namespace Api.Converter
                 return new HelperDTO
                 {
                     Id = helper.Id,
-                    HelperCategoryId = helper.HelperCategoryId,
-                    SetMembers = helper.SetMembers,
-                    QueuedMembers = helper.QueuedMembers,
+                    RoleId = helper.HelperCategoryId,
+                    LockedMembers = helper.LockedMembers,
+                    PreselectedMembers = helper.PreselectedMembers,
+                    AvailableMembers = helper.AvailableMembers,
                     RequiredAmount = helper.RequiredAmount,
-                    GameId = gameId,
+                    EventId = gameId,
                     RequiredGroups = helper.RequiredGroups,
                     LockingTime = helper.LockingTime
                 };

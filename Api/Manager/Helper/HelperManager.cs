@@ -49,7 +49,7 @@ namespace Api.Manager
             return HelperConverter.Convert(helpers, eventID);
         }
 
-        public async Task SetIsHelping(string departmentId, string eventId, string helperId, string memberId, bool isHelping)
+        public async Task SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable)
         {
             var helperReference = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
@@ -61,15 +61,17 @@ namespace Api.Manager
                 return;
             var helper = helperSnapshot.ConvertTo<Helper>();
 
-            if (isHelping)
+            if (isAvailable)
             {
-                if (!helper.SetMembers.Union(helper.QueuedMembers).Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
+                if (!helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(memberId))
+                    await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
             }
             else
             {
-                if(helper.QueuedMembers.Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Helper.QueuedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
+                if(helper.PreselectedMembers.Contains(memberId))
+                    await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
+                if (helper.AvailableMembers.Contains(memberId))
+                    await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
             }
         }
     }

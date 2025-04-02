@@ -14,9 +14,11 @@ namespace Api.Models
         [FirestoreProperty]
         public List<string> RequiredGroups { get; set; }
         [FirestoreProperty]
-        public List<string> SetMembers { get; set; }
+        public List<string> LockedMembers { get; set; }
         [FirestoreProperty]
-        public List<string> QueuedMembers { get; set; }
+        public List<string> PreselectedMembers { get; set; }
+        [FirestoreProperty]
+        public List<string> AvailableMembers { get; set; }
 
     }
 }

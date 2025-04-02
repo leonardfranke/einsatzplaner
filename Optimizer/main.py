@@ -51,3 +51,6 @@ def optimize(request : flask.Request):
 	if result:
 		return result
 	return "Optimization completed", 200
+
+if __name__ == "__main__":
+	optimizeDepartment("v87avboSu7Dc74ZJpJFk")

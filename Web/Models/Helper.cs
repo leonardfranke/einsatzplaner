@@ -12,9 +12,11 @@
 
         public int RequiredAmount { get; set; }
 
-        public List<string> SetMemberIds { get; set; }
+        public List<string> LockedMembers { get; set; }
 
-        public List<string> QueuedMemberIds { get; set; }
+        public List<string> PreselectedMembers { get; set; }
+
+        public List<string> AvailableMembers { get; set; }
 
         public List<string> RequiredGroups { get; set; }
     }

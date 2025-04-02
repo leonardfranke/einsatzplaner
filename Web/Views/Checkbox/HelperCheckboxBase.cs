@@ -1,6 +1,5 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using Web.Manager;
 using Web.Services;
 
@@ -20,20 +19,11 @@ namespace Web.Views
         [Parameter]
         public Models.Member Member { private get; set; }
 
-        private bool _isHelping;
-
-        public bool IsHelping { 
-            get => _isHelping; 
-            set
-            {
-                _isHelping = value;
-                SetIsHelping(value);
-            }
-        }
+        public bool IsPreselectedOrAvailable { get => Helper.PreselectedMembers.Union(Helper.AvailableMembers).Contains(currentUserId); set { } }
 
         public bool IsMemberPermitted => Member.GroupIds.Intersect(Helper?.RequiredGroups ?? new()).Any() && Member.RoleIds.Contains(Helper?.RoleId);
 
-        public bool IsPlayerLocked => (Helper?.SetMemberIds?.Contains(currentUserId) == true) && Helper?.LockingTime < DateTime.Now;
+        public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
 
         [Inject]
         private IAuthManager _authManager { get; set; }
@@ -48,32 +38,42 @@ namespace Web.Views
             currentUserId = (await _authManager.GetLocalUser()).Id;
         }
 
-        protected override async Task OnParametersSetAsync()
-        {            
-            var queuedMembers = Helper.QueuedMemberIds ?? new();
-            var setMembers = Helper.SetMemberIds ?? new();
-            _isHelping = queuedMembers.Union(setMembers).Contains(currentUserId);
-        } 
-
-        protected Task<bool> SetIsHelping(bool value)
+        protected Task<bool> SetIsAvailable(bool setHelping)
         {
-            return _helperService.SetIsHelping(Event.DepartmentId, Event.Id, Helper.Id, currentUserId, value);
+            if(setHelping)
+            {
+                Helper.AvailableMembers.Add(currentUserId);
+            }
+            else
+            {
+                Helper.PreselectedMembers.Remove(currentUserId);
+                Helper.AvailableMembers.Remove(currentUserId);
+            }
+            StateHasChanged();
+            return _helperService.SetIsAvailable(Event.DepartmentId, Event.Id, Helper.Id, currentUserId, setHelping);
         }
 
-        public async Task PromptLockingHelper()
+
+        public async Task ChangeHelpingEvent()
         {
-            var closeModalFunc = Modal.HideAsync;
-            var confirmModalAction = () =>
+            if(Helper.LockingTime < DateTime.Now && !IsPreselectedOrAvailable)
             {
-                Helper?.SetMemberIds.Add(currentUserId);
-                IsHelping = true;
-            };
-            var parameters = new Dictionary<string, object>
+                var closeModalFunc = Modal.HideAsync;
+                var confirmModalAction = async () =>
+                {
+                    await SetIsAvailable(true);
+                };
+                var parameters = new Dictionary<string, object>
+                {
+                    { nameof(LockingHelperPrompt.LockingHelperPrompt.CloseModalFunc), closeModalFunc },
+                    { nameof(LockingHelperPrompt.LockingHelperPrompt.ConfirmModalAction), confirmModalAction },
+                };
+                await Modal.ShowAsync<LockingHelperPrompt.LockingHelperPrompt>(title: "Rolle bestätigen", parameters: parameters);
+            }
+            else
             {
-                { nameof(LockingHelperPrompt.LockingHelperPrompt.CloseModalFunc), closeModalFunc },
-                { nameof(LockingHelperPrompt.LockingHelperPrompt.ConfirmModalAction), confirmModalAction },
-            };
-            await Modal.ShowAsync<LockingHelperPrompt.LockingHelperPrompt>(title: "Rolle bestätigen", parameters: parameters);
+                await SetIsAvailable(!IsPreselectedOrAvailable);
+            }            
         }
     }
 }

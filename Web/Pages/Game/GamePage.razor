@@ -23,12 +23,12 @@
         <tr>
             <th scope="col">Kategorie</th>
             <th scope="col">Bedarf</th>
-            <AuthorizeView>
-
+            <AuthorizeView Roles="IsAdmin">
+                <th scope="col">Gesperrte Helfer</th>
+                <th scope="col">Vorausgewählte Helfer</th>
+                <th scope="col">Verfügbare Helfer</th>
             </AuthorizeView>
-            <th scope="col">Warteschlange</th>
-            <th scope="col">Gesetzter Spieler</th>
-            <th scope="col">Gesetzte Gruppen</th>
+            <th scope="col">Verfügbare Gruppen</th>
             <th scope="col">Sperrzeitpunkt</th>
         </tr>
     </thead>
@@ -39,8 +39,11 @@
             <tr>
                 <th>@category.Name</th>
                 <th>@help.RequiredAmount</th>
-                <th>@GetDisplayMemberNames(help.QueuedMemberIds)</th>
-                <th>@GetDisplayMemberNames(help.SetMemberIds)</th>
+                <AuthorizeView Roles="IsAdmin">
+                    <th>@GetDisplayMemberNames(help.LockedMembers)</th>
+                    <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
+                    <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
+                </AuthorizeView>
                 <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
                 <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
             </tr>            

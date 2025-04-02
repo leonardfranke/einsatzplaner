@@ -26,12 +26,12 @@ namespace Api.Controllers
         }
 
         [HttpPost("SetIsHelping/{departmentId}/{eventId}/{helperId}/{memberId}")]
-        public async Task SetIsHelping([FromRoute] string departmentId, [FromRoute] string eventId, [FromRoute] string helperId, [FromRoute] string memberId, [FromQuery] string isHelpingString)
+        public async Task SetIsHelping([FromRoute] string departmentId, [FromRoute] string eventId, [FromRoute] string helperId, [FromRoute] string memberId, [FromQuery] string isAvailableString)
         {
-            var parsed = bool.TryParse(isHelpingString, out bool isHelping);
+            var parsed = bool.TryParse(isAvailableString, out bool isAvailable);
             if (!parsed)
                 return;
-            await _helperManager.SetIsHelping(departmentId, eventId, helperId, memberId, isHelping);
+            await _helperManager.SetIsAvailable(departmentId, eventId, helperId, memberId, isAvailable);
         }
 
 

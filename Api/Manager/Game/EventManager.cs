@@ -72,7 +72,7 @@ namespace Api.Manager
             {
                 foreach (var updateHelper in updateHelpers)
                 {
-                    var currentHelper = currentHelpers.Find(helper => helper.HelperCategoryId == updateHelper.HelperCategoryId);
+                    var currentHelper = currentHelpers.Find(helper => helper.RoleId == updateHelper.HelperCategoryId);
                     currentHelpers.Remove(currentHelper);
 
                     var helperCategoryId = updateHelper.HelperCategoryId;
@@ -87,8 +87,9 @@ namespace Api.Manager
                             RequiredAmount = requiredAmount,
                             LockingTime = lockingTimeUTC,
                             RequiredGroups = requiredGroups,
-                            QueuedMembers = new(),
-                            SetMembers = new()
+                            LockedMembers = new(),
+                            PreselectedMembers = new(),
+                            AvailableMembers = new()
                         };
                         var addTask = helpersRef.AddAsync(newHelper);
                         tasks.Add(addTask);

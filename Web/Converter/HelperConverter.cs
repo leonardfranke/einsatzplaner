@@ -11,10 +11,11 @@ namespace Web.Converter
                 return new Models.Helper
                 {
                     Id = helper.Id,
-                    RoleId = helper.HelperCategoryId,
-                    SetMemberIds = helper.SetMembers,
-                    QueuedMemberIds = helper.QueuedMembers ?? new(),
-                    EventId = helper.GameId,
+                    RoleId = helper.RoleId,
+                    LockedMembers = helper.LockedMembers,
+                    PreselectedMembers = helper.PreselectedMembers,
+                    AvailableMembers = helper.AvailableMembers,
+                    EventId = helper.EventId,
                     RequiredGroups = helper.RequiredGroups,
                     LockingTime = helper.LockingTime,
                     RequiredAmount = helper.RequiredAmount

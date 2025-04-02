@@ -8,10 +8,7 @@
     <BlazorBootstrap.Modal @ref="Modal" />
 
     <main>        
-        <div class="top-row px-4">  
-            <AuthorizeView Roles="InDepartment" Context=differentContext>
-                <button class="btn btn-primary mx-2" @onclick="NavigateToDepartment">Abteilung</button>
-            </AuthorizeView>
+        <div class="top-row px-4">
             <AuthorizeView>
                 <Authorized>                    
                     <button class="btn btn-primary" @onclick="Logout">Logout</button>

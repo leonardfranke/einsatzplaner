@@ -6,6 +6,6 @@ namespace Api.Manager
     {
         public Task<List<HelperDTO>> GetAll(string departmentId);
         public Task<List<HelperDTO>> GetAll(string departmentId, string gameId);
-        public Task SetIsHelping(string departmentId, string gameId, string helperCategoryId, string memberId, bool isHelping);
+        public Task SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable);
     }
 }
