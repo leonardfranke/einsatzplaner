@@ -49,7 +49,7 @@ var configFile = $"appsettings.{app.Environment.EnvironmentName}.json";
 var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
 builder.Configuration.AddConfiguration(config);
 
-var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["FIREBASE_JSON_FILE"], CancellationToken.None);
+var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
 FirebaseApp.Create(new AppOptions()
 {
     Credential = credentials,
