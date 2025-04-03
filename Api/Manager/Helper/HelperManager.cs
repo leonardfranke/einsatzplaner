@@ -64,15 +64,26 @@ namespace Api.Manager
             if (isAvailable)
             {
                 if (!helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(memberId))
+                {
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
+                    await TriggerRecalculation(departmentId);
+                }
             }
             else
             {
                 if(helper.PreselectedMembers.Contains(memberId))
+                {
                     await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
+                    await TriggerRecalculation(departmentId);
+                }
                 if (helper.AvailableMembers.Contains(memberId))
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
             }
+        }
+
+        private async Task TriggerRecalculation(string departmentId)
+        {
+
         }
     }
 }
