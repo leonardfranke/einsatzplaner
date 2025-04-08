@@ -3,6 +3,9 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 
 var builder = WebApplication.CreateBuilder(args);
+var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
+var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
+builder.Configuration.AddConfiguration(config);
 
 builder.Services.AddCors(options =>
 {
@@ -32,6 +35,8 @@ builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
+var optimizerEndpoint = builder.Configuration["OPTIMIZER_END_POINT"] ?? throw new ArgumentNullException("OPTIMIZER_END_POINT", "Argument is missing in configuration file");
+builder.Services.AddSingleton<ITaskManager>(new TaskManager(optimizerEndpoint));
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -44,10 +49,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-var configFile = $"appsettings.{app.Environment.EnvironmentName}.json";
-var config = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile(configFile).Build();
-builder.Configuration.AddConfiguration(config);
 
 var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
 FirebaseApp.Create(new AppOptions()

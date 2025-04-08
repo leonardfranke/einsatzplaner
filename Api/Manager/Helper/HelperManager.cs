@@ -8,12 +8,12 @@ namespace Api.Manager
     public class HelperManager : IHelperManager
     {
         private FirestoreDb _firestoreDb;
-        private IDepartmentManager _departmentManager;
+        private ITaskManager _taskManager;
 
-        public HelperManager(IFirestoreManager firestoreManager, IDepartmentManager departmentManager)
+        public HelperManager(IFirestoreManager firestoreManager, ITaskManager taskManager)
         {
             _firestoreDb = firestoreManager.Database;
-            _departmentManager = departmentManager;
+            _taskManager = taskManager;
         }
 
         public async Task<List<HelperDTO>> GetAll(string departmentId)
@@ -66,7 +66,7 @@ namespace Api.Manager
                 if (!helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(memberId))
                 {
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
-                    await TriggerRecalculation(departmentId);
+                    await _taskManager.TriggerRecalculation(departmentId);
                 }
             }
             else
@@ -74,16 +74,11 @@ namespace Api.Manager
                 if(helper.PreselectedMembers.Contains(memberId))
                 {
                     await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
-                    await TriggerRecalculation(departmentId);
+                    await _taskManager.TriggerRecalculation(departmentId);
                 }
                 if (helper.AvailableMembers.Contains(memberId))
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
             }
-        }
-
-        private async Task TriggerRecalculation(string departmentId)
-        {
-
         }
     }
 }
