@@ -66,9 +66,19 @@ class Tests(unittest.TestCase):
             Helper("2", "A", "Y", 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1"]),
         ])]
         filledCategories = Optimize(categories)
-        print(filledCategories)
         self.assertEqual(len(filledCategories[0].PreselectedMembers) + len(filledCategories[0].AvailableMembers) + len(filledCategories[1].PreselectedMembers), 0)
         self.assertSetEqual(set(filledCategories[1].AvailableMembers), set("1"))
+
+    def test_AvoidChangesForEqualOptimizations(self):
+        categories : list[Event] = [Event(Helpers=[
+            Helper("1", "A", "Z", 1, LockedMembers=[], PreselectedMembers=["1"], AvailableMembers=["2"]),
+            Helper("2", "B", "Y", 1, LockedMembers=[], PreselectedMembers=["2"], AvailableMembers=["1"]),
+        ])]
+        filledCategories = Optimize(categories)
+        firstPreselectedMembers = filledCategories[0].PreselectedMembers
+        secondPreselectedMembers = filledCategories[1].PreselectedMembers
+        self.assertSetEqual(set(firstPreselectedMembers), set("1"))
+        self.assertSetEqual(set(secondPreselectedMembers), set("2"))
 
 
 if __name__ == '__main__':
