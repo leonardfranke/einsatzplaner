@@ -1,6 +1,7 @@
 using Api.Manager;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Tasks.V2;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -23,6 +24,15 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName);
 });
 
+var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
+FirebaseApp.Create(new AppOptions()
+{
+    Credential = credentials,
+    ProjectId = "1077768805408",
+});
+var gTasksClientBuilder = new CloudTasksClientBuilder() { GoogleCredential = credentials };
+
+builder.Services.AddSingleton(sp => gTasksClientBuilder.Build());
 builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
@@ -36,7 +46,7 @@ builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
 var optimizerEndpoint = builder.Configuration["OPTIMIZER_END_POINT"] ?? throw new ArgumentNullException("OPTIMIZER_END_POINT", "Argument is missing in configuration file");
-builder.Services.AddSingleton<ITaskManager>(new TaskManager(optimizerEndpoint));
+builder.Services.AddSingleton<ITaskManager>(sp => new TaskManager(sp.GetRequiredService<CloudTasksClient>(), optimizerEndpoint));
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -50,12 +60,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = credentials,
-    ProjectId = "1077768805408",
-});
+
 
 
 app.UseAuthorization();

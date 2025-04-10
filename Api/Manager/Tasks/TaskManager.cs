@@ -7,18 +7,18 @@ namespace Api.Manager
         private GTask.CloudTasksClient _client;
         private string _optimizerEndPoint;
 
-        public TaskManager(string optimizerEndPoint)
+        public TaskManager(GTask.CloudTasksClient client, string optimizerEndPoint)
         {
-            _client = GTask.CloudTasksClient.Create();
+            _client = client;
             _optimizerEndPoint = optimizerEndPoint;
         }
 
-        public Task TriggerRecalculation(string departmentId, DateTimeOffset? dateTimeOffset = null)
+        public Task TriggerRecalculation(string departmentId, DateTime? dateTime = null)
         {
-            if (dateTimeOffset == null) 
+            if (dateTime == null) 
             {
-                var berlinTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
-                dateTimeOffset = new DateTimeOffset(DateTime.Today.AddDays(1), berlinTimeZone.BaseUtcOffset);
+                var berlinTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
+                dateTime = TimeZoneInfo.ConvertTime(DateTime.Today.AddDays(1), berlinTimeZone);
             }
 
             var httpRequest = new GTask.HttpRequest() 
@@ -26,16 +26,18 @@ namespace Api.Manager
                 Url = $"{_optimizerEndPoint}?departmentId={departmentId}", 
                 HttpMethod = GTask.HttpMethod.Get 
             };
+
+            var queueName = new GTask.QueueName("einsatzplaner", "europe-west1", "Optimization");
+            var taskId = $"{departmentId}-{dateTime.Value.ToString("yyyy-MM-dd")}";
+            var taskName = new GTask.TaskName(queueName.ProjectId, queueName.LocationId, queueName.QueueId, taskId);
             var googleTask = new GTask.Task()
             {
                 HttpRequest = httpRequest,
-                TaskName = new GTask.TaskName("einsatzplaner", 
-                    "europe-west1", 
-                    "Optimization", 
-                    $"{departmentId}{dateTimeOffset.Value.ToString("yyyy-MM-dd")}")
+                TaskName = taskName
             };
-            googleTask.ScheduleTime = new Google.Protobuf.WellKnownTypes.Timestamp { Seconds = dateTimeOffset.Value.ToUnixTimeSeconds() };
-            return _client.CreateTaskAsync("Optimization", googleTask);
+            var secondsSinceEpoch = new DateTimeOffset(dateTime.Value.ToUniversalTime()).ToUnixTimeSeconds();
+            googleTask.ScheduleTime = new Google.Protobuf.WellKnownTypes.Timestamp { Seconds = secondsSinceEpoch };
+            return _client.CreateTaskAsync(queueName, googleTask);
         }
     }
 }

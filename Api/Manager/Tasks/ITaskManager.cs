@@ -2,6 +2,6 @@
 {
     public interface ITaskManager
     {
-        public Task TriggerRecalculation(string departmentId, DateTimeOffset? dateTimeOffset = null);
+        public Task TriggerRecalculation(string departmentId, DateTime? dateTime = null);
     }
 }
