@@ -10,6 +10,7 @@ class Helper:
     RoleId : str
     RequiredAmount : int
     LockedMembers : list[str]
+    PreselectedMembers : list[str]
     AvailableMembers : list[str]
 
 @dataclass
@@ -20,8 +21,8 @@ class Event:
 class FilledHelper:
     Id: str
     EventId : str
-    SetMembers : list[str]
-    RemainingMembers : list[str]
+    PreselectedMembers : list[str]
+    AvailableMembers : list[str]
 
 def Optimize(events : list[Event]) -> list[FilledHelper]:
     lockedMemberAssignments : dict[tuple[str, str], int] = {}    
@@ -34,24 +35,26 @@ def Optimize(events : list[Event]) -> list[FilledHelper]:
 
 def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tuple[str, str], int], max_V_er: float) -> list[FilledHelper]: 
     model = mathopt.Model()
-
-    X_mer_dict = defaultdict[list[mathopt.Variable]](list)
+    
     X_me_dict = defaultdict[list[mathopt.Variable]](list)
     X_mr_dict = defaultdict[list[mathopt.Variable]](list)
     X_er_dict = defaultdict[list[mathopt.Variable]](list)
     V_er_sum = mathopt.LinearSum([])
+    Deselected = []
 
     for event in events:
         eventLockedMembers = set().union(*[helper.LockedMembers for helper in event.Helpers])
         for helper in event.Helpers:
             X_er = []
-            for member in set(helper.AvailableMembers) - eventLockedMembers:
+            for member, was_preselected in [(member, True) for member in set(helper.PreselectedMembers) - eventLockedMembers] + [(member, False) for member in set(helper.AvailableMembers) - eventLockedMembers]:
                 X = model.add_binary_variable(name=f"{helper.EventId}, {helper.RoleId}: {member}")
                 X_er.append(X)
-                X_mer_dict[(member, helper.EventId, helper.RoleId)].append(X)
                 X_me_dict[(member, helper.EventId)].append(X)
                 X_mr_dict[(member, helper.RoleId)].append(X)
                 X_er_dict[(helper.EventId, helper.RoleId)].append((X, member))
+                if was_preselected:
+                    Deselected.append(X == False)
+
             openRequiredAmount = helper.RequiredAmount - len(helper.LockedMembers)
             V_er = openRequiredAmount - mathopt.LinearSum(X_er)
             V_er_sum += V_er
@@ -60,7 +63,6 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
     for X_me in X_me_dict.values():
         model.add_linear_constraint(mathopt.LinearSum(X_me) <= 1)
 
-    
     model.minimize_quadratic_objective(V_er_sum)
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
     max_V_er = result.objective_value()         
@@ -69,17 +71,26 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
     E_mr_list = [mathopt.LinearSum(variables) + lockedMemberAssignments.get(assignment, 0) for assignment, variables in X_mr_dict.items()]
     squaredCounts = [E_mr*E_mr for E_mr in E_mr_list]
     squaredCountsSum = mathopt.QuadraticSum(squaredCounts)
-    model.minimize_quadratic_objective(squaredCountsSum)
+    deselections = mathopt.LinearSum(Deselected)
+
+    model.minimize((len(Deselected) + 1) * squaredCountsSum + deselections)
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
 
     filledCategories : list[FilledHelper] = []
     for helper in [helper for event in events for helper in event.Helpers]:
-        filledHelper = FilledHelper(helper.Id, helper.EventId, helper.LockedMembers.copy(), helper.AvailableMembers.copy())
+        filledHelper = FilledHelper(helper.Id, helper.EventId, [], [])
+        preselectedMembers = set(helper.PreselectedMembers)
+        availableMembers = set(helper.AvailableMembers)
         X_er = X_er_dict[(helper.EventId, helper.RoleId)]
         for (X, member) in X_er:
             if result.variable_values(X) == 1:
-                filledHelper.SetMembers.append(member)
-                filledHelper.RemainingMembers.remove(member)
+                preselectedMembers.add(member)
+                availableMembers.discard(member)
+            else:
+                preselectedMembers.discard(member)
+                availableMembers.add(member)
+        filledHelper.PreselectedMembers = list(preselectedMembers)
+        filledHelper.AvailableMembers = list(availableMembers)
         filledCategories.append(filledHelper)
 
     return filledCategories

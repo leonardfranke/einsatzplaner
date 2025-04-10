@@ -37,8 +37,8 @@ def optimizeDepartment(departmentId : str):
 	
 	for filledHelper in filledHelpers:
 		eventsRef.document(filledHelper.EventId).collection("Helper").document(filledHelper.Id).update({
-			"SetMembers": filledHelper.SetMembers,
-			"QueuedMembers": filledHelper.RemainingMembers,
+			"SetMembers": filledHelper.PreselectedMembers,
+			"QueuedMembers": filledHelper.AvailableMembers,
 		})
 
 @functions_framework.http
