@@ -1,6 +1,7 @@
 from ortools.math_opt.python import mathopt
 from dataclasses import dataclass
 from collections import defaultdict
+from datetime import datetime, timezone
 
 
 @dataclass
@@ -8,6 +9,7 @@ class Helper:
     Id: str
     EventId : str
     RoleId : str
+    LockingTime : datetime
     RequiredAmount : int
     LockedMembers : list[str]
     PreselectedMembers : list[str]
@@ -18,13 +20,12 @@ class Event:
     Helpers: list[Helper]
 
 @dataclass
-class FilledHelper:
-    Id: str
-    EventId : str
-    PreselectedMembers : list[str]
-    AvailableMembers : list[str]
+class Updates:
+    NewLockedMembers : list[str]
+    NewPreselectedMembers : list[str]
+    NewAvailableMembers : list[str]
 
-def Optimize(events : list[Event]) -> list[FilledHelper]:
+def Optimize(events : list[Event]) -> list[(Helper, Updates)]:
     lockedMemberAssignments : dict[tuple[str, str], int] = {}    
     for helper in [helper for event in events for helper in event.Helpers]:        
         for member in helper.LockedMembers:
@@ -33,7 +34,7 @@ def Optimize(events : list[Event]) -> list[FilledHelper]:
     return OptimizeOverfilled(events, lockedMemberAssignments, None)
     
 
-def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tuple[str, str], int], max_V_er: float) -> list[FilledHelper]: 
+def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tuple[str, str], int], max_V_er: float) -> list[(Helper, Updates)]: 
     model = mathopt.Model()
     
     X_me_dict = defaultdict[list[mathopt.Variable]](list)
@@ -76,9 +77,9 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
     model.minimize((len(Deselected) + 1) * squaredCountsSum + deselections)
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
 
-    filledCategories : list[FilledHelper] = []
+    filledHelpers : list[(Helper, Updates)] = []
     for helper in [helper for event in events for helper in event.Helpers]:
-        filledHelper = FilledHelper(helper.Id, helper.EventId, [], [])
+        lockedMembers = set(helper.LockedMembers)
         preselectedMembers = set(helper.PreselectedMembers)
         availableMembers = set(helper.AvailableMembers)
         X_er = X_er_dict[(helper.EventId, helper.RoleId)]
@@ -89,8 +90,10 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
             else:
                 preselectedMembers.discard(member)
                 availableMembers.add(member)
-        filledHelper.PreselectedMembers = list(preselectedMembers)
-        filledHelper.AvailableMembers = list(availableMembers)
-        filledCategories.append(filledHelper)
+        if datetime.now(timezone.utc) < helper.LockingTime:
+            update = Updates(list(lockedMembers), list(preselectedMembers), list(availableMembers))
+        else:
+            update = Updates(list(lockedMembers.union(preselectedMembers)), [], list(availableMembers))
+        filledHelpers.append((helper, update))
 
-    return filledCategories
+    return filledHelpers
