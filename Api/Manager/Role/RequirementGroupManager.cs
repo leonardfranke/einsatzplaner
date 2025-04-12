@@ -35,7 +35,7 @@ namespace Api.Manager
             var categoryReference = GetCategoryGroupCollectionReference(departmentId);
             var snapshot = await categoryReference.GetSnapshotAsync();
             var groups = snapshot.Select(doc => doc.ConvertTo<HelperCategoryGroup>()).ToList();
-            return HelperCategoryGroupConverter.Convert(groups);
+            return RequirementGroupConverter.Convert(groups);
         }
 
         public Task UpdateOrCreateGroup(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements)

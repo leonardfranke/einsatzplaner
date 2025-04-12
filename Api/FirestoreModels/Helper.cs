@@ -6,7 +6,7 @@ namespace Api.Models
     public class Helper : FirebaseDocument
     {
         [FirestoreProperty]
-        public string HelperCategoryId { get; set; }
+        public string RoleId { get; set; }
         [FirestoreProperty]
         public DateTime LockingTime { get; set; }
         [FirestoreProperty]

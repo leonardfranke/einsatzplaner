@@ -19,7 +19,7 @@ namespace Web.Views
         public Func<string, string, int, Task> SaveHelperCategoryFunc { get; set; }
 
         [SupplyParameterFromForm]
-        public FormModel HelperCategoryData { get; set; }
+        public FormModel RoleData { get; set; }
         public EditContext EditContext { get; set; }
 
         public bool IsUpdate { get; set; }
@@ -30,8 +30,8 @@ namespace Web.Views
 
         protected override void OnInitialized()
         {
-            HelperCategoryData = new();
-            EditContext = new(HelperCategoryData);
+            RoleData = new();
+            EditContext = new(RoleData);
             EditContext.OnValidationRequested += ValidateForm;
             _messageStore = new(EditContext);
         }
@@ -40,11 +40,11 @@ namespace Web.Views
         {
             _messageStore.Clear();
 
-            if (string.IsNullOrWhiteSpace(HelperCategoryData.Name))
-                _messageStore.Add(() => HelperCategoryData.Name, "Bezeichnung muss gesetzt sein.");
+            if (string.IsNullOrWhiteSpace(RoleData.Name))
+                _messageStore.Add(() => RoleData.Name, "Bezeichnung muss gesetzt sein.");
 
-            if (HelperCategoryData.LockingPeriod < 0)
-                _messageStore.Add(() => HelperCategoryData.LockingPeriod, "Sperrzeitraum muss positiv sein.");
+            if (RoleData.LockingPeriod < 0)
+                _messageStore.Add(() => RoleData.LockingPeriod, "Sperrzeitraum muss positiv sein.");
         }
 
         protected override async Task OnParametersSetAsync()
@@ -53,16 +53,16 @@ namespace Web.Views
             if (!IsUpdate)
                 return;
 
-            HelperCategoryData.Name = Role.Name;
-            HelperCategoryData.LockingPeriod = Role.LockingPeriod;
-            _oldName = HelperCategoryData.Name;
-            _oldLockingPeriod = HelperCategoryData.LockingPeriod;
+            RoleData.Name = Role.Name;
+            RoleData.LockingPeriod = Role.LockingPeriod;
+            _oldName = RoleData.Name;
+            _oldLockingPeriod = RoleData.LockingPeriod;
         }
 
         public async Task SaveHelperCategory()
         {
-            if(HelperCategoryData.Name != _oldName || HelperCategoryData.LockingPeriod != _oldLockingPeriod)
-                await SaveHelperCategoryFunc(Role?.Id, HelperCategoryData.Name, HelperCategoryData.LockingPeriod);
+            if(RoleData.Name != _oldName || RoleData.LockingPeriod != _oldLockingPeriod)
+                await SaveHelperCategoryFunc(Role?.Id, RoleData.Name, RoleData.LockingPeriod);
             await CloseModal();
         }
 

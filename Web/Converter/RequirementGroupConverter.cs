@@ -1,15 +1,15 @@
-﻿using Api.Models;
-using DTO;
+﻿using DTO;
+using Web.Models;
 
-namespace Api.Converter
+namespace Web.Converter
 {
-    public static class HelperCategoryGroupConverter
+    public static class RequirementGroupConverter
     {
-        public static List<RequirementGroupDTO> Convert(List<HelperCategoryGroup> categories)
+        public static List<RequirementGroup> Convert(List<RequirementGroupDTO> categories)
         {
             return categories.Select(category =>
             {
-                return new RequirementGroupDTO
+                return new RequirementGroup
                 {
                     Id = category.Id,
                     Requirements = category.Requirements

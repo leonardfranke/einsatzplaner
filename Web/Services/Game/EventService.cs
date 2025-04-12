@@ -32,14 +32,14 @@ namespace Web.Services
                 {
                     var updateHelpers = helpers.Select(helper =>
                     {
-                        var helperCategoryId = helper.Key;
+                        var roleId = helper.Key;
                         var value = helper.Value;
                         var requiredAmount = value.Item1;
                         var lockingTime = value.Item2;
                         var requiredGroups = value.Item3;
                         return new UpdateHelperDTO
                         {
-                            HelperCategoryId = helperCategoryId,
+                            RoleId = roleId,
                             RequiredAmount = requiredAmount,
                             LockingTime = lockingTime,
                             RequiredGroups = requiredGroups

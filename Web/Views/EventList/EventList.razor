@@ -1,7 +1,7 @@
 ﻿@inherits EventListBase
 
 @{
-    var helperCategories = Events
+    var roles = Events
         .SelectMany(GetHelpers)
         .Select(GetCategory)
         .DistinctBy(category => category.Id);
@@ -19,9 +19,9 @@
                 <th scope="col">Eventkategorie</th>
             }
             <th scope="col">Datum</th>
-            @foreach (var category in helperCategories)
+            @foreach (var role in roles)
             {
-                <th scope="col">@category.Name</th>
+                <th scope="col">@role.Name</th>
             }
             <th></th>
         </tr>
@@ -55,10 +55,10 @@
                     }                        
                 }
                 <td>@eventObj.GameDate.ToString("dd.MM.yyyy HH:mm")</td>
-                @foreach (var category in helperCategories)
+                @foreach (var role in roles)
                 {
                     var helpers = GetHelpers(eventObj);
-                    var helper = helpers.Find(helper => helper.RoleId == category.Id);
+                    var helper = helpers.Find(helper => helper.RoleId == role.Id);
                     <td>
                         @if(helper != null)
                         {

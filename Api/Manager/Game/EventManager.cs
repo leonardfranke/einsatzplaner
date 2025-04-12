@@ -72,10 +72,10 @@ namespace Api.Manager
             {
                 foreach (var updateHelper in updateHelpers)
                 {
-                    var currentHelper = currentHelpers.Find(helper => helper.RoleId == updateHelper.HelperCategoryId);
+                    var currentHelper = currentHelpers.Find(helper => helper.RoleId == updateHelper.RoleId);
                     currentHelpers.Remove(currentHelper);
 
-                    var helperCategoryId = updateHelper.HelperCategoryId;
+                    var roleId = updateHelper.RoleId;
                     var requiredAmount = updateHelper.RequiredAmount;
                     var requiredGroups = updateHelper.RequiredGroups;
                     var lockingTimeUTC = updateHelper.LockingTime.ToUniversalTime();
@@ -83,7 +83,7 @@ namespace Api.Manager
                     {
                         var newHelper = new Helper
                         {
-                            HelperCategoryId = helperCategoryId,
+                            RoleId = roleId,
                             RequiredAmount = requiredAmount,
                             LockingTime = lockingTimeUTC,
                             RequiredGroups = requiredGroups,
@@ -98,7 +98,7 @@ namespace Api.Manager
                     {
                         var helperRef = helpersRef.Document(currentHelper.Id);
                         var updateTask = helperRef.UpdateAsync(new Dictionary<string, object> {
-                        { nameof(Helper.HelperCategoryId), helperCategoryId },
+                        { nameof(Helper.RoleId), roleId },
                         { nameof(Helper.RequiredAmount), requiredAmount },
                         { nameof(Helper.LockingTime), lockingTimeUTC },
                         { nameof(Helper.RequiredGroups), requiredGroups }

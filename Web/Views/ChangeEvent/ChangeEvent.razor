@@ -50,7 +50,7 @@
                     }
 
                     <li><h6 class="dropdown-header">Helferkategorien</h6></li>
-                    var alreadySelectedCategoryIds = EventData.Helpers?.Select(helper => helper.HelperCategoryId);
+                    var alreadySelectedCategoryIds = EventData.Helpers?.Select(helper => helper.RoleId);
                     var dropdownListHelpers = Roles.Where(category => !alreadySelectedCategoryIds.Contains(category.Id));
                     if (dropdownListHelpers.Count() == 0)
                     {
@@ -74,7 +74,7 @@
     {
         @foreach (var helperForm in EventData.Helpers)
         {
-            var category = GetCategoryById(helperForm.HelperCategoryId);
+            var category = GetCategoryById(helperForm.RoleId);
 
             <div class="d-flex mt-4 mb-2">
             @if (category == null)

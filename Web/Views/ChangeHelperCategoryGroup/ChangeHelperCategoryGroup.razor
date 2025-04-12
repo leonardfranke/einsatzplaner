@@ -6,7 +6,7 @@
         <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Hinzufügen</button>
         <ul class="dropdown-menu">
             @{
-                var dropdownList = Roles.Where(category => HelperCategoryGroupData.Requirements?.ContainsKey(category.Id) == false);
+                var dropdownList = Roles.Where(category => RequirementGroupData.Requirements?.ContainsKey(category.Id) == false);
                 if (dropdownList.Count() == 0)
                 {
                     <div class="text-body-secondary p-4">
@@ -24,9 +24,9 @@
         </ul>
     </div>
 
-    @if (HelperCategoryGroupData.Requirements != null)
+    @if (RequirementGroupData.Requirements != null)
     {
-        @foreach (var pair in HelperCategoryGroupData.Requirements)
+        @foreach (var pair in RequirementGroupData.Requirements)
         {
             var category = GetCategoryById(pair.Key);
             <label class="form-label">@category.Name</label>

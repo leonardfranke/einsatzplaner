@@ -38,7 +38,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public Task UpdateOrCreate(string departmentId, string? helperCategoryGroupId, UpdateHelperCategoryGroupDTO updateGroupDTO)
+        public Task UpdateOrCreate(string departmentId, string? helperCategoryGroupId, RequirementGroupDTO updateGroupDTO)
         {
             return _helperCategoryGroupManager.UpdateOrCreateGroup(departmentId, helperCategoryGroupId, updateGroupDTO.Requirements);
         }

@@ -112,7 +112,7 @@ namespace Web.Views
             foreach (var helper in EventData.Helpers)
             {
                 var lockingTime = EventData.Date.AddDays(-helper.LockingPeriod);
-                categoryData.Add(helper.HelperCategoryId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups));
+                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups));
             }
 
             await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, categoryData);
@@ -159,7 +159,7 @@ namespace Web.Views
             var defaultLockingPeriod = category.LockingPeriod;
             EventData.Helpers.Add(new HelperFormModel
             {
-                HelperCategoryId = categoryId,
+                RoleId = categoryId,
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
                 RequiredGroups = requiredGroups ?? new()
@@ -173,7 +173,7 @@ namespace Web.Views
 
         private HelperFormModel GetHelperFormModel(string categoryId)
         {
-            return EventData.Helpers.FirstOrDefault(helper => helper.HelperCategoryId == categoryId);
+            return EventData.Helpers.FirstOrDefault(helper => helper.RoleId == categoryId);
         }
 
         public void SetLockingPeriod(HelperFormModel helperForm, string value)
@@ -222,7 +222,7 @@ namespace Web.Views
 
         public class HelperFormModel
         {
-            public string HelperCategoryId { get; set; }
+            public string RoleId { get; set; }
             public int LockingPeriod { get; set; }
             public int RequiredAmount { get; set; }
             public List<string> RequiredGroups { get; set; } = new();

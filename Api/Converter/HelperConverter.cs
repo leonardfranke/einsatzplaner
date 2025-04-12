@@ -12,7 +12,7 @@ namespace Api.Converter
                 return new HelperDTO
                 {
                     Id = helper.Id,
-                    RoleId = helper.HelperCategoryId,
+                    RoleId = helper.RoleId,
                     LockedMembers = helper.LockedMembers,
                     PreselectedMembers = helper.PreselectedMembers,
                     AvailableMembers = helper.AvailableMembers,

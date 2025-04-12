@@ -26,12 +26,12 @@ namespace Web.Services
             var query = QueryBuilder.Build(("departmentId", departmentId));
             var response = await _httpClient.GetAsync(new Uri($"/api/HelperCategoryGroup{query}", UriKind.Relative));
             var categoryDTOs = await response.Content.ReadFromJsonAsync<List<RequirementGroupDTO>>();
-            return HelperCategoryGroupConverter.Convert(categoryDTOs);
+            return RequirementGroupConverter.Convert(categoryDTOs);
         }
 
         public async Task UpdateOrCreate(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements)
         {
-            var updateCategoryDTO = new UpdateHelperCategoryGroupDTO
+            var updateCategoryDTO = new RequirementGroupDTO
             {
                 Requirements = requirements
             };

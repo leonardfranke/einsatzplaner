@@ -22,7 +22,7 @@ namespace Web.Views
         public Func<string, Dictionary<string, uint>, Task> SaveHelperCategoryGroupFunc { get; set; }
 
         [SupplyParameterFromForm]
-        public FormModel HelperCategoryGroupData { get; set; }
+        public FormModel RequirementGroupData { get; set; }
         public EditContext EditContext { get; set; }
 
         public bool IsUpdate { get; set; }
@@ -32,8 +32,8 @@ namespace Web.Views
 
         protected override void OnInitialized()
         {
-            HelperCategoryGroupData = new();
-            EditContext = new(HelperCategoryGroupData);
+            RequirementGroupData = new();
+            EditContext = new(RequirementGroupData);
             EditContext.OnValidationRequested += ValidateForm;
             _messageStore = new(EditContext);
         }
@@ -47,11 +47,11 @@ namespace Web.Views
         {
             IsUpdate = HelperCategoryGroup != null;
             if (IsUpdate)
-                HelperCategoryGroupData.Requirements = HelperCategoryGroup.Requirements ?? new();
+                RequirementGroupData.Requirements = HelperCategoryGroup.Requirements ?? new();
             else
-                HelperCategoryGroupData.Requirements.Clear();
+                RequirementGroupData.Requirements.Clear();
 
-            _oldRequirements = new(HelperCategoryGroupData.Requirements);
+            _oldRequirements = new(RequirementGroupData.Requirements);
         }
 
         public Role GetCategoryById(string helperCategoryId)
@@ -61,12 +61,12 @@ namespace Web.Views
 
         public void AddRequirement(string categoryId)
         {
-            HelperCategoryGroupData.Requirements.TryAdd(categoryId, 1);
+            RequirementGroupData.Requirements.TryAdd(categoryId, 1);
         }
 
         public void RemoveRequirement(string categoryId)
         {
-            HelperCategoryGroupData.Requirements.Remove(categoryId);
+            RequirementGroupData.Requirements.Remove(categoryId);
         }
 
         public void SetRequirement(string categoryId, string stringValue)
@@ -74,13 +74,13 @@ namespace Web.Views
             var parsed = uint.TryParse(stringValue, out uint value);
             if(!parsed)
                 value = 1;
-            HelperCategoryGroupData.Requirements[categoryId] = value;
+            RequirementGroupData.Requirements[categoryId] = value;
         }
 
         public async Task SaveHelperCategoryGroup()
         {
-            if(HelperCategoryGroupData.Requirements.Count != _oldRequirements.Count 
-                || HelperCategoryGroupData.Requirements.Any(requirement =>
+            if(RequirementGroupData.Requirements.Count != _oldRequirements.Count 
+                || RequirementGroupData.Requirements.Any(requirement =>
             {
                 var exists = _oldRequirements.TryGetValue(requirement.Key, out var value);
                 if (!exists)
@@ -89,7 +89,7 @@ namespace Web.Views
             }))
             {
                 await SaveHelperCategoryGroupFunc(HelperCategoryGroup?.Id, 
-                    HelperCategoryGroupData.Requirements);
+                    RequirementGroupData.Requirements);
             }
             await CloseModal();
         }

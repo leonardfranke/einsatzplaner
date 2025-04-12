@@ -2,7 +2,7 @@
 {
     public class UpdateHelperDTO
     {
-        public string HelperCategoryId { get; set; }
+        public string RoleId { get; set; }
 
         public int RequiredAmount { get; set; }
 
