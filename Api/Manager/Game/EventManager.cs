@@ -80,7 +80,8 @@ namespace Api.Manager
                     var roleId = updateHelper.RoleId;
                     var requiredAmount = updateHelper.RequiredAmount;
                     var requiredGroups = updateHelper.RequiredGroups;
-                    var lockingTimeUTC = updateHelper.LockingTime.ToUniversalTime();
+                    var lockingTime = updateHelper.LockingTime.Date;
+                    var lockingTimeUTC = lockingTime.ToUniversalTime();
                     if (currentHelper == null)
                     {
                         var newHelper = new Helper
@@ -107,7 +108,7 @@ namespace Api.Manager
                             }, Precondition.MustExist);
                         tasks.Add(updateTask);
                     }
-                    tasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTimeUTC.Date));
+                    tasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTime));
                 }
 
                 foreach (var helper in currentHelpers)
