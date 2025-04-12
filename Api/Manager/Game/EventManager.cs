@@ -9,11 +9,13 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
         private IHelperManager _helperManager;
+        private ITaskManager _taskManager;
 
-        public EventManager(IFirestoreManager firestoreManager, IHelperManager helperManager)
+        public EventManager(IFirestoreManager firestoreManager, IHelperManager helperManager, ITaskManager taskManager)
         {
             _firestoreDb = firestoreManager.Database;
             _helperManager = helperManager;
+            _taskManager = taskManager;
         }
 
         public async Task UpdateOrCreate(UpdateEventDTO updateEventDTO)
@@ -102,9 +104,10 @@ namespace Api.Manager
                         { nameof(Helper.RequiredAmount), requiredAmount },
                         { nameof(Helper.LockingTime), lockingTimeUTC },
                         { nameof(Helper.RequiredGroups), requiredGroups }
-                    }, Precondition.MustExist);
+                            }, Precondition.MustExist);
                         tasks.Add(updateTask);
                     }
+                    tasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTimeUTC.Date));
                 }
 
                 foreach (var helper in currentHelpers)
