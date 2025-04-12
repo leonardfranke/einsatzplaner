@@ -3,6 +3,7 @@ import functions_framework
 from firebase_admin import firestore
 import flask
 from optimizer import Event, Helper, Optimize
+import traceback
 
 if not firebase_admin._apps:
     firebase_admin.initialize_app()
@@ -20,14 +21,13 @@ def optimizeDepartment(departmentId : str):
 		event = Event([])
 		for helperRef in helpers:
 			helperSnapshot = helperRef.to_dict()
-			if helperRef.read_time < helperSnapshot["LockingTime"]:
-				lockedMembers = []
-				availableMembers = helperSnapshot["SetMembers"] + helperSnapshot["QueuedMembers"]
-			else:
-				lockedMembers = helperSnapshot["SetMembers"]
-				availableMembers = helperSnapshot["QueuedMembers"]
 
-			event.Helpers.append(Helper(helperRef.id, eventRef.id, helperSnapshot["HelperCategoryId"], helperSnapshot["RequiredAmount"], lockedMembers, availableMembers))
+			try:
+				helper = Helper(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"])
+				event.Helpers.append(helper)
+			except Exception as e:
+				traceback.print_exc()
+			
 		events.append(event)
 	
 	if no_events:
