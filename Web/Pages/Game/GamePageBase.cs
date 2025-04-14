@@ -54,12 +54,12 @@ namespace Web.Pages
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
 
+            if (!await _loginCheck.CheckLogin(department))
+                return;
+
             GameTask = _gameService.GetEvent(department.Id, GameId);
             Game = await GameTask;
             if (Game == null)
-                return;
-
-            if (!await _loginCheck.CheckLogin(department))
                 return;
 
             var helpersTask = _helperService.GetAll(department.Id, Game.Id);
