@@ -2,10 +2,9 @@
 
 @if(IsPlayerLocked)
 {
-    <InputCheckbox disabled Value="true"/>
+    <input type="checkbox" disabled  checked/>
 }
-
-@if (IsMemberPermitted)
+else if (IsMemberPermitted)
 {
     <InputCheckbox @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsPreselectedOrAvailable"/>    
 }
