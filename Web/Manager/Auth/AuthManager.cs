@@ -115,7 +115,11 @@ namespace Web.Manager
 
         public async Task SetCurrentDepartment(string departmentId)
         {
-            await _sessionStorage.SetItemAsync(departmentKey, departmentId);
+            if(await GetCurrentDepartment() != departmentId)
+            {
+                await _sessionStorage.SetItemAsync(departmentKey, departmentId);
+                NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
+            }
         }
 
         public async Task<string> GetCurrentDepartment()
