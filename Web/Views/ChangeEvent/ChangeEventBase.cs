@@ -128,13 +128,13 @@ namespace Web.Views
 
         public Task CloseModal() => CloseModalFunc();
 
-        public Role GetCategoryById(string id) => Roles.Find(category => category.Id == id);
+        public Role GetRoleById(string id) => Roles.Find(role => role.Id == id);
 
         public string GetGroupDisplayText(RequirementGroup helperCategoryGroup)
         {
             var names = helperCategoryGroup.Requirements.Select(requirement =>
             {
-                var category = GetCategoryById(requirement.Key);
+                var category = GetRoleById(requirement.Key);
                 return $"{requirement.Value}x {category?.Name ?? "Kein Name"}";
             });
             return string.Join(Environment.NewLine, names);
@@ -156,8 +156,8 @@ namespace Web.Views
 
         public void AddCategoryToGame(string categoryId, int requiredAmount, int? lockingPeriod = null, List<string> requiredGroups = null)
         {
-            var category = GetCategoryById(categoryId);
-            var defaultLockingPeriod = category.LockingPeriod;
+            var category = GetRoleById(categoryId);
+            var defaultLockingPeriod = category?.LockingPeriod ?? 0;
             EventData.Helpers.Add(new HelperFormModel
             {
                 RoleId = categoryId,
