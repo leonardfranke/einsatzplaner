@@ -34,7 +34,8 @@ namespace Api.Manager
             DocumentReference eventRef;
 
 
-            var tasks = new List<Task>();
+            var dataChangesTasks = new List<Task>();
+            var optimizerTasks = new List<Task>();
             if (string.IsNullOrEmpty(eventId))
             {
                 if (dateUTC == null)
@@ -49,7 +50,7 @@ namespace Api.Manager
                 eventRef = await eventsRef.AddAsync(newEvent);
 
                 var updateTask = eventRef.UpdateAsync(nameof(Event.IdProperty), eventRef.Id, Precondition.MustExist);
-                tasks.Add(updateTask);
+                dataChangesTasks.Add(updateTask);
             }
             else
             {
@@ -62,7 +63,7 @@ namespace Api.Manager
                 if(dateUTC != null)
                     valueToUpdate.Add(nameof(Event.Date), dateUTC);
                 var updateTask = eventRef.UpdateAsync(valueToUpdate, Precondition.MustExist);
-                tasks.Add(updateTask);
+                dataChangesTasks.Add(updateTask);
             }
 
             var helpersRef = eventRef.Collection(Paths.HELPER);
@@ -96,7 +97,7 @@ namespace Api.Manager
                             AvailableMembers = new()
                         };
                         var addTask = helpersRef.AddAsync(newHelper);
-                        tasks.Add(addTask);
+                        dataChangesTasks.Add(addTask);
                     }
                     else
                     {
@@ -114,19 +115,20 @@ namespace Api.Manager
                         }
                         var helperRef = helpersRef.Document(currentHelper.Id);
                         var updateTask = helperRef.UpdateAsync(updateDict);
-                        tasks.Add(updateTask);
+                        dataChangesTasks.Add(updateTask);
                     }
-                    tasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTime));
+                    optimizerTasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTime));
                 }
 
                 foreach (var helper in currentHelpers)
                 {
                     var deleteTask = helpersRef.Document(helper.Id).DeleteAsync();
-                    tasks.Add(deleteTask);
+                    dataChangesTasks.Add(deleteTask);
                 }
             }
             
-            await Task.WhenAll(tasks);
+            await Task.WhenAll(dataChangesTasks);
+            await Task.WhenAll(optimizerTasks);
         }
 
         public async Task DeleteEvent(string departmentId, string eventId)
