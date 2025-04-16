@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Web.Manager;
@@ -24,8 +25,11 @@ namespace Web.Checks
             _departmentService = departmentService;
         }
 
-        public async Task<bool> CheckLogin(Department department = null)
+        public async Task<bool> CheckLogin(Department department = null, bool requiresAdminRole = false)
         {
+            if (department == null && requiresAdminRole)
+                throw new ArgumentException("Requires admin role but no department passed", nameof(requiresAdminRole));
+
             var authState = await _authStateProvider.GetAuthenticationStateAsync();
 
             var authenticated = authState?.User?.Identity?.IsAuthenticated == true;
@@ -51,6 +55,12 @@ namespace Web.Checks
                 NavigateToMembership(department);
                 return false;
             }
+
+            if(requiresAdminRole && !authState.User.HasClaim(ClaimTypes.Role, IAuthManager.AdminClaim))
+            {
+                NavigateToLogin(department);
+                return false;
+            }  
 
             return true;
         }

@@ -38,7 +38,7 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if (!await _loginCheck.CheckLogin(Department))
+            if (!await _loginCheck.CheckLogin(Department, true))
                 return;            
             _departmentId = Department.Id;
 

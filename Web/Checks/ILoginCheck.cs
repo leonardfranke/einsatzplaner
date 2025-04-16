@@ -4,6 +4,6 @@ namespace Web.Checks
 {
     public interface ILoginCheck
     {
-        public Task<bool> CheckLogin(Department department = null);
+        public Task<bool> CheckLogin(Department department = null, bool requiresAdminRole = false);
     }
 }

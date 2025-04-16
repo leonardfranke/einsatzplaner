@@ -38,7 +38,7 @@ namespace Web.Pages
         {
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
-            if (!await _loginCheck.CheckLogin(department))
+            if (!await _loginCheck.CheckLogin(department, true))
                 return;
             _departmentId = department.Id;
             await LoadEventCategories();

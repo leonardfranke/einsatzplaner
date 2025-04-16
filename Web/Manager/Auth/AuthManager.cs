@@ -109,7 +109,7 @@ namespace Web.Manager
             {
                 var member = await _memberService.GetMember(departmentId, user.Id);
                 if (member != null && member.IsAdmin)
-                    claims.Add(new Claim(ClaimTypes.Role, "IsAdmin"));
+                    claims.Add(new Claim(ClaimTypes.Role, IAuthManager.AdminClaim));
             }
 
             return claims;
