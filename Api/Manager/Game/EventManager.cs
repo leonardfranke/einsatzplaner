@@ -35,7 +35,6 @@ namespace Api.Manager
 
 
             var dataChangesTasks = new List<Task>();
-            var optimizerTasks = new List<Task>();
             if (string.IsNullOrEmpty(eventId))
             {
                 if (dateUTC == null)
@@ -72,7 +71,8 @@ namespace Api.Manager
             if(!string.IsNullOrEmpty(eventId))
                 currentHelpers = await _helperManager.GetAll(departmentId, eventId);
 
-            if(updateHelpers != null)
+            var optimizerDatetimes = new HashSet<DateTime>();
+            if (updateHelpers != null)
             {
                 foreach (var updateHelper in updateHelpers)
                 {
@@ -117,7 +117,7 @@ namespace Api.Manager
                         var updateTask = helperRef.UpdateAsync(updateDict);
                         dataChangesTasks.Add(updateTask);
                     }
-                    optimizerTasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTime));
+                    optimizerDatetimes.Add(lockingTime);
                 }
 
                 foreach (var helper in currentHelpers)
@@ -127,8 +127,11 @@ namespace Api.Manager
                 }
             }
             
-            await Task.WhenAll(dataChangesTasks);
-            await Task.WhenAll(optimizerTasks);
+            await Task.WhenAll(dataChangesTasks);  
+            foreach(var lockingTime in optimizerDatetimes)
+            {
+                await _taskManager.TriggerRecalculation(departmentId, lockingTime);
+            }
         }
 
         public async Task DeleteEvent(string departmentId, string eventId)

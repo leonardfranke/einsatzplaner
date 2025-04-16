@@ -31,7 +31,8 @@ namespace Api.Manager
 
             var queueName = new GTask.QueueName("einsatzplaner", "europe-west1", "Optimization");
             var taskId = $"{departmentId}-{dateTime.Value.ToString("yyyy-MM-dd")}";
-            var taskName = new GTask.TaskName(queueName.ProjectId, queueName.LocationId, queueName.QueueId, taskId);
+            var taskHash = Math.Abs(taskId.GetHashCode()).ToString();
+            var taskName = new GTask.TaskName(queueName.ProjectId, queueName.LocationId, queueName.QueueId, taskHash);
             var googleTask = new GTask.Task()
             {
                 HttpRequest = httpRequest,
