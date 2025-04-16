@@ -24,6 +24,7 @@ namespace Api.Manager
             var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
             return new UserDTO
             {
+                Name = userRecord.DisplayName,
                 Uid = userRecord.Uid,
                 IsDisabled = userRecord.Disabled,
                 IsEmailVerified = userRecord.EmailVerified

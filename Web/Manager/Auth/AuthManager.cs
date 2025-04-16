@@ -96,6 +96,8 @@ namespace Web.Manager
         {
             var claims = new List<Claim>();
 
+            claims.Add(new Claim(ClaimTypes.Name, userDTO.Name));
+
             if (!userDTO.IsDisabled)
                 claims.Add(new Claim(IAuthManager.IsActiveClaim, true.ToString(), ClaimValueTypes.Boolean));
 

@@ -10,7 +10,8 @@
     <main>        
         <div class="top-row px-4">
             <AuthorizeView>
-                <Authorized>                    
+                <Authorized>   
+                    <span class="me-3">Hallo @(context.User.Identity?.Name)!</span>
                     <button class="btn btn-primary" @onclick="Logout">Logout</button>
                 </Authorized>
                 <NotAuthorized>
