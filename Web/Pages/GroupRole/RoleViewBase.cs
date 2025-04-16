@@ -47,11 +47,9 @@ namespace Web.Pages
                 return;
 
             var membersTask = _memberService.GetAll(Department.Id);
-            var rolesTask = LoadRoles();
+            await LoadRoles();
             var requirementGroupsTask = LoadRequirementGroups();
-
             _members = await membersTask;
-            await rolesTask;
             await requirementGroupsTask;
         }
 
@@ -62,8 +60,8 @@ namespace Web.Pages
 
         private async Task LoadRequirementGroups()
         {
-            var helperCategoryGroupsTask = _requirementGroupService.GetAll(Department.Id);
-            RequirementGroups = await helperCategoryGroupsTask;
+            RequirementGroups = await _requirementGroupService.GetAll(Department.Id);
+            StateHasChanged();
         }
 
         private async Task LoadRoles()
@@ -73,6 +71,7 @@ namespace Web.Pages
             RoleMembersDict.Clear();
             foreach (var role in _roles)
                 RoleMembersDict[role] = _members.Where(member => member.RoleIds.Contains(role.Id)).ToList();
+            StateHasChanged();
         }
 
         public string GetGroupDisplayText(RequirementGroup group)

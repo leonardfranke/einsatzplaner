@@ -44,6 +44,7 @@ namespace Web.Pages
             GroupMembersDict.Clear();
             foreach (var group in _groups)
                 GroupMembersDict[group] = _members.Where(member => member.GroupIds.Contains(group.Id)).ToList();
+            StateHasChanged();
         }
 
         public async Task EditOrCreateGroup(Group? group)

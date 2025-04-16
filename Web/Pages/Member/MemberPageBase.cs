@@ -70,11 +70,13 @@ namespace Web.Pages
         private async Task LoadRequests()
         {
             MembershipRequests = await _departmentService.MembershipRequests(_departmentId);
+            StateHasChanged();
         }
 
         private async Task LoadMembers()
         {
             Members = await _memberService.GetAll(_departmentId);
+            StateHasChanged();
         }
 
         public string GetGroupNamesByIds(List<string> groupIds)
