@@ -22,7 +22,14 @@
 
         <CascadingValue Value="@Modal">
             <article class="content px-4">
-                @Body
+                <ErrorBoundary>
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent>
+                        <Web.Views.ErrorContent.ErrorMessage/>
+                    </ErrorContent>
+                </ErrorBoundary>
             </article>
         </CascadingValue>
     </main>
