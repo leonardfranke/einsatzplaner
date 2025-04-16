@@ -113,7 +113,7 @@ namespace Web.Views
 
         private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers)
         {
-            await _eventService.UpdateOrCreate(DepartmentId, eventId, groupId, eventCategoryId, gameDate, helpers);
+            //await _eventService.UpdateOrCreate(DepartmentId, eventId, groupId, eventCategoryId, gameDate, helpers);
             await ReloadPage();
         }
     }

@@ -6,6 +6,6 @@
         public string DepartmentId { get; set; }
         public string? GroupId { get; set; }
         public string? EventCategoryId { get; set; }
-        public DateTime GameDate { get; set; }
+        public DateTime EventDate { get; set; }
     }
 }

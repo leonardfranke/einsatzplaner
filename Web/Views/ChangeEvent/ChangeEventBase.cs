@@ -83,7 +83,7 @@ namespace Web.Views
             {
                 EventData.GroupId = Event.GroupId;
                 EventData.EventCategoryId = Event.EventCategoryId;
-                EventData.Date = Event.GameDate;
+                EventData.Date = Event.EventDate;
                 var helpers = await _helperService.GetAll(Event.DepartmentId, Event.Id);
                     
                 foreach (var helper in helpers)
