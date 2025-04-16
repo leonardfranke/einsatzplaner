@@ -1,7 +1,5 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
-using Web.Checks;
-using Web.Manager;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeGroup;
@@ -25,23 +23,17 @@ namespace Web.Pages
         [Inject]
         private IMemberService _memberService { get; set; }
 
-        [Inject]
-        private ILoginCheck _loginCheck { get; set; }
-
-        [Inject]
-        private IAuthManager _authManager { get; set; }
-
         public string HoveredId { get; set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
 
-        protected override async Task OnInitializedAsync()
+        protected override async Task OnParametersSetAsync()
         {
-            if (!await _loginCheck.CheckLogin(Department, true))
-                return;            
-            _departmentId = Department.Id;
+            if (Department == null)
+                return;
 
+            _departmentId = Department.Id;
             await LoadGroups();
         }
 

@@ -41,9 +41,9 @@ namespace Web.Pages
 
         public List<RequirementGroup> RequirementGroups { get; set; }
 
-        protected override async Task OnInitializedAsync()
+        protected override async Task OnParametersSetAsync()
         {
-            if (!await _loginCheck.CheckLogin(Department, true))
+            if (Department == null)
                 return;
 
             var membersTask = _memberService.GetAll(Department.Id);
