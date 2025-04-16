@@ -74,7 +74,6 @@ namespace Web.Views
         {
             Roles = await _roleService.GetAll(DepartmentId);
             Groups = await _groupService.GetAll(DepartmentId);
-            Roles = await _roleService.GetAll(DepartmentId);
             EventCategories = await _eventCategoryService.GetAll(DepartmentId);
             RequirementGroups = await _requirementGroupService.GetAll(DepartmentId);
             
