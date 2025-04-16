@@ -47,6 +47,7 @@ namespace Web.Pages
         private async Task LoadEventCategories()
         {
             EventCategories = await _eventCategoryService.GetAll(_departmentId);
+            StateHasChanged();
         }
 
         public async Task EditOrCreateEventCategory(Models.EventCategory? eventCategory)
