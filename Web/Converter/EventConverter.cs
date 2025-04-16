@@ -17,7 +17,7 @@ namespace Web.Converter
 
             return new Event
             {
-                GameDate = @event.Date.ToLocalTime(),
+                EventDate = @event.Date.ToLocalTime(),
                 DepartmentId = @event.DepartmentId,
                 GroupId = @event.GroupId,
                 EventCategoryId = @event.EventCategoryId,

@@ -51,7 +51,7 @@ namespace Web.Views
         public List<RequirementGroup> RequirementGroups { get; private set; }
 
         [Parameter]
-        public Func<string?, string?, string?, DateTime, Dictionary<string, Tuple<int, DateTime, List<string>>>, Task> SaveEventFunc { get; set; }
+        public Func<string?, string?, string?, DateTime, Dictionary<string, Tuple<int, DateTime, List<string>>>, bool, Task> SaveEventFunc { get; set; }
 
         public ElementReference GroupSelect;
 
@@ -89,7 +89,7 @@ namespace Web.Views
                 foreach (var helper in helpers)
                 {
                     var lockingTime = helper.LockingTime;
-                    var lockingPeriod = Event.GameDate.Subtract(lockingTime).Days;
+                    var lockingPeriod = Event.EventDate.Subtract(lockingTime).Days;
                     AddCategoryToGame(helper.RoleId, helper.RequiredAmount, lockingPeriod, helper.RequiredGroups);
                 }
             }
@@ -115,8 +115,10 @@ namespace Web.Views
                 categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups));
             }
 
-            await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, categoryData);
-            await CloseModal();
+            var dateHasChanged = IsUpdate && EventData.Date != Event?.EventDate;
+            await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, categoryData, dateHasChanged);
+            if(!dateHasChanged)
+                await CloseModal();
         }
 
         public async Task DeleteGame()

@@ -8,5 +8,6 @@
         public string? EventCategoryId { get; set; }
         public DateTime? Date { get; set; }
         public List<UpdateHelperDTO>? Helpers { get; set; }
+        public bool RemoveMembers { get; set; }
     }
 }

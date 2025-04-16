@@ -5,6 +5,7 @@ using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
+using Web.Views.BasicModals;
 using Web.Views.ChangeEvent;
 
 namespace Web.Pages
@@ -275,10 +276,31 @@ namespace Web.Pages
             await Modal.ShowAsync<ChangeEvent>(title: "Event bearbeiten", parameters: parameters);
         }
 
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers)
+        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool dateHasChanged)
         {
-            await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, helpers);
-            await LoadEventData();
+            var sendChangesFunc = async (bool removeMembers) =>
+            {
+                await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, helpers, removeMembers);
+                await LoadEventData();
+            };
+
+            if(dateHasChanged)
+            {
+                var closeModalFunc = Modal.HideAsync;
+                var parameters = new Dictionary<string, object>
+                {
+                    { nameof(YesNoModal.Text), "Das Datum des Events wird verändert. Sollen die Eintragungen zu verfügbaren und fest eingetragenen Helfern entfernt werden?" },
+                    { nameof(YesNoModal.TrueButtonText), "Entfernen" },
+                    { nameof(YesNoModal.FalseButtonText), "Einträge belassen" },
+                    { nameof(YesNoModal.ResultFunc), sendChangesFunc },
+                    { nameof(YesNoModal.CloseModalFunc), closeModalFunc }
+                };
+                await Modal.ShowAsync<YesNoModal>(title: "Eintragungen entfernen", parameters: parameters);
+            }
+            else
+            {
+                await sendChangesFunc(false);
+            }            
         }
 
         protected void OpenGame(Models.Event @event)

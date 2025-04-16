@@ -26,6 +26,7 @@ namespace Api.Manager
             var groupId = updateEventDTO.GroupId;
             var eventCategoryId = updateEventDTO.EventCategoryId;
             var updateHelpers = updateEventDTO.Helpers;
+            var removeMembers = updateEventDTO.RemoveMembers;
 
             var eventsRef = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
@@ -99,13 +100,20 @@ namespace Api.Manager
                     }
                     else
                     {
+                        var updateDict = new Dictionary<string, object> {
+                            { nameof(Helper.RoleId), roleId },
+                            { nameof(Helper.RequiredAmount), requiredAmount },
+                            { nameof(Helper.LockingTime), lockingTimeUTC },
+                            { nameof(Helper.RequiredGroups), requiredGroups }
+                        };
+                        if (removeMembers)
+                        {
+                            updateDict.Add(nameof(Helper.LockedMembers), new List<string>());
+                            updateDict.Add(nameof(Helper.PreselectedMembers), new List<string>());
+                            updateDict.Add(nameof(Helper.AvailableMembers), new List<string>());
+                        }
                         var helperRef = helpersRef.Document(currentHelper.Id);
-                        var updateTask = helperRef.UpdateAsync(new Dictionary<string, object> {
-                        { nameof(Helper.RoleId), roleId },
-                        { nameof(Helper.RequiredAmount), requiredAmount },
-                        { nameof(Helper.LockingTime), lockingTimeUTC },
-                        { nameof(Helper.RequiredGroups), requiredGroups }
-                            }, Precondition.MustExist);
+                        var updateTask = helperRef.UpdateAsync(updateDict);
                         tasks.Add(updateTask);
                     }
                     tasks.Add(_taskManager.TriggerRecalculation(departmentId, lockingTime));

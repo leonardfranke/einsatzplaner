@@ -24,8 +24,15 @@ namespace Web.Services.Member
         public async Task<Models.Member> GetMember(string departmentId, string memberId)
         {
             var response = await _httpClient.GetAsync(new Uri($"/api/Member/{departmentId}/{memberId}", UriKind.Relative));
-            var gameDTOs = await response.Content.ReadFromJsonAsync<MemberDTO>();
-            return MemberConverter.Convert(gameDTOs);
+            try
+            {
+                var gameDTOs = await response.Content.ReadFromJsonAsync<MemberDTO>();
+                return MemberConverter.Convert(gameDTOs);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public async Task UpdateMember(string departmentId, string userId, List<string> groupIds, List<string> roleIds, bool isAdmin)
