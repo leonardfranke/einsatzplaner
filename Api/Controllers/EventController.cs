@@ -28,7 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpPost()]
-        public Task CreateEvent([FromBody] UpdateEventDTO updateEvent)
+        public Task UpdateOrCreate([FromBody] UpdateEventDTO updateEvent)
         {
             return _eventManager.UpdateOrCreate(updateEvent);
         }
