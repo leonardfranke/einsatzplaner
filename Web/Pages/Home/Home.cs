@@ -30,6 +30,9 @@ namespace Web.Pages
         public string? HoveredGameId { get; set; }
 
         [Inject]
+        protected ToastService _toastService { get; set; }
+
+        [Inject]
         private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
         [Inject]
@@ -282,6 +285,12 @@ namespace Web.Pages
             {
                 await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, helpers, removeMembers);
                 await LoadEventData();
+                if(string.IsNullOrEmpty(eventId))
+                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
+                else if(removeMembers)
+                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert. Die eingetragenen Helfer wurden entfernt."));
+                else
+                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert."));
             };
 
             if(dateHasChanged)
