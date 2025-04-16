@@ -76,7 +76,7 @@
                 }
                 <th></th>
             </tr>
-            @foreach (var eventObj in group.OrderBy(@event => @event.GameDate))
+            @foreach (var eventObj in group.OrderBy(@event => @event.EventDate))
             {
                 <tr @onmouseenter="() => HoveredEventId = eventObj.Id" @onmouseleave="() => HoveredEventId = null">
                     @if (!GroupByGroup)
@@ -103,7 +103,7 @@
                             <td scope="col">@name</td>
                         }
                     }
-                    <td>@eventObj.GameDate.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@eventObj.EventDate.ToString("dd.MM.yyyy HH:mm")</td>
                     @{var helpers = GetHelpers(eventObj);}
                     @foreach (var role in relevantRoles)
                     {

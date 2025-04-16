@@ -107,7 +107,7 @@ namespace Web.Pages
 
         public string HoveredEventId { get; set; }
 
-        public IEnumerable<Event> FilteredEvents => events?.Where(@event => !HidePastEvents || @event.GameDate.AddDays(2) >= DateTime.Now);
+        public IEnumerable<Event> FilteredEvents => events?.Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now);
 
         private List<Event> events;
         private List<Models.EventCategory> eventCategories;
