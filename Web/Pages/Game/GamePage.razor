@@ -39,9 +39,8 @@
                 <AuthorizeView Roles="IsAdmin">
                     <th class="position-relative">
                         @(GetDisplayMemberNames(help.LockedMembers))
-                        <span class="position-absolute top-0 end-0 m-1 cursor-pointer" @onclick="() => OpenLockedMembersSelected(help)">
-                            <i class="bi bi-plus-lg"></i>
-                        </span>
+                        <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
+                           @onclick="() => OpenLockedMembersSelected(help)"></i>
                     </th>
                     <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
                     <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
