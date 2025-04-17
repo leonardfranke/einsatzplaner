@@ -4,7 +4,7 @@
 @if(GameTask == null || !GameTask.IsCompleted)
     return;
 
-@if(Game == null)
+@if(Event == null)
 {
     <div>No game found</div>
     return;
@@ -14,10 +14,7 @@
     @GetPageTitle()
 </p>
 
-
-<p class="fs-3">Termin: @Game.EventDate.ToString("dd.MM.yyyy HH:mm") Uhr</p>
 <p class="fs-3">Helfer:</p>
-
 <table class="table table-striped">
     <thead>
         <tr>

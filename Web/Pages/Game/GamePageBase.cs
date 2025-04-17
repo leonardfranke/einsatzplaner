@@ -20,7 +20,7 @@ namespace Web.Pages
         [Parameter]
         public string GameId { get; set; }
 
-        public Models.Event Game { get; private set; }
+        public Models.Event Event { get; private set; }
 
         public Task<Event> GameTask { get; private set; }
 
@@ -65,18 +65,18 @@ namespace Web.Pages
 
             _departmentId = department.Id;
             GameTask = _gameService.GetEvent(department.Id, GameId);
-            Game = await GameTask;
-            if (Game == null)
+            Event = await GameTask;
+            if (Event == null)
                 return;
 
             var groupsTask = _groupService.GetAll(department.Id);
             var rolesTask = _roleService.GetAll(department.Id);
             var membersTask = _memberService.GetAll(department.Id);
             _groups = await groupsTask;
-            _group = _groups?.Find(group => group.Id == Game.GroupId);
-            if (!string.IsNullOrEmpty(Game.EventCategoryId))
+            _group = _groups?.Find(group => group.Id == Event.GroupId);
+            if (!string.IsNullOrEmpty(Event.EventCategoryId))
             {
-                var eventCategoriesTask = _eventCategoryService.GetById(department.Id, Game.EventCategoryId);
+                var eventCategoriesTask = _eventCategoryService.GetById(department.Id, Event.EventCategoryId);
                 _eventCategory = await eventCategoriesTask;
             }            
 
@@ -87,7 +87,7 @@ namespace Web.Pages
 
         private async Task ReloadHelpers()
         {
-            Helpers = await _helperService.GetAll(_departmentId, Game.Id);
+            Helpers = await _helperService.GetAll(_departmentId, Event.Id);
             StateHasChanged();
         }
 
@@ -134,18 +134,20 @@ namespace Web.Pages
         protected string GetPageTitle()
         {
             var pageTitles = new List<string>();
-            var groupId = Game?.GroupId;
+            var groupId = Event?.GroupId;
             if(!string.IsNullOrEmpty(groupId))
             {
                 pageTitles.Add((_group == null) ? "Unbekannte Gruppe" : _group.Name);
             }
 
-            if (!string.IsNullOrEmpty(Game.EventCategoryId))
+            if (!string.IsNullOrEmpty(Event.EventCategoryId))
             {
                 pageTitles.Add((_eventCategory == null) ? "Unbekannte Eventkategorie" : _eventCategory.Name);
             }
 
-            return string.Join(" - ", pageTitles);
+            var eventInfos = string.Join(" - ", pageTitles);
+            var dateInfo = Event.EventDate.ToString("dd.MM.yyyy HH:mm") + " Uhr";
+            return string.Join(", ", eventInfos, dateInfo);
         }
     }
 }
