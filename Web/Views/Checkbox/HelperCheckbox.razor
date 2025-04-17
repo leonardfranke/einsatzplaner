@@ -4,7 +4,7 @@
 {
     <input type="checkbox" disabled  checked/>
 }
-else if (IsMemberPermitted)
+else if (IsMemberPermitted || IsPreselectedOrAvailable)
 {
     <InputCheckbox @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsPreselectedOrAvailable"/>    
 }

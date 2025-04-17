@@ -16,6 +16,7 @@ namespace Web.Pages
         private const string _groupByGroupKey = $"GroupByGroup{nameof(Home)}";
         private const string _groupByEventCategoryKey = $"GroupByEventCategory{nameof(Home)}";
         private const string _hidePastEventsKey = "HidePastEvents";
+        private string _currentUserId;
 
         [CascadingParameter]
         public Modal Modal { get; set; }
@@ -133,7 +134,7 @@ namespace Web.Pages
             _departmentId = department.Id;
             if (!await _loginCheck.CheckLogin(department))
                 return;
-            var user = await _authManager.GetLocalUser();
+            _currentUserId = (await _authManager.GetLocalUser()).Id;
 
             var rolesTask = _roleService.GetAll(_departmentId);
             var groupsTask = _groupService.GetAll(_departmentId);
@@ -141,7 +142,7 @@ namespace Web.Pages
 
             var eventCategoriesTask = _eventCategoryService.GetAll(_departmentId);
             members = await membersTask;
-            Member = members.FirstOrDefault(member => member.Id == user.Id);
+            Member = members.FirstOrDefault(member => member.Id == _currentUserId);
             MemberGroupIds = Member.GroupIds ?? new();
             _memberRoleIds = Member.RoleIds ?? new();
             Roles = await rolesTask;
@@ -193,9 +194,12 @@ namespace Web.Pages
         protected IEnumerable<Role> GetRelevantRoles()
         {
             var allHelpers = FilteredEvents.SelectMany(GetHelpers);
-            var relevantRoles = allHelpers.Select(helper => helper.RoleId).Distinct();
-            var relevantPermittedRoles = relevantRoles.Intersect(_memberRoleIds);
-            return relevantPermittedRoles.Select(GetRoleById);
+            var rolesWithEvent = allHelpers.Select(helper => helper.RoleId);
+            var rolesWithUserEntered = allHelpers
+                .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
+                .Select(helper => helper.RoleId);
+            var relevantRoles = rolesWithEvent.Intersect(_memberRoleIds).Union(rolesWithUserEntered).Distinct();
+            return relevantRoles.Select(GetRoleById);
         }
 
         private void RecalculateGrouping()
