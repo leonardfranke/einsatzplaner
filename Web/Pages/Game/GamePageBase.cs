@@ -1,13 +1,19 @@
-﻿using Microsoft.AspNetCore.Components;
-using System.Linq;
+﻿using BlazorBootstrap;
+using Microsoft.AspNetCore.Components;
 using Web.Checks;
 using Web.Models;
 using Web.Services;
+using Web.Views.MemberSelection;
 
 namespace Web.Pages
 {
     public class GamePageBase : ComponentBase
     {
+        private string _departmentId;
+
+        [CascadingParameter]
+        public Modal Modal { get; set; }
+
         [Parameter]
         public string DepartmentUrl { get; set; }
 
@@ -57,12 +63,12 @@ namespace Web.Pages
             if (!await _loginCheck.CheckLogin(department))
                 return;
 
+            _departmentId = department.Id;
             GameTask = _gameService.GetEvent(department.Id, GameId);
             Game = await GameTask;
             if (Game == null)
                 return;
 
-            var helpersTask = _helperService.GetAll(department.Id, Game.Id);
             var groupsTask = _groupService.GetAll(department.Id);
             var rolesTask = _roleService.GetAll(department.Id);
             var membersTask = _memberService.GetAll(department.Id);
@@ -74,9 +80,15 @@ namespace Web.Pages
                 _eventCategory = await eventCategoriesTask;
             }            
 
-            Helpers = await helpersTask;
             _roles = await rolesTask;
-            _members = await membersTask;            
+            _members = await membersTask;
+            await ReloadHelpers();
+        }
+
+        private async Task ReloadHelpers()
+        {
+            Helpers = await _helperService.GetAll(_departmentId, Game.Id);
+            StateHasChanged();
         }
 
         public Role GetRoleById(string roleId)
@@ -96,6 +108,27 @@ namespace Web.Pages
             if (groupIds == null || groupIds.Count == 0)
                 return "-";
             return string.Join(", ", groupIds.Select(id => _groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name"));
+        }
+
+        protected async Task OpenLockedMembersSelected(Models.Helper helper)
+        {
+            var lockedMembers = new List<string>(helper.LockedMembers);
+            var confirmModalAction = async () =>
+            {
+                var lockedMembersToRemove = helper.LockedMembers.Except(lockedMembers).ToList();
+                var lockedMembersToAdd = lockedMembers.Except(helper.LockedMembers).ToList();
+                await _helperService.UpdateLockedMembers(_departmentId, helper.EventId, helper.Id, lockedMembersToRemove, lockedMembersToAdd);
+                await ReloadHelpers();
+            };
+            var closeModalFunc = Modal.HideAsync;
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
+                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
+                { nameof(MemberSelectionModal.Members), _members},
+                { nameof(MemberSelectionModal.SelectedMembers), lockedMembers }
+            };
+            await Modal.ShowAsync<MemberSelectionModal>(title: "Feste Helfer auswählen", parameters: parameters);
         }
 
         protected string GetPageTitle()

@@ -35,5 +35,16 @@ namespace Web.Services
             else
                 return false;
         }
+
+        public async Task UpdateLockedMembers(string departmentId, string eventId, string helperId, List<string> formerMembers, List<string> newMembers)
+        {
+            var updateMembersDTO = new UpdateMembersListDTO
+            {
+                FormerMembers = formerMembers,
+                NewMembers = newMembers
+            };
+            var content = JsonContent.Create(updateMembersDTO);
+            var response = await _httpClient.PostAsync(new Uri($"/api/Helper/UpdateLockedMembers/{departmentId}/{eventId}/{helperId}", UriKind.Relative), content);
+        }
     }
 }

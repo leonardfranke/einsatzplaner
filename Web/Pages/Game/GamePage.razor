@@ -40,7 +40,12 @@
                 <th>@category.Name</th>
                 <th>@help.RequiredAmount</th>
                 <AuthorizeView Roles="IsAdmin">
-                    <th>@GetDisplayMemberNames(help.LockedMembers)</th>
+                    <th class="position-relative">
+                        @(GetDisplayMemberNames(help.LockedMembers))
+                        <span class="position-absolute top-0 end-0 m-1 cursor-pointer" @onclick="() => OpenLockedMembersSelected(help)">
+                            <i class="bi bi-plus-lg"></i>
+                        </span>
+                    </th>
                     <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
                     <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
                 </AuthorizeView>

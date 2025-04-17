@@ -34,6 +34,12 @@ namespace Api.Controllers
             await _helperManager.SetIsAvailable(departmentId, eventId, helperId, memberId, isAvailable);
         }
 
+        [HttpPost("UpdateLockedMembers/{departmentId}/{eventId}/{helperId}")]
+        public Task UpdateLockedMembers([FromRoute] string departmentId, [FromRoute] string eventId, [FromRoute] string helperId, [FromBody] UpdateMembersListDTO updateMembersList)
+        {
+            return _helperManager.UpdateLockedMembers(departmentId, eventId, helperId, updateMembersList);
+        }
+
 
     }
 }

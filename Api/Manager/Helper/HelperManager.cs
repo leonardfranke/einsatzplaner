@@ -80,5 +80,19 @@ namespace Api.Manager
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
             }
         }
+
+        public async Task UpdateLockedMembers(string departmentId, string eventId, string helperId, UpdateMembersListDTO updateMembersList)
+        {
+            var helperReference = _firestoreDb
+                .Collection(Paths.DEPARTMENT).Document(departmentId)
+                .Collection(Paths.EVENT).Document(eventId)
+                .Collection(Paths.HELPER).Document(helperId);
+
+
+            await helperReference.UpdateAsync(nameof(Helper.LockedMembers), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
+            await helperReference.UpdateAsync(nameof(Helper.LockedMembers), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
+            await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
+            await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
+        }
     }
 }
