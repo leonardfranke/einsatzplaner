@@ -16,6 +16,7 @@ namespace Web.Pages
         private const string _groupByGroupKey = $"GroupByGroup{nameof(Home)}";
         private const string _groupByEventCategoryKey = $"GroupByEventCategory{nameof(Home)}";
         private const string _hidePastEventsKey = "HidePastEvents";
+        private const string _hideEventsWithoutEnteringKey = "HideEventsWithoutEntering"; 
         private string _currentUserId;
 
         [CascadingParameter]
@@ -107,12 +108,24 @@ namespace Web.Pages
                 _hidePastEvents = value;
                 _localStorage.SetItemAsync(_hidePastEventsKey, value);
                 RecalculateGrouping();
-            } 
+            }
+        }
+        public bool HideEventsWithoutEntering
+        {
+            get => _hideEventsWithoutEntering;
+            set
+            {
+                _hideEventsWithoutEntering = value;
+                _localStorage.SetItemAsync(_hideEventsWithoutEnteringKey, value);
+                RecalculateGrouping();
+            }
         }
 
         public string HoveredEventId { get; set; }
 
-        public IEnumerable<Event> FilteredEvents => events?.Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now);
+        public IEnumerable<Event> FilteredEvents => events?
+            .Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now)
+            .Where(@event => !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
 
         private List<Event> events;
         private List<Models.EventCategory> eventCategories;
@@ -124,6 +137,7 @@ namespace Web.Pages
         private Lazy<List<IGrouping<object, Event>>> _groupEventGrouping;
         private Lazy<List<IGrouping<object, Event>>> _categoryEventGrouping;
         private bool _hidePastEvents;
+        private bool _hideEventsWithoutEntering;
         private bool _groupByGroup;
         private bool _groupByEventCategory;
 

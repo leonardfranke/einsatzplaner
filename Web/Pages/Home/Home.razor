@@ -34,6 +34,10 @@
                 <InputCheckbox @bind-Value="HidePastEvents" />
                 Vergangene Events ausblenden
             </DropdownItem>
+            <DropdownItem Type="DropdownItemType.Button" @onclick="() => HideEventsWithoutEntering = !HideEventsWithoutEntering">
+                <InputCheckbox @bind-Value="HideEventsWithoutEntering" />
+                Events ohne Eintragung ausblenden
+            </DropdownItem>
         </DropdownMenu>
     </Dropdown>
 </div>
