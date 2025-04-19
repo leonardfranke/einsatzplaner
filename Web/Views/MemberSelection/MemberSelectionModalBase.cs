@@ -12,7 +12,7 @@ namespace Web.Views
         public Func<Task> CloseModalFunc { get; set; }
 
         [Parameter]
-        public List<Member> Members { get; set; } = new();
+        public IEnumerable<Member> Members { get; set; } = new List<Member>();
 
         [Parameter]
         public List<string> SelectedMembers { get; set; } = new();

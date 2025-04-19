@@ -7,7 +7,7 @@ using Web.Views.MemberSelection;
 
 namespace Web.Pages
 {
-    public class GamePageBase : ComponentBase
+    public class EventPageBase : ComponentBase
     {
         private string _departmentId;
 
@@ -22,7 +22,7 @@ namespace Web.Pages
 
         public Models.Event Event { get; private set; }
 
-        public Task<Event> GameTask { get; private set; }
+        public Task<Models.Event> EventTask { get; private set; }
 
         public List<Models.Helper> Helpers { get; private set; }
 
@@ -64,8 +64,8 @@ namespace Web.Pages
                 return;
 
             _departmentId = department.Id;
-            GameTask = _gameService.GetEvent(department.Id, GameId);
-            Event = await GameTask;
+            EventTask = _gameService.GetEvent(department.Id, GameId);
+            Event = await EventTask;
             if (Event == null)
                 return;
 
@@ -112,7 +112,9 @@ namespace Web.Pages
 
         protected async Task OpenLockedMembersSelected(Models.Helper helper)
         {
+            var role = GetRoleById(helper.RoleId);
             var lockedMembers = new List<string>(helper.LockedMembers);
+            var permittedMembers = _members.Where(member => helper.LockedMembers.Contains(member.Id) || member.GroupIds.Intersect(helper.RequiredGroups).Any() && member.RoleIds.Contains(helper.RoleId));
             var confirmModalAction = async () =>
             {
                 var lockedMembersToRemove = helper.LockedMembers.Except(lockedMembers).ToList();
@@ -125,10 +127,10 @@ namespace Web.Pages
             {
                 { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
                 { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
-                { nameof(MemberSelectionModal.Members), _members},
+                { nameof(MemberSelectionModal.Members), permittedMembers},
                 { nameof(MemberSelectionModal.SelectedMembers), lockedMembers }
             };
-            await Modal.ShowAsync<MemberSelectionModal>(title: "Feste Helfer auswählen", parameters: parameters);
+            await Modal.ShowAsync<MemberSelectionModal>(title: $"{role?.Name ?? "Nutzer"} auswählen, Bedarf: {helper.RequiredAmount}", parameters: parameters);
         }
 
         protected string GetPageTitle()

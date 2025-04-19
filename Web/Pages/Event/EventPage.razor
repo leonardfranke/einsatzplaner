@@ -1,7 +1,7 @@
 ﻿@page "/{departmentUrl}/Game/{gameId}"
-@inherits GamePageBase
+@inherits EventPageBase
 
-@if(GameTask == null || !GameTask.IsCompleted)
+@if(EventTask == null || !EventTask.IsCompleted)
     return;
 
 @if(Event == null)

@@ -22,9 +22,9 @@ namespace Web.Pages
         [CascadingParameter]
         public Modal Modal { get; set; }
 
-        public List<IGrouping<object, Event>> BothEventGrouping { get => _bothEventGrouping.Value; }
-        public List<IGrouping<object, Event>> GroupEventGrouping { get => _groupEventGrouping.Value; }
-        public List<IGrouping<object, Event>> CategoryEventGrouping { get => _categoryEventGrouping.Value; }
+        public List<IGrouping<object, Models.Event>> BothEventGrouping { get => _bothEventGrouping.Value; }
+        public List<IGrouping<object, Models.Event>> GroupEventGrouping { get => _groupEventGrouping.Value; }
+        public List<IGrouping<object, Models.Event>> CategoryEventGrouping { get => _categoryEventGrouping.Value; }
 
         [Parameter]
         public string DepartmentUrl { get; set; }
@@ -123,19 +123,19 @@ namespace Web.Pages
 
         public string HoveredEventId { get; set; }
 
-        public IEnumerable<Event> FilteredEvents => events?
+        public IEnumerable<Models.Event> FilteredEvents => events?
             .Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now)
             .Where(@event => !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
 
-        private List<Event> events;
+        private List<Models.Event> events;
         private List<Models.EventCategory> eventCategories;
         private List<Models.Member> members;
         private List<string> _memberRoleIds;
         private List<RequirementGroup> helperCategoryGroups;
         private string _departmentId;
-        private Lazy<List<IGrouping<object, Event>>> _bothEventGrouping;
-        private Lazy<List<IGrouping<object, Event>>> _groupEventGrouping;
-        private Lazy<List<IGrouping<object, Event>>> _categoryEventGrouping;
+        private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
+        private Lazy<List<IGrouping<object, Models.Event>>> _groupEventGrouping;
+        private Lazy<List<IGrouping<object, Models.Event>>> _categoryEventGrouping;
         private bool _hidePastEvents;
         private bool _hideEventsWithoutEntering;
         private bool _groupByGroup;
@@ -179,7 +179,7 @@ namespace Web.Pages
             StateHasChanged();
         }
 
-        public string GetGroupHeading(IGrouping<object, Event> group)
+        public string GetGroupHeading(IGrouping<object, Models.Event> group)
         {
             var unknown = "Sonstiges";
             var groupName = string.Empty;
@@ -219,7 +219,7 @@ namespace Web.Pages
         private void RecalculateGrouping()
         {
             _bothEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Event, object>(game =>
+                FilteredEvents.GroupBy<Models.Event, object>(game =>
                 {
                     var group = Groups.FirstOrDefault(group => group.Id.Equals(game.GroupId));
                     var eventCategory = eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId));
@@ -246,7 +246,7 @@ namespace Web.Pages
                 }).ToList()
             );
             _groupEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Event, object>(game =>
+                FilteredEvents.GroupBy<Models.Event, object>(game =>
                     Groups.FirstOrDefault(group => group.Id.Equals(game.GroupId)))
                 .OrderBy(eventGroup =>
                 {
@@ -256,7 +256,7 @@ namespace Web.Pages
                         return Groups.Count;
                 }).ToList());
             _categoryEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Event, object>(game =>
+                FilteredEvents.GroupBy<Models.Event, object>(game =>
                     eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId)))
                 .OrderBy(eventGroup =>
                 {
@@ -273,7 +273,7 @@ namespace Web.Pages
 
         protected Models.EventCategory GetEventCategoryById(string categoryId) => eventCategories.FirstOrDefault(category => category.Id == categoryId);
 
-        protected List<Models.Helper> GetHelpers(Event @event)
+        protected List<Models.Helper> GetHelpers(Models.Event @event)
         {
             if (@event == null)
                 return null;
@@ -335,7 +335,7 @@ namespace Web.Pages
             _navigationManager.NavigateTo($"./{DepartmentUrl}/game/{@event.Id}");
         }
 
-        public async Task EditGame(Event? @event)
+        public async Task EditGame(Models.Event? @event)
         {
             var closeModalFunc = Modal.HideAsync;
             var deleteGameFunc = DeleteGame;

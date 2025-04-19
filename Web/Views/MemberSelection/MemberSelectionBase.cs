@@ -6,7 +6,7 @@ namespace Web.Views
     public class MemberSelectionBase : ComponentBase
     {
         [Parameter]
-        public List<Member> Members { protected get; set; } = new();
+        public IEnumerable<Member> Members { protected get; set; } = new List<Member>();
 
         [Parameter]
         public List<string> SelectedMembers { get; set; } = new();
