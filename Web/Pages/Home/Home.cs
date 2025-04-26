@@ -1,5 +1,6 @@
 ﻿using BlazorBootstrap;
 using Blazored.LocalStorage;
+using DTO;
 using Microsoft.AspNetCore.Components;
 using Web.Checks;
 using Web.Manager;
@@ -297,11 +298,11 @@ namespace Web.Pages
             await Modal.ShowAsync<ChangeEvent>(title: "Event bearbeiten", parameters: parameters);
         }
 
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool dateHasChanged)
+        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool dateHasChanged)
         {
             var sendChangesFunc = async (bool removeMembers) =>
             {
-                await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, helpers, removeMembers);
+                await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, place, helpers, removeMembers);
                 await LoadEventData();
                 if(string.IsNullOrEmpty(eventId))
                     _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
@@ -332,7 +333,7 @@ namespace Web.Pages
 
         protected void OpenGame(Models.Event @event)
         {
-            _navigationManager.NavigateTo($"./{DepartmentUrl}/game/{@event.Id}");
+            _navigationManager.NavigateTo($"./{DepartmentUrl}/event/{@event.Id}");
         }
 
         public async Task EditGame(Models.Event? @event)

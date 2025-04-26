@@ -21,7 +21,8 @@ namespace Web.Converter
                 DepartmentId = @event.DepartmentId,
                 GroupId = @event.GroupId,
                 EventCategoryId = @event.EventCategoryId,
-                Id = @event.Id
+                Id = @event.Id,
+                Place = @event.Place
             };
         }
     }

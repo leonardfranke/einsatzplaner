@@ -1,9 +1,11 @@
 ﻿using BlazorBootstrap;
+using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Web.Checks;
 using Web.Models;
 using Web.Services;
 using Web.Views.MemberSelection;
+using static LeafletForBlazor.Map;
 
 namespace Web.Pages
 {
@@ -26,6 +28,7 @@ namespace Web.Pages
 
         public List<Models.Helper> Helpers { get; private set; }
 
+        public RealTimeMap.LoadParameters LoadParameters { get; private set; }
 
         [Inject]
         private ILoginCheck _loginCheck { get; set; }
@@ -55,6 +58,19 @@ namespace Web.Pages
         private Models.EventCategory _eventCategory;
         private Models.Group _group;
 
+        protected override void OnInitialized()
+        {
+            LoadParameters = new RealTimeMap.LoadParameters
+            {
+                location = new RealTimeMap.Location
+                {
+                    latitude = 51.164305,
+                    longitude = 10.4541205,
+                },
+                zoomLevel = 5.5
+            };
+        }
+
         protected override async Task OnParametersSetAsync()
         {
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
@@ -78,11 +94,42 @@ namespace Web.Pages
             {
                 var eventCategoriesTask = _eventCategoryService.GetById(department.Id, Event.EventCategoryId);
                 _eventCategory = await eventCategoriesTask;
-            }            
+            }
 
             _roles = await rolesTask;
             _members = await membersTask;
             await ReloadHelpers();
+
+            if (Event.Place.HasValue)
+            {
+                LoadParameters = new RealTimeMap.LoadParameters
+                {
+                    location = new RealTimeMap.Location
+                    {
+                        latitude = Event.Place.Value.Latitude,
+                        longitude = Event.Place.Value.Longitude,
+                    },
+                    zoomLevel = 17
+                };
+            }
+        }
+
+        public async Task MapLoaded(RealTimeMap.MapEventArgs args)
+        {
+            var map = args.sender;
+            await map.Geometric.Points.upload([new RealTimeMap.StreamPoint
+            {
+                latitude = Event.Place.Value.Latitude,
+                longitude = Event.Place.Value.Longitude,
+
+            }], true);
+            map.Geometric.Points.Appearance().pattern = new RealTimeMap.PointSymbol()
+            {
+                color = "green",
+                fillColor = "green",
+                fillOpacity = 0.5,
+                radius = 10
+            };
         }
 
         private async Task ReloadHelpers()

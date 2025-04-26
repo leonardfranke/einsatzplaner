@@ -23,6 +23,7 @@
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
     <PackageReference Include="FirebaseAuthentication.net" Version="4.1.0" />
+    <PackageReference Include="LeafletForBlazor" Version="2.2.4" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.3" />

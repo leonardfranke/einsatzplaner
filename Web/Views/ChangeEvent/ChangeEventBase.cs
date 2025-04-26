@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using Blazored.LocalStorage;
+using DTO;
+using LeafletForBlazor;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using Web.Manager;
@@ -14,6 +17,9 @@ namespace Web.Views
 
         [Inject]
         private IJSRuntime js { get; set; }
+
+        [Inject]
+        private ILocalStorageService _localStorage { get; set; }
 
         [Inject]
         private IHelperService _helperService { get; set; }
@@ -50,8 +56,10 @@ namespace Web.Views
 
         public List<RequirementGroup> RequirementGroups { get; private set; }
 
+        public RealTimeMap EventMap { get; set; }
+
         [Parameter]
-        public Func<string?, string?, string?, DateTime, Dictionary<string, Tuple<int, DateTime, List<string>>>, bool, Task> SaveEventFunc { get; set; }
+        public Func<string?, string?, string?, DateTime, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>>>, bool, Task> SaveEventFunc { get; set; }
 
         public ElementReference GroupSelect;
 
@@ -60,7 +68,8 @@ namespace Web.Views
         [SupplyParameterFromForm]
         public FormModel EventData { get; set; }
         public EditContext EditContext { get; set; }
-
+        public RealTimeMap.LoadParameters LoadParameters { get; private set; }
+        public RealTimeMap.MapOptions MapOptions { get; private set; }
         public bool IsUpdate { get; set; }
 
         private ValidationMessageStore _messageStore;
@@ -70,12 +79,34 @@ namespace Web.Views
             CreateFormContext();
         }
 
+        protected override void OnInitialized()
+        {
+            LoadParameters = new RealTimeMap.LoadParameters
+            {
+                location = new RealTimeMap.Location
+                {
+                    latitude = 51.164305,
+                    longitude = 10.4541205,
+                },
+                zoomLevel = 5.5
+            };
+
+            MapOptions = new RealTimeMap.MapOptions
+            {
+                interactionOptions = new RealTimeMap.InteractionOptions
+                {
+                    doubleClickZoom = false
+                }
+            };
+        }
+
         protected override async Task OnParametersSetAsync()
         {
             Roles = await _roleService.GetAll(DepartmentId);
             Groups = await _groupService.GetAll(DepartmentId);
             EventCategories = await _eventCategoryService.GetAll(DepartmentId);
             RequirementGroups = await _requirementGroupService.GetAll(DepartmentId);
+
             
             IsUpdate = Event != null;
             if (IsUpdate)
@@ -91,6 +122,20 @@ namespace Web.Views
                     var lockingPeriod = Event.EventDate.Subtract(lockingTime).Days;
                     AddCategoryToGame(helper.RoleId, helper.RequiredAmount, lockingPeriod, helper.RequiredGroups);
                 }
+                if (Event.Place.HasValue) 
+                {
+                    EventData.Place = Event.Place.Value;
+
+                    LoadParameters = new RealTimeMap.LoadParameters
+                    {
+                        location = new RealTimeMap.Location
+                        {
+                            latitude = EventData.Place.Value.Latitude,
+                            longitude = EventData.Place.Value.Longitude,
+                        },
+                        zoomLevel = 17
+                    };
+                }
             }
             else
             {
@@ -105,6 +150,37 @@ namespace Web.Views
             _messageStore = new(EditContext);
         }
 
+        public async Task UpdateMapMarker(RealTimeMap.MapEventArgs args)
+        {
+            if(!EventData.Place.HasValue)
+                return;
+
+            await EventMap.Geometric.Points.upload([new RealTimeMap.StreamPoint
+            {
+                latitude = EventData.Place.Value.Latitude,
+                longitude = EventData.Place.Value.Longitude
+            }], true);
+
+            EventMap.Geometric.Points.Appearance().pattern = new RealTimeMap.PointSymbol()
+            {
+                color = "green",
+                fillColor = "green",
+                fillOpacity = 0.5,
+                radius = 10
+            };
+        }
+
+        public Task MapDoubleClicked(RealTimeMap.ClicksMapArgs args)
+        {
+            EventData.Place = new Geolocation 
+            {
+                Latitude = args.location.latitude,
+                Longitude = args.location.longitude
+            };
+
+            return UpdateMapMarker(null);
+        }
+
         public async Task SaveGame()
         {
             var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>>>();
@@ -115,7 +191,7 @@ namespace Web.Views
             }
 
             var dateHasChanged = IsUpdate && EventData.Date != Event?.EventDate;
-            await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, categoryData, dateHasChanged);
+            await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, EventData.Place, categoryData, dateHasChanged);
             if(!dateHasChanged)
                 await CloseModal();
         }
@@ -219,6 +295,7 @@ namespace Web.Views
                     _date = date;
                 } }
             public List<HelperFormModel> Helpers { get; set; } = new();
+            public Geolocation? Place { get; set; }
         }
 
         public class HelperFormModel

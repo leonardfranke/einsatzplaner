@@ -1,4 +1,5 @@
-﻿@page "/{departmentUrl}/Game/{gameId}"
+﻿@page "/{departmentUrl}/event/{gameId}"
+@using LeafletForBlazor
 @inherits EventPageBase
 
 @if(EventTask == null || !EventTask.IsCompleted)
@@ -14,43 +15,50 @@
     @GetPageTitle()
 </p>
 
-<p class="fs-3">Helfer:</p>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th scope="col">Kategorie</th>
-            <th scope="col">Bedarf</th>
-            <AuthorizeView Roles="IsAdmin">
-                <th scope="col">Feste Helfer</th>
-                <th scope="col">Vorausgewählte Helfer</th>
-                <th scope="col">Verfügbare Helfer</th>
-            </AuthorizeView>
-            <th scope="col">Verfügbare Gruppen</th>
-            <th scope="col">Sperrzeitpunkt</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var help in Helpers)
-        {
-            var category = GetRoleById(help.RoleId);
+@if(Helpers.Any())
+{    
+    <p class="fs-3">Helfer:</p>
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <th>@category.Name</th>
-                <th>@help.RequiredAmount</th>
+                <th scope="col">Kategorie</th>
+                <th scope="col">Bedarf</th>
                 <AuthorizeView Roles="IsAdmin">
-                    <th class="position-relative">
-                        @(GetDisplayMemberNames(help.LockedMembers))
-                        <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
-                           @onclick="() => OpenLockedMembersSelected(help)"></i>
-                    </th>
-                    <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
-                    <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
+                    <th scope="col">Feste Helfer</th>
+                    <th scope="col">Vorausgewählte Helfer</th>
+                    <th scope="col">Verfügbare Helfer</th>
                 </AuthorizeView>
-                <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
-                <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
-            </tr>            
-        }        
-    </tbody>
-</table>
+                <th scope="col">Verfügbare Gruppen</th>
+                <th scope="col">Sperrzeitpunkt</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var help in Helpers)
+            {
+                var category = GetRoleById(help.RoleId);
+                <tr>
+                    <th>@category.Name</th>
+                    <th>@help.RequiredAmount</th>
+                    <AuthorizeView Roles="IsAdmin">
+                        <th class="position-relative">
+                            @(GetDisplayMemberNames(help.LockedMembers))
+                            <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
+                            @onclick="() => OpenLockedMembersSelected(help)"></i>
+                        </th>
+                        <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
+                        <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
+                    </AuthorizeView>
+                    <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
+                    <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
+                </tr>            
+            }        
+        </tbody>
+    </table>
+}
 
 
-
+@if(Event.Place.HasValue)
+{
+    <p class="fs-3">Veranstaltungsort:</p>
+    <RealTimeMap width="600px" height="400px" OnAfterMapLoaded="MapLoaded"></RealTimeMap>
+}

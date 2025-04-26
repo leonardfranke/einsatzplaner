@@ -1,4 +1,6 @@
-﻿namespace Web.Models
+﻿using DTO;
+
+namespace Web.Models
 {
     public class Event
     {
@@ -7,5 +9,6 @@
         public string? GroupId { get; set; }
         public string? EventCategoryId { get; set; }
         public DateTime EventDate { get; set; }
+        public Geolocation? Place { get; set; }
     }
 }

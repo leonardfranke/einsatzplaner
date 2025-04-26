@@ -15,7 +15,7 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool removeMembers)
+        public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool removeMembers)
         {
             try
             {                
@@ -26,7 +26,8 @@ namespace Web.Services
                     GroupId = groupId,
                     EventCategoryId = eventCategoryId,
                     Date = gameDate,
-                    RemoveMembers = removeMembers
+                    RemoveMembers = removeMembers,
+                    Place = place
                 };
 
                 if (helpers != null)

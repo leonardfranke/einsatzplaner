@@ -27,6 +27,7 @@ namespace Api.Manager
             var eventCategoryId = updateEventDTO.EventCategoryId;
             var updateHelpers = updateEventDTO.Helpers;
             var removeMembers = updateEventDTO.RemoveMembers;
+            GeoPoint? place = updateEventDTO.Place.HasValue ? new GeoPoint(updateEventDTO.Place.Value.Latitude, updateEventDTO.Place.Value.Longitude) : null;
 
             var eventsRef = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
@@ -44,17 +45,18 @@ namespace Api.Manager
                 {
                     GroupId = groupId,
                     EventCategoryId = eventCategoryId,
-                    Date = (DateTime)dateUTC
+                    Date = (DateTime)dateUTC,
+                    Place = place
                 };
                 eventRef = await eventsRef.AddAsync(newEvent);
-
-                var updateTask = eventRef.UpdateAsync(nameof(Event.IdProperty), eventRef.Id, Precondition.MustExist);
-                dataChangesTasks.Add(updateTask);
             }
             else
             {
                 eventRef = eventsRef.Document(eventId);
-                var valueToUpdate = new Dictionary<string, object>();
+                var valueToUpdate = new Dictionary<string, object>
+                {
+                    { nameof(Event.Place), place }
+                };
                 if(groupId != null)
                     valueToUpdate.Add(nameof(Event.GroupId), groupId);
                 if (eventCategoryId != null)
@@ -165,14 +167,12 @@ namespace Api.Manager
         {
             var snapshot = await _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.EVENT).WhereEqualTo(nameof(Event.IdProperty), eventId)
-                .Limit(1).GetSnapshotAsync();
+                .Collection(Paths.EVENT).Document(eventId).GetSnapshotAsync();
 
-            if (snapshot.Count() == 0)
+            if (!snapshot.Exists)
                 return null;
 
-            var eventModel = snapshot.First();
-            var @event = eventModel.ConvertTo<Event>();
+            var @event = snapshot.ConvertTo<Event>();
             return EventConverter.Convert(@event, departmentId);            
         }
     }
