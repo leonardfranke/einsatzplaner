@@ -3,55 +3,83 @@
 
 <h2>@Member.Name</h2>
 
-<EditForm EditContext="@EditContext" OnValidSubmit="SaveMember">
-    @{
-        var notSelectedGroups = Groups.Where(group => !MemberData.GroupIds.Contains(group.Id));
-        var notSelectedRoles = Roles.Where(role => !MemberData.RoleIds.Contains(role.Id));
-    }
-    <label class="form-label">Gruppen</label>   
-    <Dropdown ItemType="Models.Group" Items="notSelectedGroups" Title="Gruppe hinzufügen" EmptyListText="Keine Gruppen" ItemClickFunc="@AddGroup" ItemDisplayFunc="(group) => group.Name" />
-
-    @foreach (var groupId in MemberData.GroupIds)
-    {        
-        var group = Groups.FirstOrDefault(group => group.Id == groupId);
-
-        <div class="btn-group btn-group-sm mt-1" style="display: inline-flex;" role="group">
-            <button type="button" class="btn btn-outline-primary">@group.Name</button>
-            <button @onclick="() => RemoveGroup(group)" type="button" class="btn btn-outline-danger">
-                <i class="bi bi-trash3"></i>
-            </button>
-        </div>
-        <br />
-    }
-
-    <label class="form-label mt-3">Rollen</label>
-    <Dropdown ItemType="Models.Role" Items="notSelectedRoles" Title="Rolle hinzufügen" EmptyListText="Keine Rollen" ItemClickFunc="@AddRole" ItemDisplayFunc="(role) => role.Name" />
-
-    @foreach (var roleId in MemberData.RoleIds)
-    {
-        var role = Roles.FirstOrDefault(role => role.Id == roleId);
-
-        <div class="btn-group btn-group-sm mt-1" role="group">
-            <button type="button" class="btn btn-outline-primary">@(string.IsNullOrEmpty(role?.Name) ? "Unbekannte Rolle" : role.Name)</button>
-            <button @onclick="() => RemoveRole(roleId)" type="button" class="btn btn-outline-danger">
-                <i class="bi bi-trash3"></i>
-            </button>
-        </div>
-        <br/>
-    }
-    
-    <div class="form-check">
-        <InputCheckbox class="form-check-input" @bind-Value="MemberData.IsAdmin" id="flexCheckDefault"/>
-        <label class="form-check-label" for="flexCheckDefault">
-            Administrator
-        </label>
+@if(IsMemberLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
     </div>
-</EditForm>
+}
+else
+{    
+    <EditForm EditContext="@EditContext" OnValidSubmit="SaveMember">
+        @{
+            var notSelectedGroups = Groups.Where(group => !MemberData.GroupIds.Contains(group.Id));
+            var notSelectedRoles = Roles.Where(role => !MemberData.RoleIds.Contains(role.Id));
+        }
+        <label class="form-label">Gruppen</label>   
+        <Dropdown ItemType="Models.Group" Items="notSelectedGroups" Title="Gruppe hinzufügen" EmptyListText="Keine Gruppen" ItemClickFunc="@AddGroup" ItemDisplayFunc="(group) => group.Name" />
+
+        @foreach (var groupId in MemberData.GroupIds)
+        {        
+            var group = Groups.FirstOrDefault(group => group.Id == groupId);
+
+            <div class="btn-group btn-group-sm mt-1" style="display: inline-flex;" role="group">
+                <button type="button" class="btn btn-outline-primary">@group.Name</button>
+                <button @onclick="() => RemoveGroup(group)" type="button" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+            <br />
+        }
+
+        <label class="form-label mt-3">Rollen</label>
+        <Dropdown ItemType="Models.Role" Items="notSelectedRoles" Title="Rolle hinzufügen" EmptyListText="Keine Rollen" ItemClickFunc="@AddRole" ItemDisplayFunc="(role) => role.Name" />
+
+        @foreach (var roleId in MemberData.RoleIds)
+        {
+            var role = Roles.FirstOrDefault(role => role.Id == roleId);
+
+            <div class="btn-group btn-group-sm mt-1" role="group">
+                <button type="button" class="btn btn-outline-primary">@(string.IsNullOrEmpty(role?.Name) ? "Unbekannte Rolle" : role.Name)</button>
+                <button @onclick="() => RemoveRole(roleId)" type="button" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+            <br/>
+        }
+
+        <div class="form-check">
+            <InputCheckbox class="form-check-input" @bind-Value="MemberData.IsAdmin" id="flexCheckDefault"/>
+            <label class="form-check-label" for="flexCheckDefault">
+                Administrator
+            </label>
+        </div>
+    </EditForm>
+}
 
 
 <hr />
-<button class="btn btn-danger" @onclick="DeleteMember">Nutzer entfernen</button>
+@if(IsMemberDeleting)
+{
+    <button class="btn btn-danger">
+        <span class="spinner-border spinner-border-sm"></span>
+        <span>Nutzer entfernen</span>
+    </button>
+}
+else
+{
+    <button class="btn btn-danger" @onclick="DeleteMember">Nutzer entfernen</button>
+}
 <div class="float-end">
-    <button class="btn btn-secondary" @onclick="CloseModal">Abbrechen</button>
-    <button class="btn btn-primary" @onclick="SaveMember">Nutzer speichern</button>
+    @if(IsMemberSaving)
+    {
+        <button class="btn btn-primary">
+            <span class="spinner-border spinner-border-sm"></span>
+            <span>Nutzer speichern</span>
+        </button>
+    }
+    else
+    {
+        <button class="btn btn-primary" @onclick="SaveMember">Nutzer speichern</button>
+    }
 </div>

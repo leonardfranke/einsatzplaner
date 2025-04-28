@@ -34,6 +34,10 @@ namespace Web.Views
         public FormModel RoleData { get; set; }
         public EditContext EditContext { get; set; }
 
+        public bool IsRoleSaving { get; set; }
+        public bool IsRoleDeleting { get; set; }
+        public bool IsRoleLoading { get; set; }
+
         protected List<string> SelectedMembers { get; private set; }
 
         protected List<Member> Members { get; private set; } = new();
@@ -63,6 +67,7 @@ namespace Web.Views
 
         protected override async Task OnParametersSetAsync()
         {
+            IsRoleLoading = true;
             IsUpdate = Role != null;
             if (!IsUpdate)
             {
@@ -82,21 +87,26 @@ namespace Web.Views
             _oldLockingPeriod = RoleData.LockingPeriod;
             _oldSelectedMembers = Members.Where(member => member.RoleIds.Contains(Role.Id)).Select(member => member.Id).ToList();
             SelectedMembers = new(_oldSelectedMembers);
+            IsRoleLoading = false;
         }
 
         public async Task SaveRole()
         {
+            IsRoleSaving = true;
             var newRoleMembers = SelectedMembers.Except(_oldSelectedMembers);
             var formerRoleMembers = _oldSelectedMembers.Except(SelectedMembers);
             if (RoleData.Name != _oldName || RoleData.LockingPeriod != _oldLockingPeriod || newRoleMembers.Any() || formerRoleMembers.Any())
                 await UpdateRoleFunc(Role?.Id, RoleData.Name, RoleData.LockingPeriod, newRoleMembers, formerRoleMembers);
             await CloseModal();
+            IsRoleSaving = false;
         }
 
         public async Task DeleteRole()
         {
+            IsRoleDeleting = true;
             await DeleteRoleFunc(Role.Id);
             await CloseModal();
+            IsRoleDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();

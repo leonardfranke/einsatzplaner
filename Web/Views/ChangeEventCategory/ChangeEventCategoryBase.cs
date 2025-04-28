@@ -21,6 +21,8 @@ namespace Web.Views
         [SupplyParameterFromForm]
         public FormModel EventCategoryData { get; set; }
         public EditContext EditContext { get; set; }
+        public bool IsEventCategorySaving { get; set; }
+        public bool IsEventCategoryDeleting { get; set; }
 
         public bool IsUpdate { get; set; }
 
@@ -43,7 +45,7 @@ namespace Web.Views
                 _messageStore.Add(() => EventCategoryData.Name, "Die Eventkategorie benötigt einen Namen.");
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override void OnParametersSet()
         {
             IsUpdate = EventCategory != null;
             if (!IsUpdate)
@@ -55,15 +57,19 @@ namespace Web.Views
 
         public async Task SaveEventCategory()
         {
+            IsEventCategorySaving = true;
             if(EventCategoryData.Name != _oldName)
                 await SaveEventCategoryFunc(EventCategory?.Id, EventCategoryData.Name);
             await CloseModal();
+            IsEventCategorySaving = false;
         }
 
         public async Task DeleteEventCategory()
         {
+            IsEventCategoryDeleting = true;
             await DeleteEventCategoryFunc(EventCategory.Id);
             await CloseModal();
+            IsEventCategoryDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();

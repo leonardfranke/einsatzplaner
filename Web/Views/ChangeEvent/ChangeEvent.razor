@@ -3,125 +3,154 @@
 @using Web.Extensions
 @using BlazorBootstrap
 
-<EditForm EditContext="@EditContext" OnValidSubmit="SaveGame">
-    
-    <div class="mb-3">
-        <label class="form-label">Gruppe</label>
-        <select @ref="GroupSelect" class="form-control" @bind="EventData.GroupId">
-            <option value=""><i>kein Group</i></option>
-            @foreach (var groups in Groups ?? new())
-            {
-                <option value="@groups.Id">@groups.Name</option>
-            }
-        </select>
+@if(IsEventLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
     </div>
+}
+else
+{    
+    <EditForm EditContext="@EditContext" OnValidSubmit="SaveGame">
 
-    <div class="mb-3">
-        <label class="form-label">Kategorie</label>
-        <select @ref="EventCategorySelect" class="form-control" @bind="@EventData.EventCategoryId">
-            <option value=""><i>keine Kategorie</i></option>
-            @foreach (var category in EventCategories ?? new())
-            {
-                <option value="@category.Id">@category.Name</option>
-            }
-        </select>
-    </div>
-    
-    <div class="mb-3">
-        <label class="form-label">Datum</label>
-        <input class="form-control" type="datetime-local" @bind-value="@EventData.Date" />
-    </div>
+        <div class="mb-3">
+            <label class="form-label">Gruppe</label>
+            <select @ref="GroupSelect" class="form-control" @bind="EventData.GroupId">
+                <option value=""><i>kein Group</i></option>
+                @foreach (var groups in Groups ?? new())
+                {
+                    <option value="@groups.Id">@groups.Name</option>
+                }
+            </select>
+        </div>
 
-    <h3 class="my-3">Helfer:</h3>
+        <div class="mb-3">
+            <label class="form-label">Kategorie</label>
+            <select @ref="EventCategorySelect" class="form-control" @bind="@EventData.EventCategoryId">
+                <option value=""><i>keine Kategorie</i></option>
+                @foreach (var category in EventCategories ?? new())
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </div>
 
-    @if(Roles != null)
-    {        
-        <div class="dropdown">
-            <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Hinzufügen</button>
-            <ul class="dropdown-menu">
-                @{
-                    if(RequirementGroups != null && RequirementGroups.Count > 0)
-                    {
-                        <li><h6 class="dropdown-header">Bedarfsgruppen</h6></li>
-                        foreach (var helperGroup in RequirementGroups)
+        <div class="mb-3">
+            <label class="form-label">Datum</label>
+            <input class="form-control" type="datetime-local" @bind-value="@EventData.Date" />
+        </div>
+
+        <h3 class="my-3">Helfer:</h3>
+
+        @if(Roles != null)
+        {        
+            <div class="dropdown">
+                <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Hinzufügen</button>
+                <ul class="dropdown-menu">
+                    @{
+                        if(RequirementGroups != null && RequirementGroups.Count > 0)
                         {
-                            <li><button @onclick="() => SetHelperGroup(helperGroup)" type="button" class="dropdown-item" href="#">@GetGroupDisplayText(helperGroup)</button></li>
+                            <li><h6 class="dropdown-header">Bedarfsgruppen</h6></li>
+                            foreach (var helperGroup in RequirementGroups)
+                            {
+                                <li><button @onclick="() => SetHelperGroup(helperGroup)" type="button" class="dropdown-item" href="#">@GetGroupDisplayText(helperGroup)</button></li>
+                            }
+                            <li><hr class="dropdown-divider"></li>
                         }
-                        <li><hr class="dropdown-divider"></li>
-                    }
 
-                    <li><h6 class="dropdown-header">Helferkategorien</h6></li>
-                    var alreadySelectedCategoryIds = EventData.Helpers?.Select(helper => helper.RoleId);
-                    var dropdownListHelpers = Roles.Where(category => !alreadySelectedCategoryIds.Contains(category.Id));
-                    if (dropdownListHelpers.Count() == 0)
+                        <li><h6 class="dropdown-header">Helferkategorien</h6></li>
+                        var alreadySelectedCategoryIds = EventData.Helpers?.Select(helper => helper.RoleId);
+                        var dropdownListHelpers = Roles.Where(category => !alreadySelectedCategoryIds.Contains(category.Id));
+                        if (dropdownListHelpers.Count() == 0)
+                        {
+                            <div class="text-body-secondary ps-3">
+                                <p>Keine weiteren Rollen</p>
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var category in dropdownListHelpers)
+                            {
+                                <li><button @onclick="() => AddCategoryToGame(category.Id, 1)" type="button" class="dropdown-item" href="#">@category.Name</button></li>
+                            }
+                        }
+                    }
+                </ul>
+            </div>
+        }
+
+        @if (EventData.Helpers.Count > 0)
+        {
+            @foreach (var helperForm in EventData.Helpers)
+            {
+                var category = GetRoleById(helperForm.RoleId);
+
+                <div class="d-flex mt-4 mb-2">
+                    @if (category == null)
                     {
-                        <div class="text-body-secondary ps-3">
-                            <p>Keine weiteren Rollen</p>
-                        </div>
+                        <h5><i>Unbekannte Rolle</i></h5>
                     }
                     else
                     {
-                        foreach (var category in dropdownListHelpers)
-                        {
-                            <li><button @onclick="() => AddCategoryToGame(category.Id, 1)" type="button" class="dropdown-item" href="#">@category.Name</button></li>
-                        }
+                        <h4>@category.Name</h4>
                     }
-                }
-            </ul>
-        </div>
-    }
 
-    @if (EventData.Helpers.Count > 0)
-    {
-        @foreach (var helperForm in EventData.Helpers)
-        {
-            var category = GetRoleById(helperForm.RoleId);
+                    <button @onclick="() => RemoveCategoryFromGame(helperForm)" type="button" class="btn btn-outline-dark align-self-center ms-auto">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>            
 
-            <div class="d-flex mt-4 mb-2">
-            @if (category == null)
-            {
-                <h5><i>Unbekannte Rolle</i></h5>
-            }
-            else
-            {
-                <h4>@category.Name</h4>
-            }
-
-                <button @onclick="() => RemoveCategoryFromGame(helperForm)" type="button" class="btn btn-outline-dark align-self-center ms-auto">
-                    <i class="bi bi-trash3"></i>
-                </button>
-            </div>            
-
-            <div>
-                <label class="form-label">Bedarf</label>
-                <input class="form-control" type="number" min="1" value="@helperForm.RequiredAmount" @onchange="(value) => SetRequiredAmount(helperForm, (string)value.Value)" />
-            </div>
-            <div>
-                <label class="form-label">Sperrzeitraum</label>
-                <input class="form-control" type="number" min="0" value="@helperForm.LockingPeriod" @onchange="(value) => SetLockingPeriod(helperForm, (string)value.Value)" />
-            </div>
-            @if(Groups.Count > 0)
-            {
-                <label class="form-label">Freigeschaltete Gruppen:</label>
-                @foreach (var group in Groups)
+                <div>
+                    <label class="form-label">Bedarf</label>
+                    <input class="form-control" type="number" min="1" value="@helperForm.RequiredAmount" @onchange="(value) => SetRequiredAmount(helperForm, (string)value.Value)" />
+                </div>
+                <div>
+                    <label class="form-label">Sperrzeitraum</label>
+                    <input class="form-control" type="number" min="0" value="@helperForm.LockingPeriod" @onchange="(value) => SetLockingPeriod(helperForm, (string)value.Value)" />
+                </div>
+                @if(Groups.Count > 0)
                 {
-                    <div class="form-check">
-                        <label class="form-check-label">@group.Name</label>
-                        <input class="form-check-input" type="checkbox" checked="@IsGroupSetForCategory(helperForm, group.Id)" @onchange="(value) => SetRequiredGroup(helperForm, group.Id, (bool)value.Value)" />
-                    </div>
-                }
-            }            
+                    <label class="form-label">Freigeschaltete Gruppen:</label>
+                    @foreach (var group in Groups)
+                    {
+                        <div class="form-check">
+                            <label class="form-check-label">@group.Name</label>
+                            <input class="form-check-input" type="checkbox" checked="@IsGroupSetForCategory(helperForm, group.Id)" @onchange="(value) => SetRequiredGroup(helperForm, group.Id, (bool)value.Value)" />
+                        </div>
+                    }
+                }            
+            }
         }
-    }
 
-    <RealTimeMap width="300px" height="100px" @ref="EventMap" OnAfterMapLoaded="UpdateMapMarker" Parameters="LoadParameters" OnDoubleClickMap="MapDoubleClicked" Options="MapOptions"></RealTimeMap>
+        <RealTimeMap width="300px" height="100px" @ref="EventMap" OnAfterMapLoaded="UpdateMapMarker" Parameters="LoadParameters" OnDoubleClickMap="MapDoubleClicked" Options="MapOptions"></RealTimeMap>
 
-    <hr />
-    @if (IsUpdate)
-    {
-        <button class="btn btn-danger" type="button" @onclick="DeleteGame">Event löschen</button>
-    }
-    <div class="float-end">
-        <button class="btn btn-primary" type="submit">Event speichern</button>
-    </div>
-</EditForm>
+        <hr />
+        @if (IsUpdate)
+        {
+                @if (IsEventDeleting) 
+                { 
+                    <button class="btn btn-danger" type="button">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        <span>Löschen</span>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-danger" type="button" @onclick="DeleteGame">Löschen</button>
+                }
+        }
+        <div class="float-end">
+                @if (IsEventSaving)
+                {
+                    <button class="btn btn-primary" type="submit">
+                        <span class="spinner-border spinner-border-sm"></span>
+                        <span>Speichern</span>
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary">Speichern</button>
+                }
+        </div>
+    </EditForm>
+}

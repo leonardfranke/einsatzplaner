@@ -2,19 +2,47 @@
 @using Web.Extensions
 @using Web.Views.MemberSelection
 
-<EditForm EditContext="EditContext" OnValidSubmit="SafeGroup">
-    <label class="form-label">Name</label>
-    <InputText @bind-Value="GroupData.Name" class="form-control mb-3"/>    
-
-    <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
-
-    <hr />
-    @if (IsUpdate)
-    {
-        <button class="btn btn-danger" type="button" @onclick="DeleteGroup">Rolle löschen</button>
-    }
-    <div class="float-end">
-        <button class="btn btn-secondary" type="button" @onclick="CloseModal">Abbrechen</button>
-        <button class="btn btn-primary" type="submit">Rolle speichern</button>
+@if (IsGroupLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
     </div>
-</EditForm>
+}
+else
+{    
+    <EditForm EditContext="EditContext" OnValidSubmit="SafeGroup">
+        <label class="form-label">Name</label>
+        <InputText @bind-Value="GroupData.Name" class="form-control mb-3"/>    
+
+        <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
+
+        <hr />
+        @if (IsUpdate)
+        {
+            @if(IsGroupDeleting)
+            {
+                <button class="btn btn-danger" type="button">
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span>Speichern</span>
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-danger" type="button" @onclick="DeleteGroup">Löschen</button>
+            }
+        }
+        <div class="float-end">
+            @if(IsGroupSaving)
+            {
+                <button class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm"></span>
+                    <span>Speichern</span>
+                </button>
+            }
+            else
+            {
+                <button class="btn btn-primary" type="submit">Speichern</button>
+            }
+        </div>
+    </EditForm>
+}

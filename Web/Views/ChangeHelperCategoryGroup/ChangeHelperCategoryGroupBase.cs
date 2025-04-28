@@ -25,6 +25,9 @@ namespace Web.Views
         public FormModel RequirementGroupData { get; set; }
         public EditContext EditContext { get; set; }
 
+        public bool IsHelperCategoryGroupSaving { get; set; }
+        public bool IsHelperCategoryGroupDeleting { get; set; }
+
         public bool IsUpdate { get; set; }
 
         private ValidationMessageStore _messageStore;
@@ -43,7 +46,7 @@ namespace Web.Views
             _messageStore.Clear();
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override void OnParametersSet()
         {
             IsUpdate = HelperCategoryGroup != null;
             if (IsUpdate)
@@ -79,6 +82,7 @@ namespace Web.Views
 
         public async Task SaveHelperCategoryGroup()
         {
+            IsHelperCategoryGroupSaving = true;
             if(RequirementGroupData.Requirements.Count != _oldRequirements.Count 
                 || RequirementGroupData.Requirements.Any(requirement =>
             {
@@ -92,12 +96,15 @@ namespace Web.Views
                     RequirementGroupData.Requirements);
             }
             await CloseModal();
+            IsHelperCategoryGroupSaving = false;
         }
 
         public async Task DeleteHelperCategoryGroup()
         {
+            IsHelperCategoryGroupDeleting = true;
             await DeleteHelperCategoryGroupFunc(HelperCategoryGroup.Id);
             await CloseModal();
+            IsHelperCategoryGroupDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();

@@ -58,6 +58,10 @@ namespace Web.Views
 
         public RealTimeMap EventMap { get; set; }
 
+        public bool IsEventSaving { get; set; }
+        public bool IsEventDeleting { get; set; }
+        public bool IsEventLoading { get; set; }
+
         [Parameter]
         public Func<string?, string?, string?, DateTime, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>>>, bool, Task> SaveEventFunc { get; set; }
 
@@ -102,6 +106,7 @@ namespace Web.Views
 
         protected override async Task OnParametersSetAsync()
         {
+            IsEventLoading = true;
             Roles = await _roleService.GetAll(DepartmentId);
             Groups = await _groupService.GetAll(DepartmentId);
             EventCategories = await _eventCategoryService.GetAll(DepartmentId);
@@ -141,6 +146,7 @@ namespace Web.Views
             {
                 EventData.Date = DateTime.Today.AddDays(1);
             }
+            IsEventLoading = false;
         }
 
         private void CreateFormContext()
@@ -183,6 +189,7 @@ namespace Web.Views
 
         public async Task SaveGame()
         {
+            IsEventSaving = true;
             var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>>>();
             foreach (var helper in EventData.Helpers)
             {
@@ -194,12 +201,15 @@ namespace Web.Views
             await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, EventData.Place, categoryData, dateHasChanged);
             if(!dateHasChanged)
                 await CloseModal();
+            IsEventSaving = false;
         }
 
         public async Task DeleteGame()
         {
+            IsEventDeleting = true;
             await DeleteGameFunc(Event.Id);
             await CloseModal();
+            IsEventDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();

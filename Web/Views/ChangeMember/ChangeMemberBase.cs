@@ -47,9 +47,11 @@ namespace Web.Views
 
         [SupplyParameterFromForm]
         public FormModel MemberData { get; set; }
-
         public EditContext EditContext { get; set; }
 
+        public bool IsMemberSaving { get; set; }
+        public bool IsMemberDeleting { get; set; }
+        public bool IsMemberLoading { get; set; }
 
         private ValidationMessageStore _messageStore;
 
@@ -65,8 +67,10 @@ namespace Web.Views
 
         protected override async Task OnInitializedAsync()
         {
+            IsMemberLoading = true;
             Roles = await _roleService.GetAll(DepartmentId);
             Groups = await _groupService.GetAll(DepartmentId);
+            IsMemberLoading = false;
         }
 
         private void ValidateForm(object? sender, ValidationRequestedEventArgs e)
@@ -74,7 +78,7 @@ namespace Web.Views
 
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override void OnParametersSet()
         {
             MemberData = new FormModel();
             MemberData.GroupIds = Member.GroupIds ?? new();
@@ -103,17 +107,21 @@ namespace Web.Views
 
         public async Task SaveMember()
         {
-            if(_oldGroupIds.Count != MemberData.GroupIds.Count || _oldGroupIds.Any(oldGroup => !MemberData.GroupIds.Contains(oldGroup))
+            IsMemberSaving = true;
+            if (_oldGroupIds.Count != MemberData.GroupIds.Count || _oldGroupIds.Any(oldGroup => !MemberData.GroupIds.Contains(oldGroup))
                 || _oldRoleIds.Count != MemberData.RoleIds.Count || _oldRoleIds.Any(oldRole => !MemberData.RoleIds.Contains(oldRole))
                 || _oldIsAdmin != MemberData.IsAdmin)
                 await SaveMemberFunc(Member.Id, MemberData.GroupIds, MemberData.RoleIds, MemberData.IsAdmin);
             await CloseModal();
+            IsMemberSaving = false;
         }
 
         public async Task DeleteMember()
         {
+            IsMemberDeleting = true;
             await DeleteMemberFunc(Member.Id);
             await CloseModal();
+            IsMemberDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();

@@ -196,7 +196,8 @@ namespace Web.Pages
 
             var eventInfos = string.Join(" - ", pageTitles);
             var dateInfo = Event.EventDate.ToString("dd.MM.yyyy HH:mm") + " Uhr";
-            return string.Join(", ", eventInfos, dateInfo);
+            string[] titleparts = [eventInfos, dateInfo];
+            return string.Join(", ", titleparts.Where(part => !string.IsNullOrEmpty(part)));
         }
     }
 }

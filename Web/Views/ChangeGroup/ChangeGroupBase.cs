@@ -24,17 +24,16 @@ namespace Web.Views
         [Inject]
         public IMemberService _memberService { private get; set; }
 
-        [Inject]
-        private IAuthManager _authManager { get; set; }
-        [Inject]
-        private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
-
         [Parameter]
         public Func<string, string, IEnumerable<string>, IEnumerable<string>, Task> UpdateGroupFunc { get; set; }
 
         [SupplyParameterFromForm]
         public FormModel GroupData { get; set; }
         public EditContext EditContext { get; set; }
+
+        public bool IsGroupSaving { get; set; }
+        public bool IsGroupDeleting { get; set; }
+        public bool IsGroupLoading { get; set; }
 
         protected List<string> SelectedMembers { get; private set; }
 
@@ -64,6 +63,7 @@ namespace Web.Views
 
         protected override async Task OnParametersSetAsync()
         {
+            IsGroupLoading = true;
             IsUpdate = Group != null;
             if (!IsUpdate)
             {
@@ -79,22 +79,27 @@ namespace Web.Views
             SelectedMembers = new(_oldSelectedMembers);
             GroupData.Name = Group.Name;
             _oldName = GroupData.Name;
+            IsGroupLoading = false;
         }
 
         public async Task SafeGroup()
         {
+            IsGroupSaving = true;
             var newGroupMembers = SelectedMembers.Except(_oldSelectedMembers);
             var formerGroupMembers = _oldSelectedMembers.Except(SelectedMembers);
             if (GroupData.Name != _oldName || newGroupMembers.Any() || formerGroupMembers.Any())
                 await UpdateGroupFunc(Group?.Id, GroupData.Name, newGroupMembers, formerGroupMembers);
 
             await CloseModal();
+            IsGroupSaving = false;
         }
 
         public async Task DeleteGroup()
         {
+            IsGroupDeleting = true;
             await DeleteGroupFunc(Group.Id);
             await CloseModal();
+            IsGroupDeleting = false;
         }
 
         public Task CloseModal() => CloseModalFunc();
