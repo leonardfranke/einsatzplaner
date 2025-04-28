@@ -16,13 +16,17 @@ namespace Web.Pages.GroupRole
 
         public Models.Department Department { get; private set; }
 
+        public bool IsPageLoading { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
+            IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             if (!await _loginCheck.CheckLogin(department, true))
                 return;
             Department = department;
+            IsPageLoading = false;
         }
     }
 }

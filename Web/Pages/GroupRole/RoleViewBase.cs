@@ -28,29 +28,26 @@ namespace Web.Pages
         [Inject]
         private IMemberService _memberService { get; set; }
 
-        [Inject]
-        private ILoginCheck _loginCheck { get; set; }
-
-        [Inject]
-        private IAuthManager _authManager { get; set; }
-
         public string HoveredId { get; set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
 
         public List<RequirementGroup> RequirementGroups { get; set; }
+        public bool IsViewLoading { get; set; }
 
         protected override async Task OnParametersSetAsync()
         {
             if (Department == null)
                 return;
 
+            IsViewLoading = true;
             var membersTask = _memberService.GetAll(Department.Id);
             await LoadRoles();
             var requirementGroupsTask = LoadRequirementGroups();
             _members = await membersTask;
             await requirementGroupsTask;
+            IsViewLoading = false;
         }
 
         protected IEnumerable<Models.Member> GetMembersWithRoleId(string roleId)

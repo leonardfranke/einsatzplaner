@@ -3,6 +3,14 @@
 @using Web.Extensions
 @inherits EventCategoryPageBase
 
+@if (IsPageLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 @if (EventCategories?.Count > 0)
 {
     <table class="table">

@@ -49,13 +49,17 @@ namespace Web.Pages
         [CascadingParameter]
         public Modal Modal { get; set; }
 
+        public bool IsPageLoading { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
+            IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             _departmentId = department.Id;
             if (!await _loginCheck.CheckLogin(department, true))
                 return;
+
             var groupTask = _groupService.GetAll(_departmentId);
             var rolesTask = _roleService.GetAll(_departmentId);
             var membersTask = LoadMembers();
@@ -65,6 +69,7 @@ namespace Web.Pages
             Roles = await rolesTask;
             await membersTask;
             await requestsTask;
+            IsPageLoading = false;
         }
 
         private async Task LoadRequests()

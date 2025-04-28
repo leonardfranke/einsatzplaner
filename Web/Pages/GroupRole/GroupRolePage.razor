@@ -1,6 +1,14 @@
 ﻿@page "/{departmentUrl}/groups"
 @inherits GroupRolePageBase
 
+@if (IsPageLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 <GroupView Department="Department"/>
 <div class="my-5" />
 <RoleView Department="Department"/>

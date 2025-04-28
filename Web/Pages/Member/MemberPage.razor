@@ -2,6 +2,14 @@
 @using BlazorBootstrap
 @inherits MemberPageBase
 
+@if (IsPageLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 <h1>Mitglieder</h1>
 
 @if(Members?.Count > 0)

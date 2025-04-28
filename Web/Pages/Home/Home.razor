@@ -5,6 +5,14 @@
 @inherits HomeBase
 <PageTitle>Eventübersicht</PageTitle>
 
+@if(IsPageLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 @if (FilteredEvents == null)
     return;
 

@@ -34,14 +34,19 @@ namespace Web.Pages
         [CascadingParameter]
         public Modal Modal { get; set; }
 
+        public bool IsPageLoading { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
+            IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             if (!await _loginCheck.CheckLogin(department, true))
                 return;
+
             _departmentId = department.Id;
             await LoadEventCategories();
+            IsPageLoading = false;
         }
 
         private async Task LoadEventCategories()

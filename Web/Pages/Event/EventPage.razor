@@ -2,8 +2,13 @@
 @using LeafletForBlazor
 @inherits EventPageBase
 
-@if(EventTask == null || !EventTask.IsCompleted)
+@if (IsPageLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
     return;
+}
 
 @if(Event == null)
 {

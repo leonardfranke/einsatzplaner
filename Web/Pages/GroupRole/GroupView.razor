@@ -2,6 +2,14 @@
 @using Web.Extensions
 @inherits GroupViewBase
 
+@if (IsViewLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 <h3>Gruppen:</h3>
 
 @foreach (var (group, groupMembers) in GroupMembersDict)

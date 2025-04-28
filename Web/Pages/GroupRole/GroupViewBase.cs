@@ -28,13 +28,17 @@ namespace Web.Pages
         [CascadingParameter]
         public Modal Modal { get; set; }
 
+        public bool IsViewLoading { get; set; }
+
         protected override async Task OnParametersSetAsync()
         {
             if (Department == null)
                 return;
 
+            IsViewLoading = true;
             _departmentId = Department.Id;
             await LoadGroups();
+            IsViewLoading = false;
         }
 
         private async Task LoadGroups()

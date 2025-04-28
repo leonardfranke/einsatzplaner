@@ -52,6 +52,8 @@ namespace Web.Pages
         [Inject]
         private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
 
+        public bool IsPageLoading { get; set; }
+
         private List<Models.Member> _members;
         private List<Group> _groups;
         private List<Role> _roles;
@@ -73,6 +75,7 @@ namespace Web.Pages
 
         protected override async Task OnParametersSetAsync()
         {
+            IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
 
@@ -112,6 +115,7 @@ namespace Web.Pages
                     zoomLevel = 17
                 };
             }
+            IsPageLoading = false;
         }
 
         public async Task MapLoaded(RealTimeMap.MapEventArgs args)

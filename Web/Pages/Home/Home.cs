@@ -85,6 +85,8 @@ namespace Web.Pages
 
         public Models.Member Member { get; private set; }
 
+        public bool IsPageLoading { get; set; }
+
         public bool GroupByGroup {
             get => _groupByGroup;
             set
@@ -144,11 +146,13 @@ namespace Web.Pages
 
         protected override async Task OnInitializedAsync()
         {
-            if(await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
+            IsPageLoading = true;
+            if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             _departmentId = department.Id;
             if (!await _loginCheck.CheckLogin(department))
                 return;
+
             _currentUserId = (await _authManager.GetLocalUser()).Id;
 
             var rolesTask = _roleService.GetAll(_departmentId);
@@ -167,6 +171,7 @@ namespace Web.Pages
             GroupByEventCategory = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
             HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
             await LoadEventData();
+            IsPageLoading = false;
         }
 
         protected async Task LoadEventData()

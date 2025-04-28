@@ -2,6 +2,14 @@
 @using Web.Extensions
 @inherits RoleViewBase
 
+@if(IsViewLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border m-5"></div>
+    </div>
+    return;
+}
+
 <h3>Rollen:</h3>
 
 @foreach (var (role, roleMembers) in RoleMembersDict)
