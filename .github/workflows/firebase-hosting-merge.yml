@@ -21,7 +21,7 @@ jobs:
         run: dotnet restore
 
       - name: Publish 
-        run: dotnet publish Web/Web.csproj -c Release --no-restore
+        run: dotnet publish Web/Web.csproj -c Release -o Web/out --no-restore
       
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
