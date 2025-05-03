@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "public": "Web/out",
+    "public": "Web/out/wwwroot",
     "ignore": [
       "firebase.json",
       "**/.*",
@@ -9,7 +9,7 @@
     "rewrites": [
       {
         "source": "**",
-        "destination": "/wwwroot/index.html"
+        "destination": "/index.html"
       }
     ]
   }
