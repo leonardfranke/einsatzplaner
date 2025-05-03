@@ -20,6 +20,14 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
+      - name: Replace base path
+        run: |
+          sed -i 's|<base href=".*"|<base href="${{vars.BASE_PATH}}"|' 'Web/wwwroot/index.html'
+
+      - name: Replace backend address
+        run: |
+          sed -i 's|"BACKEND_ADDRESS": ".*"|"BACKEND_ADDRESS": "${{vars.BACKEND_ADDRESS}}"|' 'Web/wwwroot/appsettings.json'
+
       - name: Publish 
         run: dotnet publish Web/Web.csproj -c Release -o Web/out --no-restore
       
