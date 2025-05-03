@@ -122,7 +122,7 @@ else
             }
         }
 
-        <RealTimeMap width="300px" height="100px" @ref="EventMap" OnAfterMapLoaded="UpdateMapMarker" Parameters="LoadParameters" OnDoubleClickMap="MapDoubleClicked" Options="MapOptions"></RealTimeMap>
+        
 
         <hr />
         @if (IsUpdate)
@@ -142,14 +142,14 @@ else
         <div class="float-end">
                 @if (IsEventSaving)
                 {
-                    <button class="btn btn-primary" type="submit">
+                    <button class="btn btn-primary" type="button">
                         <span class="spinner-border spinner-border-sm"></span>
                         <span>Speichern</span>
                     </button>
                 }
                 else
                 {
-                    <button class="btn btn-primary">Speichern</button>
+                    <button class="btn btn-primary" type="submit">Speichern</button>
                 }
         </div>
     </EditForm>

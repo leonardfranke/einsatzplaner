@@ -101,38 +101,7 @@ namespace Web.Pages
             _roles = await rolesTask;
             _members = await membersTask;
             await ReloadHelpers();
-
-            if (Event.Place.HasValue)
-            {
-                LoadParameters = new RealTimeMap.LoadParameters
-                {
-                    location = new RealTimeMap.Location
-                    {
-                        latitude = Event.Place.Value.Latitude,
-                        longitude = Event.Place.Value.Longitude,
-                    },
-                    zoomLevel = 17
-                };
-            }
             IsPageLoading = false;
-        }
-
-        public async Task MapLoaded(RealTimeMap.MapEventArgs args)
-        {
-            var map = args.sender;
-            await map.Geometric.Points.upload([new RealTimeMap.StreamPoint
-            {
-                latitude = Event.Place.Value.Latitude,
-                longitude = Event.Place.Value.Longitude,
-
-            }], true);
-            map.Geometric.Points.Appearance().pattern = new RealTimeMap.PointSymbol()
-            {
-                color = "green",
-                fillColor = "green",
-                fillOpacity = 0.5,
-                radius = 10
-            };
         }
 
         private async Task ReloadHelpers()
