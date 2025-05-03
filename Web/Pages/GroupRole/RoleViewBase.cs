@@ -1,7 +1,5 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
-using Web.Checks;
-using Web.Manager;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeHelperCategoryGroup;

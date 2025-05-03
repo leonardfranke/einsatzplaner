@@ -5,7 +5,6 @@ using Web.Checks;
 using Web.Models;
 using Web.Services;
 using Web.Views.MemberSelection;
-using static LeafletForBlazor.Map;
 
 namespace Web.Pages
 {
