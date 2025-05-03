@@ -15,12 +15,12 @@ def optimizeDepartment(departmentId : str):
 	no_events = True
 	events = []
 	for eventRef in eventDocuments:
+		eventSnapshot = eventRef.get().to_dict()
 		no_events = False
 		helpers = eventRef.collection("Helper").get()
-		event = Event([])
+		event = Event(Date=eventSnapshot["Date"], Helpers=[])
 		for helperRef in helpers:
 			helperSnapshot = helperRef.to_dict()
-
 			try:
 				helper = Helper(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["LockingTime"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"])
 				event.Helpers.append(helper)
