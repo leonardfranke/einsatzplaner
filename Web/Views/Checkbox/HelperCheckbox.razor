@@ -2,7 +2,7 @@
 
 @if(IsPlayerLocked)
 {
-    <input type="checkbox" disabled  checked/>
+    <input style=@($"accent-color: {BackgroundColor};") type="checkbox" disabled checked />
 }
 else if (IsMemberPermitted || IsPreselectedOrAvailable)
 {
