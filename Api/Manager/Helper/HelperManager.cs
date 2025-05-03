@@ -83,6 +83,9 @@ namespace Api.Manager
 
         public async Task UpdateLockedMembers(string departmentId, string eventId, string helperId, UpdateMembersListDTO updateMembersList)
         {
+            if ((updateMembersList.FormerMembers.Any() || updateMembersList.NewMembers.Any()) == false)
+                return; 
+
             var helperReference = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
                 .Collection(Paths.EVENT).Document(eventId)
@@ -93,6 +96,7 @@ namespace Api.Manager
             await helperReference.UpdateAsync(nameof(Helper.LockedMembers), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
             await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
             await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
+            await _taskManager.TriggerRecalculation(departmentId);
         }
     }
 }
