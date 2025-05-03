@@ -6,5 +6,5 @@
 }
 else if (IsMemberPermitted || IsPreselectedOrAvailable)
 {
-    <InputCheckbox @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsPreselectedOrAvailable"/>    
+    <InputCheckbox style=@($"accent-color: {BackgroundColor};") @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsPreselectedOrAvailable" />
 }

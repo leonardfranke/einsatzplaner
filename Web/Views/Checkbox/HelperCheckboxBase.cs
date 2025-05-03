@@ -19,17 +19,33 @@ namespace Web.Views
         [Parameter]
         public Models.Member Member { private get; set; }
 
-        public bool IsPreselectedOrAvailable { get => Helper.PreselectedMembers.Union(Helper.AvailableMembers).Contains(currentUserId); set { } }
+        public bool IsPreselectedOrAvailable { get => IsPreselected || IsAvailable;  set { } }
 
         public bool IsMemberPermitted => Member.GroupIds.Intersect(Helper?.RequiredGroups ?? new()).Any() && Member.RoleIds.Contains(Helper?.RoleId);
 
         public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
+
+        public string BackgroundColor {
+            get 
+            {
+                if (IsPlayerLocked)
+                    return "red";
+                else if (IsPreselected)
+                    return "orange";
+                else if (IsAvailable)
+                    return "green";
+                else
+                    return "";
+            }}
 
         [Inject]
         private IAuthManager _authManager { get; set; }
 
         [Inject]
         private IHelperService _helperService { get; set; }
+
+        private bool IsPreselected => Helper.PreselectedMembers.Contains(currentUserId);
+        private bool IsAvailable => Helper.AvailableMembers.Contains(currentUserId);
 
         private string currentUserId;
 
@@ -54,26 +70,9 @@ namespace Web.Views
         }
 
 
-        public async Task ChangeHelpingEvent()
+        public Task ChangeHelpingEvent()
         {
-            if(Helper.LockingTime < DateTime.Now && !IsPreselectedOrAvailable)
-            {
-                var closeModalFunc = Modal.HideAsync;
-                var confirmModalAction = async () =>
-                {
-                    await SetIsAvailable(true);
-                };
-                var parameters = new Dictionary<string, object>
-                {
-                    { nameof(LockingHelperPrompt.LockingHelperPrompt.CloseModalFunc), closeModalFunc },
-                    { nameof(LockingHelperPrompt.LockingHelperPrompt.ConfirmModalAction), confirmModalAction },
-                };
-                await Modal.ShowAsync<LockingHelperPrompt.LockingHelperPrompt>(title: "Rolle bestätigen", parameters: parameters);
-            }
-            else
-            {
-                await SetIsAvailable(!IsPreselectedOrAvailable);
-            }            
+            return SetIsAvailable(!IsPreselectedOrAvailable);         
         }
     }
 }
