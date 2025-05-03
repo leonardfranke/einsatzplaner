@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 
 class Tests(unittest.TestCase):
     def test_Default(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2"]),
             Helper("2", "B", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2"])
         ])]
@@ -20,7 +20,7 @@ class Tests(unittest.TestCase):
         self.assertNotEqual(firstSetMembers[0], secondSetMembers[0])
 
     def test_TrivialCaseInfluences(self):
-        events : list[Event] = [Event(Helpers=[
+        events : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 4, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2", "3", "4", "5"]),
             Helper("2", "B", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["3"])
         ])]
@@ -29,7 +29,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(allSetMembers), 5)
 
     def test_LockedCaseInfluences(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 4, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2", "3", "4", "5"]),
             Helper("2", "B", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=["3"], PreselectedMembers=[], AvailableMembers=[])
         ])]
@@ -39,14 +39,14 @@ class Tests(unittest.TestCase):
         self.assertNotIn("3", firstPreselectedMembers)
 
     def test_LockedHelpersAreFilledTrivial(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 6, LockedMembers=["4", "5"], PreselectedMembers=[], AvailableMembers=["1", "2", "3"]),
         ])]
         filledCategories = Optimize(categories)        
         self.assertSetEqual(set(filledCategories[0][1].NewPreselectedMembers), set(["1", "2", "3"]))
 
     def test_LockedHelpersAreFilledOptimized(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 4, LockedMembers=["4", "5"], PreselectedMembers=[], AvailableMembers=["1", "2", "3"]),
         ])]
         filledCategories = Optimize(categories)   
@@ -54,7 +54,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(setMembers), 2)
 
     def test_OnlyOneCategoryPerEvent(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1"]),
             Helper("2", "A", "Y", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1"]),
         ])]
@@ -62,7 +62,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(filledCategories[0][1].NewPreselectedMembers) + len(filledCategories[1][1].NewPreselectedMembers), 1)
 
     def test_OnlyOneCategoryPerEventAsLocked(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=["1"], PreselectedMembers=[], AvailableMembers=[]),
             Helper("2", "A", "Y", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1"]),
         ])]
@@ -71,7 +71,7 @@ class Tests(unittest.TestCase):
         self.assertSetEqual(set(filledCategories[1][1].NewAvailableMembers), set("1"))
 
     def test_AvoidChangesForEqualOptimizations(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=["1"], AvailableMembers=["2"]),
             Helper("2", "B", "Y", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=["2"], AvailableMembers=["1"]),
         ])]
@@ -82,7 +82,7 @@ class Tests(unittest.TestCase):
         self.assertSetEqual(set(secondPreselectedMembers), set("2"))
 
     def test_InsertsIntoLockedAfterLockingTime(self):
-        categories : list[Event] = [Event(Helpers=[
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=1), Helpers=[
             Helper("1", "A", "Z", datetime.now(timezone.utc), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1"]),
             Helper("2", "B", "Z", datetime.now(timezone.utc), 1, LockedMembers=[], PreselectedMembers=["1"], AvailableMembers=[]),
             Helper("3", "C", "Z", datetime.now(timezone.utc), 2, LockedMembers=["2"], PreselectedMembers=["1"], AvailableMembers=[]),
@@ -94,6 +94,21 @@ class Tests(unittest.TestCase):
         self.assertSetEqual(set(firstLockedMembers), set("1"))
         self.assertSetEqual(set(secondLockedMembers), set("1"))
         self.assertSetEqual(set(thirdLockedMembers), set(["1", "2"]))
+
+    def test_SkipsPastEvents(self):
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) - timedelta(days=1), Helpers=[
+            Helper("1", "A", "Z", datetime.now(timezone.utc) - timedelta(days=2), 1, LockedMembers=["1"], PreselectedMembers=[], AvailableMembers=[])
+        ]),Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
+            Helper("2", "B", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=["1"], AvailableMembers=["2"])
+        ])]
+        filledCategories = Optimize(categories)
+        self.assertEqual(len(filledCategories), 1)
+        lockedMembers = filledCategories[0][1].NewLockedMembers
+        preselectedMembers = filledCategories[0][1].NewPreselectedMembers
+        availableMembers = filledCategories[0][1].NewAvailableMembers
+        self.assertSetEqual(set(lockedMembers), set())
+        self.assertSetEqual(set(preselectedMembers), set("2"))
+        self.assertSetEqual(set(availableMembers), set("1"))
 
 
 if __name__ == '__main__':

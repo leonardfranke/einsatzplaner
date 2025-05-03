@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from collections import defaultdict
 from datetime import datetime, timezone
 
-
 @dataclass
 class Helper:
     Id: str
@@ -17,6 +16,7 @@ class Helper:
 
 @dataclass
 class Event:
+    Date : datetime
     Helpers: list[Helper]
 
 @dataclass
@@ -31,10 +31,11 @@ def Optimize(events : list[Event]) -> list[(Helper, Updates)]:
         for member in helper.LockedMembers:
             lockedMemberAssignments[(member, helper.RoleId)] = lockedMemberAssignments.get((member, helper.RoleId), 0) + 1
 
-    return OptimizeOverfilled(events, lockedMemberAssignments, None)
+    return OptimizeOverfilled([event for event in events if event.Date > datetime.now(timezone.utc)], lockedMemberAssignments)
+
     
 
-def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tuple[str, str], int], max_V_er: float) -> list[(Helper, Updates)]: 
+def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tuple[str, str], int]) -> list[(Helper, Updates)]: 
     model = mathopt.Model()
     
     X_me_dict = defaultdict[list[mathopt.Variable]](list)
