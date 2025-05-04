@@ -1,0 +1,22 @@
+﻿@inherits LayoutComponentBase
+
+
+
+<BlazorBootstrap.Modal @ref="Modal" />
+
+<CascadingValue Value="@Modal">
+    <ErrorBoundary>
+        <ChildContent>
+            @Body
+        </ChildContent>
+        <ErrorContent>
+            <Web.Views.ErrorContent.ErrorMessage />
+        </ErrorContent>
+    </ErrorBoundary>
+</CascadingValue>
+
+<BlazorBootstrap.Toasts class="p-3" AutoHide Placement="BlazorBootstrap.ToastsPlacement.BottomRight" ShowCloseButton />
+
+@code {
+    public BlazorBootstrap.Modal Modal { get; set; }
+}

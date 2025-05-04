@@ -31,6 +31,13 @@
     <input @onclick:preventDefault type="checkbox" @onclick="() => { }" />
     <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich nicht als verfügbar eingetragen.">Nicht verfügbar</Tooltip></label>
 </div>
+<div class="form-check form-check-inline">
+    <input style=@($"accent-color: black;") type="checkbox" disabled />
+    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">Nicht zulässig</Tooltip></label>
+</div>
+
+
+
 
 <div class="float-end">
     <AuthorizeView Roles="IsAdmin">

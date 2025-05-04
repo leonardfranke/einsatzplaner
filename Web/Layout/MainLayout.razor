@@ -1,11 +1,10 @@
 ﻿@inherits MainLayoutBase
+@layout GlobalLayout
+
 <div class="page">           
     <div class="sidebar">
         <NavMenu />
     </div>
-
-
-    <BlazorBootstrap.Modal @ref="Modal" />
 
     <main>        
         <div class="top-row px-4">
@@ -20,23 +19,8 @@
             </AuthorizeView>            
         </div>
 
-        <CascadingValue Value="@Modal">
-            <article class="content px-4">
-                <ErrorBoundary>
-                    <ChildContent>
-                        @Body
-                    </ChildContent>
-                    <ErrorContent>
-                        <Web.Views.ErrorContent.ErrorMessage/>
-                    </ErrorContent>
-                </ErrorBoundary>
-            </article>
-        </CascadingValue>
+        <article class="content px-4">
+            @Body
+        </article>
     </main>
 </div>
-
-<BlazorBootstrap.Toasts class="p-3" AutoHide Placement="BlazorBootstrap.ToastsPlacement.BottomRight" ShowCloseButton/>
-
-@code{
-    public BlazorBootstrap.Modal Modal { get; set; }
-}
