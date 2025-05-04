@@ -53,11 +53,13 @@ namespace Web.Pages
 
             var authenticated = authState?.User?.Identity?.IsAuthenticated == true;
             var verified = authState.User.HasClaim(IAuthManager.EmailVerifiedClaim, true.ToString());
-            if (authenticated && !verified)
-                await ShowVerificationModal();
-
-
-            await base.OnInitializedAsync();
+            if (authenticated)
+            {
+                if (verified)
+                    NavigationManager.NavigateTo($"./{DepartmentUrl}");
+                else
+                    await ShowVerificationModal();
+            }
         }
 
         private void ValidateFormLogin(object? sender, ValidationRequestedEventArgs e)
