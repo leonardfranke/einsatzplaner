@@ -15,32 +15,33 @@
 @foreach (var (group, groupMembers) in GroupMembersDict)
 {
     var header = group.Name + (groupMembers.Any() ? "" : " - Ohne Mitglied");
-
-    <table class="table">
-        <thead>
-            <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">                
-                <th scope="col">@header</th>
-                <th>
-                    <button style="visibility:  @(HoveredId == group.Id ? "visible" : "hidden")"
-                            type="button" @onclick="() => EditOrCreateGroup(group)"
-                            class="btn btn-outline-dark">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var member in groupMembers)
-            {
-                <tr>
-                    <td>
-                        @member.Name
-                    </td>
-                    <td></td>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">                
+                    <th scope="col">@header</th>
+                    <th>
+                        <button style="visibility:  @(HoveredId == group.Id ? "visible" : "hidden")"
+                                type="button" @onclick="() => EditOrCreateGroup(group)"
+                                class="btn btn-outline-dark">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var member in groupMembers)
+                {
+                    <tr>
+                        <td>
+                            @member.Name
+                        </td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 <br />

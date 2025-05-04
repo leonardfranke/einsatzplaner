@@ -39,7 +39,7 @@
 
 
 
-<div class="float-end">
+<div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
     <AuthorizeView Roles="IsAdmin">
         <Authorized>
             <button type="button" class="btn btn-primary" @onclick="CreateGame">Event erstellen</button>
@@ -87,89 +87,90 @@
 @{
     var relevantRoles = GetRelevantRoles();
 }
-<table class="table">
-    <tbody>
-        
-        @foreach (var group in grouping)
-        {
-            <tr>
-                <th class="pt-5" colspan="100%"><h3>@GetGroupHeading(group)</h3></th>
-            </tr>
-            <tr>
-                @if (!GroupByGroup)
-                {
-                    <th scope="col">Gruppe</th>
-                }
-                @if (!GroupByEventCategory)
-                {
-                    <th scope="col">Eventkategorie</th>
-                }
-                <th scope="col">Datum</th>
-                @foreach (var role in relevantRoles)
-                {
-                    <th scope="col">@role.Name</th>
-                }
-                <th></th>
-            </tr>
-            @foreach (var eventObj in group.OrderBy(@event => @event.EventDate))
+<div class="table-responsive">
+    <table class="table">
+        <tbody>        
+            @foreach (var group in grouping)
             {
-                <tr @onmouseenter="() => HoveredEventId = eventObj.Id" @onmouseleave="() => HoveredEventId = null">
+                <tr>
+                    <th class="pt-5" colspan="100%"><h3>@GetGroupHeading(group)</h3></th>
+                </tr>
+                <tr>
                     @if (!GroupByGroup)
                     {
-                        var name = GetGroupById(eventObj.GroupId)?.Name;
-                        if (string.IsNullOrEmpty(name))
-                        {
-                            <td scope="col"><i>-</i></td>
-                        }
-                        else
-                        {
-                            <td scope="col">@name</td>
-                        }
+                        <th scope="col">Gruppe</th>
                     }
                     @if (!GroupByEventCategory)
                     {
-                        var name = GetEventCategoryById(eventObj.EventCategoryId)?.Name;
-                        if (string.IsNullOrEmpty(name))
-                        {
-                            <td scope="col"><i>-</i></td>
-                        }
-                        else
-                        {
-                            <td scope="col">@name</td>
-                        }
+                        <th scope="col">Eventkategorie</th>
                     }
-                    <td>@eventObj.EventDate.ToString("dd.MM.yyyy HH:mm")</td>
-                    @{var helpers = GetHelpers(eventObj);}
+                    <th scope="col">Datum</th>
                     @foreach (var role in relevantRoles)
                     {
-                        var helper = helpers.Find(helper => helper.RoleId == role.Id);
-                        <td>
-                            @if (helper != null)
-                            {
-                                <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" />
-                            }
-                        </td>
+                        <th scope="col">@role.Name</th>
                     }
-                    <td>
-                        <div class="btn-group" role="group">
-                            <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
-                                    type="button" @onclick="() => OpenGame(eventObj)"
-                                    class="btn btn-outline-dark">
-                                <i class="bi bi-search"></i>
-                            </button>
-                            <AuthorizeView Roles="IsAdmin">
-                                <Authorized>
-                                    <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
-                                            type="button" @onclick="() => EditGame(eventObj)"
-                                            class="btn btn-outline-dark">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                </Authorized>
-                            </AuthorizeView>
-                        </div>
-                    </td>
+                    <th></th>
                 </tr>
+                @foreach (var eventObj in group.OrderBy(@event => @event.EventDate))
+                {
+                    <tr @onmouseenter="() => HoveredEventId = eventObj.Id" @onmouseleave="() => HoveredEventId = null">
+                        @if (!GroupByGroup)
+                        {
+                            var name = GetGroupById(eventObj.GroupId)?.Name;
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                <td scope="col"><i>-</i></td>
+                            }
+                            else
+                            {
+                                <td scope="col">@name</td>
+                            }
+                        }
+                        @if (!GroupByEventCategory)
+                        {
+                            var name = GetEventCategoryById(eventObj.EventCategoryId)?.Name;
+                            if (string.IsNullOrEmpty(name))
+                            {
+                                <td scope="col"><i>-</i></td>
+                            }
+                            else
+                            {
+                                <td scope="col">@name</td>
+                            }
+                        }
+                        <td>@eventObj.EventDate.ToString("dd.MM.yyyy HH:mm")</td>
+                        @{var helpers = GetHelpers(eventObj);}
+                        @foreach (var role in relevantRoles)
+                        {
+                            var helper = helpers.Find(helper => helper.RoleId == role.Id);
+                            <td>
+                                @if (helper != null)
+                                {
+                                    <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" />
+                                }
+                            </td>
+                        }
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
+                                        type="button" @onclick="() => OpenGame(eventObj)"
+                                        class="btn btn-outline-dark">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                                <AuthorizeView Roles="IsAdmin">
+                                    <Authorized>
+                                        <button style="visibility:  @(HoveredEventId == eventObj.Id ? "visible" : "hidden")"
+                                                type="button" @onclick="() => EditGame(eventObj)"
+                                                class="btn btn-outline-dark">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </div>
+                        </td>
+                    </tr>
+                }
             }
-        }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>

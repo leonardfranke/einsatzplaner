@@ -16,33 +16,35 @@
 {
     var header = role.Name + (roleMembers.Any() ? "" : " - Ohne Mitglied");
 
-    <table class="table">
-        <thead>
-            <tr @onmouseenter="() => HoveredId = role.Id" @onmouseleave="() => HoveredId = null">
-                <th scope="col">@header</th>
-                <th>Sperrzeitraum: @role.LockingPeriod Tage</th>
-                <th>
-                    <button style="visibility:  @(HoveredId == role.Id ? "visible" : "hidden")"
-                            type="button" @onclick="() => EditOrCreateRole(role)"
-                            class="btn btn-outline-dark">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var member in roleMembers)
-            {
-                <tr>
-                    <td>
-                        @member.Name
-                    </td>
-                    <td></td>
-                    <td></td>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr @onmouseenter="() => HoveredId = role.Id" @onmouseleave="() => HoveredId = null">
+                    <th scope="col">@header</th>
+                    <th>Sperrzeitraum: @role.LockingPeriod Tage</th>
+                    <th>
+                        <button style="visibility:  @(HoveredId == role.Id ? "visible" : "hidden")"
+                                type="button" @onclick="() => EditOrCreateRole(role)"
+                                class="btn btn-outline-dark">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var member in roleMembers)
+                {
+                    <tr>
+                        <td>
+                            @member.Name
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 <br />
@@ -53,31 +55,33 @@
 <h3>Bedarfsgruppen:</h3>
 @if (RequirementGroups?.Count > 0)
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Bedarf</th>
-                <th scope="col" />
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var (group, index) in RequirementGroups.Select((group, index) => (group, index)))
-            {
-                <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">
-                    <td>
-                        @GetGroupDisplayText(group)
-                    </td>
-                    <td>
-                        <button @onclick="() => EditOrCreateRequirementGroup(group)"
-                                class="btn btn-outline-dark"
-                                style="visibility: @(HoveredId == group.Id ? "visible" : "hidden")">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                    </td>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Bedarf</th>
+                    <th scope="col" />
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var (group, index) in RequirementGroups.Select((group, index) => (group, index)))
+                {
+                    <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">
+                        <td>
+                            @GetGroupDisplayText(group)
+                        </td>
+                        <td>
+                            <button @onclick="() => EditOrCreateRequirementGroup(group)"
+                                    class="btn btn-outline-dark"
+                                    style="visibility: @(HoveredId == group.Id ? "visible" : "hidden")">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 <br/>

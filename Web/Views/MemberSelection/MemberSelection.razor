@@ -1,13 +1,15 @@
 ﻿@inherits MemberSelectionBase
 
-<table class="table">
-    <tbody>
-        @foreach (var member in Members)
-        {
-            <tr>
-                <td><input type="checkbox" checked="@GetIsSelected(member.Id)" @onchange="(e) => {SetMember(member.Id, (bool)e.Value);}"/></td>
-                <td>@member.Name</td>
-            </tr>
-        }
-    </tbody>
-</table>
+<div class="table-responsive">
+    <table class="table">
+        <tbody>
+            @foreach (var member in Members)
+            {
+                <tr>
+                    <td><input type="checkbox" checked="@GetIsSelected(member.Id)" @onchange="(e) => {SetMember(member.Id, (bool)e.Value);}"/></td>
+                    <td>@member.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -23,40 +23,42 @@
 @if(Helpers.Any())
 {    
     <p class="fs-3">Helfer:</p>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">Kategorie</th>
-                <th scope="col">Bedarf</th>
-                <AuthorizeView Roles="IsAdmin">
-                    <th scope="col">Feste Helfer</th>
-                    <th scope="col">Vorausgewählte Helfer</th>
-                    <th scope="col">Verfügbare Helfer</th>
-                </AuthorizeView>
-                <th scope="col">Verfügbare Gruppen</th>
-                <th scope="col">Sperrzeitpunkt</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var help in Helpers)
-            {
-                var category = GetRoleById(help.RoleId);
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <th>@category.Name</th>
-                    <th>@help.RequiredAmount</th>
+                    <th scope="col">Kategorie</th>
+                    <th scope="col">Bedarf</th>
                     <AuthorizeView Roles="IsAdmin">
-                        <th class="position-relative">
-                            @(GetDisplayMemberNames(help.LockedMembers))
-                            <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
-                            @onclick="() => OpenLockedMembersSelected(help)"></i>
-                        </th>
-                        <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
-                        <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
+                        <th scope="col">Feste Helfer</th>
+                        <th scope="col">Vorausgewählte Helfer</th>
+                        <th scope="col">Verfügbare Helfer</th>
                     </AuthorizeView>
-                    <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
-                    <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
-                </tr>            
-            }        
-        </tbody>
-    </table>
+                    <th scope="col">Verfügbare Gruppen</th>
+                    <th scope="col">Sperrzeitpunkt</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var help in Helpers)
+                {
+                    var category = GetRoleById(help.RoleId);
+                    <tr>
+                        <th>@category.Name</th>
+                        <th>@help.RequiredAmount</th>
+                        <AuthorizeView Roles="IsAdmin">
+                            <th class="position-relative">
+                                @(GetDisplayMemberNames(help.LockedMembers))
+                                <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
+                                @onclick="() => OpenLockedMembersSelected(help)"></i>
+                            </th>
+                            <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
+                            <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
+                        </AuthorizeView>
+                        <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
+                        <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
+                    </tr>            
+                }        
+            </tbody>
+        </table>
+    </div>
 }
