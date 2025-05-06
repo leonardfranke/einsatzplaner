@@ -48,6 +48,10 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
         eventLockedMembers = set().union(*[helper.LockedMembers for helper in event.Helpers])
         for helper in event.Helpers:
             X_er = []
+            openRequiredAmount = helper.RequiredAmount - len(helper.LockedMembers)
+            if openRequiredAmount <= 0:
+                continue
+
             for member, was_preselected in [(member, True) for member in set(helper.PreselectedMembers) - eventLockedMembers] + [(member, False) for member in set(helper.AvailableMembers) - eventLockedMembers]:
                 X = model.add_binary_variable(name=f"{helper.EventId}, {helper.RoleId}: {member}")
                 X_er.append(X)
@@ -57,7 +61,6 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
                 if was_preselected:
                     Deselected.append(1 - X)
 
-            openRequiredAmount = max(helper.RequiredAmount - len(helper.LockedMembers), 0)
             V_er = openRequiredAmount - mathopt.LinearSum(X_er)
             V_er_sum += V_er
             model.add_linear_constraint(V_er >= 0)
