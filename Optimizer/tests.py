@@ -110,6 +110,21 @@ class Tests(unittest.TestCase):
         self.assertSetEqual(set(preselectedMembers), set("2"))
         self.assertSetEqual(set(availableMembers), set("1"))
 
+    def test_OverfilledLockedHelpersUnnchanged(self):
+        categories : list[Event] = [Event(Date=datetime.now(timezone.utc) + timedelta(days=2), Helpers=[
+            Helper("1", "A", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=["1", "2"], PreselectedMembers=[], AvailableMembers=[])
+        ]),Event(Date=datetime.now(timezone.utc) + timedelta(days=1), Helpers=[
+            Helper("2", "B", "Z", datetime.now(timezone.utc), 1, LockedMembers=["1", "2"], PreselectedMembers=[], AvailableMembers=[])
+        ])]
+        filledCategories = Optimize(categories)
+        for filledCategory in filledCategories:            
+            lockedMembers = filledCategory[1].NewLockedMembers
+            preselectedMembers = filledCategory[1].NewPreselectedMembers
+            availableMembers = filledCategory[1].NewAvailableMembers
+            self.assertSetEqual(set(lockedMembers), set("1","2"))
+            self.assertSetEqual(set(preselectedMembers), set())
+            self.assertSetEqual(set(availableMembers), set())
+
 
 if __name__ == '__main__':
     unittest.main()
