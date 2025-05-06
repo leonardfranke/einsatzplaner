@@ -31,12 +31,12 @@
         </div>
         <div class="form-check form-check-inline">
             <input @onclick:preventDefault type="checkbox" @onclick="() => { }" />
-            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich nicht als verfügbar eingetragen.">Nicht verfügbar</Tooltip></label>
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich nicht als verfügbar eingetragen.">Nicht eingetragen</Tooltip></label>
         </div>
         <div class="form-check form-check-inline">
             <input style=@($"accent-color: black;") type="checkbox" disabled />
             <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">Nicht zulässig</Tooltip></label>
-            </div>
+        </div>
     </div>
 
     <div class="d-flex align-items-center gap-2">
@@ -147,7 +147,7 @@
                             <td>
                                 @if (helper != null)
                                 {
-                                    <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" />
+                                    <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member"/>                                    
                                 }
                             </td>
                         }

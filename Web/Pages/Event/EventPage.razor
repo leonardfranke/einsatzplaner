@@ -29,8 +29,8 @@
                 <tr>
                     <th scope="col">Kategorie</th>
                     <th scope="col">Bedarf</th>
+                    <th scope="col">Feste Helfer</th>
                     <AuthorizeView Roles="IsAdmin">
-                        <th scope="col">Feste Helfer</th>
                         <th scope="col">Vorausgewählte Helfer</th>
                         <th scope="col">Verfügbare Helfer</th>
                     </AuthorizeView>
@@ -45,12 +45,14 @@
                     <tr>
                         <th>@category.Name</th>
                         <th>@help.RequiredAmount</th>
-                        <AuthorizeView Roles="IsAdmin">
-                            <th class="position-relative">
-                                @(GetDisplayMemberNames(help.LockedMembers))
+                        <th class="position-relative">
+                            @(GetDisplayMemberNames(help.LockedMembers))
+                            <AuthorizeView Roles="IsAdmin">
                                 <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
                                 @onclick="() => OpenLockedMembersSelected(help)"></i>
-                            </th>
+                            </AuthorizeView>
+                        </th>
+                        <AuthorizeView Roles="IsAdmin">
                             <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
                             <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
                         </AuthorizeView>
