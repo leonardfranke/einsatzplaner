@@ -15,59 +15,63 @@
 @if (FilteredEvents == null)
     return;
 
-<div class="form-check form-check-inline">
-    <input style="accent-color: red;" type="checkbox" disabled checked/>
-    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist fest als Helfer eingeplant. Du kannst dich nicht mehr austragen.">Fest eingeplant</Tooltip></label>
-</div>
-<div class="form-check form-check-inline">
-    <input style="accent-color: orange;" @onclick:preventDefault type="checkbox" checked @onclick="() => { }" />
-    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich als verfügbar eingetragen und wurdest als Helfer vorgemerkt. Du kannst dich weiterhin austragen.">Verfügbar und vorgemerkt</Tooltip></label>
-</div>
-<div class="form-check form-check-inline">
-    <input style="accent-color: green;" @onclick:preventDefault type="checkbox" checked @onclick="() => { }" />
-    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich als verfügbar eingetragen, wurdest aber noch nicht als Helfer ausgewählt. Du kannst dich jederzeit austragen.">Verfügbar</Tooltip></label>
-</div>
-<div class="form-check form-check-inline">
-    <input @onclick:preventDefault type="checkbox" @onclick="() => { }" />
-    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich nicht als verfügbar eingetragen.">Nicht verfügbar</Tooltip></label>
-</div>
-<div class="form-check form-check-inline">
-    <input style=@($"accent-color: black;") type="checkbox" disabled />
-    <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">Nicht zulässig</Tooltip></label>
-</div>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-3 gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <div class="form-check form-check-inline">
+            <input style="accent-color: red;" type="checkbox" disabled checked/>
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist fest als Helfer eingeplant. Du kannst dich nicht mehr austragen.">Fest eingeplant</Tooltip></label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input style="accent-color: orange;" @onclick:preventDefault type="checkbox" checked @onclick="() => { }" />
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich als verfügbar eingetragen und wurdest als Helfer vorgemerkt. Du kannst dich weiterhin austragen.">Verfügbar und vorgemerkt</Tooltip></label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input style="accent-color: green;" @onclick:preventDefault type="checkbox" checked @onclick="() => { }" />
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich als verfügbar eingetragen, wurdest aber noch nicht als Helfer ausgewählt. Du kannst dich jederzeit austragen.">Verfügbar</Tooltip></label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input @onclick:preventDefault type="checkbox" @onclick="() => { }" />
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du hast dich nicht als verfügbar eingetragen.">Nicht verfügbar</Tooltip></label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input style=@($"accent-color: black;") type="checkbox" disabled />
+            <label class="form-check-label"><Tooltip Placement="TooltipPlacement.Right" Title="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">Nicht zulässig</Tooltip></label>
+            </div>
+    </div>
 
-<div class="d-flex justify-content-end gap-2 mb-3 flex-wrap">
-    <AuthorizeView Roles="IsAdmin">
-        <Authorized>
-            <button type="button" class="btn btn-primary" @onclick="CreateGame">Event erstellen</button>
-        </Authorized>
-    </AuthorizeView>
-    <Dropdown AutoCloseBehavior="DropdownAutoCloseBehavior.Outside" Color="DropdownColor.Secondary">
-        <DropdownToggleButton>Sortierung</DropdownToggleButton>
-        <DropdownMenu>
-            <DropdownItem Type="DropdownItemType.Button" @onclick="() => GroupByGroup = !GroupByGroup">
-                <InputCheckbox @bind-Value="GroupByGroup"/> 
-                Nach Gruppe
-            </DropdownItem>
-            <DropdownItem Type="DropdownItemType.Button" @onclick="() => GroupByEventCategory = !GroupByEventCategory">
-                <InputCheckbox @bind-Value="GroupByEventCategory" /> 
-                Nach Eventkategorie
-            </DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
-    <Dropdown AutoCloseBehavior="DropdownAutoCloseBehavior.Outside" Color="DropdownColor.Secondary">
-        <DropdownToggleButton>Filter</DropdownToggleButton>
-        <DropdownMenu>
-            <DropdownItem Type="DropdownItemType.Button" @onclick="() => HidePastEvents = !HidePastEvents">
-                <InputCheckbox @bind-Value="HidePastEvents" />
-                Vergangene Events ausblenden
-            </DropdownItem>
-            <DropdownItem Type="DropdownItemType.Button" @onclick="() => HideEventsWithoutEntering = !HideEventsWithoutEntering">
-                <InputCheckbox @bind-Value="HideEventsWithoutEntering" />
-                Events ohne Eintragung ausblenden
-            </DropdownItem>
-        </DropdownMenu>
-    </Dropdown>
+    <div class="d-flex align-items-center gap-2">
+        <AuthorizeView Roles="IsAdmin">
+            <Authorized>
+                <button type="button" class="btn btn-primary" @onclick="CreateGame">Event erstellen</button>
+            </Authorized>
+        </AuthorizeView>
+        <Dropdown AutoCloseBehavior="DropdownAutoCloseBehavior.Outside" Color="DropdownColor.Secondary">
+            <DropdownToggleButton>Sortierung</DropdownToggleButton>
+            <DropdownMenu>
+                <DropdownItem Type="DropdownItemType.Button" @onclick="() => GroupByGroup = !GroupByGroup">
+                    <InputCheckbox @bind-Value="GroupByGroup"/> 
+                    Nach Gruppe
+                </DropdownItem>
+                <DropdownItem Type="DropdownItemType.Button" @onclick="() => GroupByEventCategory = !GroupByEventCategory">
+                    <InputCheckbox @bind-Value="GroupByEventCategory" /> 
+                    Nach Eventkategorie
+                </DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+        <Dropdown AutoCloseBehavior="DropdownAutoCloseBehavior.Outside" Color="DropdownColor.Secondary">
+            <DropdownToggleButton>Filter</DropdownToggleButton>
+            <DropdownMenu>
+                <DropdownItem Type="DropdownItemType.Button" @onclick="() => HidePastEvents = !HidePastEvents">
+                    <InputCheckbox @bind-Value="HidePastEvents" />
+                    Vergangene Events ausblenden
+                </DropdownItem>
+                <DropdownItem Type="DropdownItemType.Button" @onclick="() => HideEventsWithoutEntering = !HideEventsWithoutEntering">
+                    <InputCheckbox @bind-Value="HideEventsWithoutEntering" />
+                    Events ohne Eintragung ausblenden
+                </DropdownItem>
+            </DropdownMenu>
+        </Dropdown>
+    </div>
 </div>
 
 
