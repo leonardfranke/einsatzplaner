@@ -57,7 +57,7 @@ def OptimizeOverfilled(events : list[Event], lockedMemberAssignments : dict[tupl
                 if was_preselected:
                     Deselected.append(1 - X)
 
-            openRequiredAmount = helper.RequiredAmount - len(helper.LockedMembers)
+            openRequiredAmount = max(helper.RequiredAmount - len(helper.LockedMembers), 0)
             V_er = openRequiredAmount - mathopt.LinearSum(X_er)
             V_er_sum += V_er
             model.add_linear_constraint(V_er >= 0)

@@ -121,7 +121,7 @@ class Tests(unittest.TestCase):
             lockedMembers = filledCategory[1].NewLockedMembers
             preselectedMembers = filledCategory[1].NewPreselectedMembers
             availableMembers = filledCategory[1].NewAvailableMembers
-            self.assertSetEqual(set(lockedMembers), set("1","2"))
+            self.assertSetEqual(set(lockedMembers), set(["1","2"]))
             self.assertSetEqual(set(preselectedMembers), set())
             self.assertSetEqual(set(availableMembers), set())
 
