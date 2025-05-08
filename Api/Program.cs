@@ -34,7 +34,7 @@ if(builder.Environment.IsProduction())
 }
 else
 {
-    builder.Services.AddSingleton(sp => new CloudTaskMock());
+    builder.Services.AddSingleton<CloudTasksClient>(sp => new CloudTaskMock());
 }
 
     var firestoreDbBuilder =
