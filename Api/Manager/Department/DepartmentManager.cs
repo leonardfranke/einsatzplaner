@@ -12,9 +12,9 @@ namespace Api.Manager
         private IMemberManager _memberManager;
         private string path = "Department";
 
-        public DepartmentManager(IFirestoreManager firestoreManager, IMemberManager memberManager)
+        public DepartmentManager(FirestoreDb firestoreDb, IMemberManager memberManager)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
             _memberManager = memberManager;
         }
 

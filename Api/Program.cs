@@ -1,7 +1,11 @@
 using Api.Manager;
 using FirebaseAdmin;
+using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -25,15 +29,35 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
-FirebaseApp.Create(new AppOptions()
-{
-    Credential = credentials,
-    ProjectId = "1077768805408",
-});
 var gTasksClientBuilder = new CloudTasksClientBuilder() { GoogleCredential = credentials };
-
 builder.Services.AddSingleton(sp => gTasksClientBuilder.Build());
-builder.Services.AddSingleton<IFirestoreManager, FirestoreManager>();
+
+var firestoreDbBuilder = 
+    builder.Environment.IsProduction() ?
+    new FirestoreDbBuilder() { ProjectId = "einsatzplaner" } : 
+    new FirestoreDbBuilder() { EmulatorDetection = Google.Api.Gax.EmulatorDetection.EmulatorOnly, ProjectId = "emulator" };
+builder.Services.AddSingleton(sp => firestoreDbBuilder.Build());
+
+if (builder.Environment.IsProduction())
+{
+    FirebaseApp.Create(new AppOptions()
+    {
+        //Credential = credentials,
+        ProjectId = "einsatzplaner",
+    });
+}
+else
+{    
+    FirebaseApp.Create(new AppOptions { Credential = GoogleCredential.FromAccessToken("mock-tocken"), ProjectId = "emulator"});
+}
+
+var firebaseAuthApiBasePath =
+    builder.Environment.IsProduction() ?
+    "https://identitytoolkit.googleapis.com/v1/" :
+    "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/";
+builder.Services.AddHttpClient("FIREBASE_AUTH", client => client.BaseAddress = new Uri(firebaseAuthApiBasePath));
+
+builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
 builder.Services.AddSingleton<IDepartmentManager, DepartmentManager>();
@@ -41,7 +65,6 @@ builder.Services.AddSingleton<IGroupManager, GroupManager>();
 builder.Services.AddSingleton<IRoleManager, RoleManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
-builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();

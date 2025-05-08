@@ -10,9 +10,9 @@ namespace Api.Manager
         private FirestoreDb _firestoreDb;
         private ITaskManager _taskManager;
 
-        public HelperManager(IFirestoreManager firestoreManager, ITaskManager taskManager)
+        public HelperManager(FirestoreDb firestoreDb, ITaskManager taskManager)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
             _taskManager = taskManager;
         }
 

@@ -10,9 +10,9 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
 
-        public MemberManager(IFirestoreManager firestoreManager)
+        public MemberManager(FirestoreDb firestoreDb)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
         }
 
         public async Task<List<MemberDTO>> GetAll(string departmentId)

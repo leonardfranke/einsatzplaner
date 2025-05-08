@@ -80,6 +80,8 @@ namespace Web.Manager
             try
             {
                 var userDTO = await _authService.GetUserData(user.Id);
+                if(userDTO == null)
+                    return authState;
                 var identity = new ClaimsIdentity("FirebaseAuth");
                 var claims = await CreateClaims(user, userDTO);
                 identity.AddClaims(claims);

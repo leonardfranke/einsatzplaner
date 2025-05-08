@@ -9,9 +9,9 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
 
-        public EventCategoryManager(IFirestoreManager firestoreManager)
+        public EventCategoryManager(FirestoreDb firestoreDb)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
         }
         private CollectionReference GetCollectionReference(string departmentId)
         {

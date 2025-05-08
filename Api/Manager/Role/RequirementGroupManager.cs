@@ -10,9 +10,9 @@ namespace Api.Manager
         private FirestoreDb _firestoreDb;
         private IUpdatedTimeManager _updatedTimeManager;
 
-        public RequirementGroupManager(IFirestoreManager firestoreManager, IUpdatedTimeManager updatedTimeManager)
+        public RequirementGroupManager(FirestoreDb firestoreDb, IUpdatedTimeManager updatedTimeManager)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
             _updatedTimeManager = updatedTimeManager;
         }
 

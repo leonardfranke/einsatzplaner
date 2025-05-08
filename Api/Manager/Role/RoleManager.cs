@@ -9,9 +9,9 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
 
-        public RoleManager(IFirestoreManager firestoreManager)
+        public RoleManager(FirestoreDb firestoreDb)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
         }
 
         private CollectionReference GetRoleCollectionReference(string departmentId)

@@ -9,9 +9,9 @@ namespace Api.Manager
         private readonly string HelperCategoryKey = "HelperCategory";
         private readonly string HelperCategoryGroupKey = "HelperCategoryGroup";
 
-        public UpdatedTimeManager(IFirestoreManager firestoreManager)
+        public UpdatedTimeManager(FirestoreDb firestoreDb)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
         }
 
         private DocumentReference GetUpdateTimeReference(string departmentId, string key)

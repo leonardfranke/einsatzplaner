@@ -13,10 +13,17 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<UserDTO> GetUserData(string userId)
+        public async Task<UserDTO?> GetUserData(string userId)
         {
-            var response = await _httpClient.GetAsync(new Uri($"/api/User/GetUserData/{userId}", UriKind.Relative));
-            return await response.Content.ReadFromJsonAsync<UserDTO>();
+            try
+            {
+                var response = await _httpClient.GetAsync(new Uri($"/api/User/GetUserData/{userId}", UriKind.Relative));
+                return await response.Content.ReadFromJsonAsync<UserDTO>();
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public Task ResetPassword(string email)

@@ -10,9 +10,9 @@ namespace Api.Manager
         private FirestoreDb _firestoreDb;
         private IMemberManager _memberManager;
 
-        public GroupManager(IFirestoreManager firestoreManager, IMemberManager memberManager)
+        public GroupManager(FirestoreDb firestoreDb, IMemberManager memberManager)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
             _memberManager = memberManager;
         }
 

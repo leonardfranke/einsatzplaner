@@ -12,7 +12,7 @@ namespace Api.Manager
 
         internal class SignInRequest
         {
-            internal static string URL = $"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=";
+            internal static string URL = "accounts:signInWithPassword?key=";
 
             public string email { get; set; }
             public string password { get; set; }
@@ -35,7 +35,7 @@ namespace Api.Manager
 
         internal class ResetPasswordRequest
         {
-            internal static string URL = $"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=";
+            internal static string URL = "accounts:sendOobCode?key=";
 
             public string requestType => "PASSWORD_RESET";
             public string email { get; set; }
@@ -43,7 +43,7 @@ namespace Api.Manager
 
         internal class SendVerificationMailRequest
         {
-            internal static string URL = $"https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=";
+            internal static string URL = "accounts:sendOobCode?key=";
 
             public string requestType => "VERIFY_EMAIL";
             public string idToken { get; set; }

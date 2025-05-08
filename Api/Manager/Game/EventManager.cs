@@ -11,9 +11,9 @@ namespace Api.Manager
         private IHelperManager _helperManager;
         private ITaskManager _taskManager;
 
-        public EventManager(IFirestoreManager firestoreManager, IHelperManager helperManager, ITaskManager taskManager)
+        public EventManager(FirestoreDb firestoreDb, IHelperManager helperManager, ITaskManager taskManager)
         {
-            _firestoreDb = firestoreManager.Database;
+            _firestoreDb = firestoreDb;
             _helperManager = helperManager;
             _taskManager = taskManager;
         }

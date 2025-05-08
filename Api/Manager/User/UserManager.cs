@@ -1,4 +1,5 @@
 ﻿using DTO;
+using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using static Api.Manager.IUserManager;
 
@@ -11,35 +12,40 @@ namespace Api.Manager
 
         public UserManager(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClientFactory.CreateClient();
-            _apiKey = Environment.GetEnvironmentVariable("FIREBASE_API_KEY"); 
-            if(string.IsNullOrEmpty(_apiKey))
-            {
-                throw new Exception("FIREBASE_API_KEY is not set.");
-            }
+            _httpClient = httpClientFactory.CreateClient("FIREBASE_AUTH");
+            _apiKey = Environment.GetEnvironmentVariable("FIREBASE_API_KEY") ?? "NO-KEY";
         }
 
         public async Task<UserDTO> GetUserData(string uid)
         {
-            var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
-            return new UserDTO
+            try
             {
-                Name = userRecord.DisplayName,
-                Uid = userRecord.Uid,
-                IsDisabled = userRecord.Disabled,
-                IsEmailVerified = userRecord.EmailVerified
-            };
+                var userRecord = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+                return new UserDTO
+                {
+                    Name = userRecord.DisplayName,
+                    Uid = userRecord.Uid,
+                    IsDisabled = userRecord.Disabled,
+                    IsEmailVerified = userRecord.EmailVerified
+                };
+            }
+            catch
+            {
+                return null;
+            }
+            
         }
 
         public async Task ResetPassword(string email)
-        {           
+        {
             var requestBody = new ResetPasswordRequest
             {
                 email = email
             };
             try
             {
-                var httpResponse = await _httpClient.PostAsJsonAsync(ResetPasswordRequest.URL + _apiKey, requestBody);                
+                var uri = Path.Combine(_httpClient.BaseAddress.ToString(), ResetPasswordRequest.URL + _apiKey);
+                var httpResponse = await _httpClient.PostAsJsonAsync(uri, requestBody);                
             }
             catch
             {
@@ -55,7 +61,8 @@ namespace Api.Manager
             };
             try
             {
-                var httpResponse = await _httpClient.PostAsJsonAsync(SendVerificationMailRequest.URL + _apiKey, requestBody);                
+                var uri = Path.Combine(_httpClient.BaseAddress.ToString(), SendVerificationMailRequest.URL + _apiKey);
+                var httpResponse = await _httpClient.PostAsJsonAsync(uri, requestBody);                
             }
             catch
             {
@@ -73,7 +80,8 @@ namespace Api.Manager
             };
             try
             {
-                var httpResponse = await _httpClient.PostAsJsonAsync(SignInRequest.URL + _apiKey, requestBody);
+                var uri = Path.Combine(_httpClient.BaseAddress.ToString(), SignInRequest.URL + _apiKey);
+                var httpResponse = await _httpClient.PostAsJsonAsync(uri, requestBody);
                 var result = await httpResponse.Content.ReadFromJsonAsync<SignInResponse>();
                 return new TokenDTO
                 {
