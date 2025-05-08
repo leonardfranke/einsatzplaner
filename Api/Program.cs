@@ -1,11 +1,9 @@
 using Api.Manager;
+using Api.Manager.Tasks;
 using FirebaseAdmin;
-using FirebaseAdmin.Auth;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Google.Cloud.Tasks.V2;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -28,14 +26,21 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName);
 });
 
-var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
-var gTasksClientBuilder = new CloudTasksClientBuilder() { GoogleCredential = credentials };
-builder.Services.AddSingleton(sp => gTasksClientBuilder.Build());
+//var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
+if(builder.Environment.IsProduction())
+{
+    var gTasksClientBuilder = new CloudTasksClientBuilder();
+    builder.Services.AddSingleton(sp => gTasksClientBuilder.Build());
+}
+else
+{
+    builder.Services.AddSingleton(sp => new CloudTaskMock());
+}
 
-var firestoreDbBuilder = 
-    builder.Environment.IsProduction() ?
-    new FirestoreDbBuilder() { ProjectId = "einsatzplaner" } : 
-    new FirestoreDbBuilder() { EmulatorDetection = Google.Api.Gax.EmulatorDetection.EmulatorOnly, ProjectId = "emulator" };
+    var firestoreDbBuilder =
+        builder.Environment.IsProduction() ?
+        new FirestoreDbBuilder() { ProjectId = "einsatzplaner" } :
+        new FirestoreDbBuilder() { EmulatorDetection = Google.Api.Gax.EmulatorDetection.EmulatorOnly, ProjectId = "emulator" };
 builder.Services.AddSingleton(sp => firestoreDbBuilder.Build());
 
 if (builder.Environment.IsProduction())

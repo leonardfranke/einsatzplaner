@@ -44,7 +44,7 @@ namespace Api.Manager
                 }, Precondition.MustExist);
         }
 
-        public async Task CreateMember(string departmentId, string userId)
+        public async Task CreateMember(string departmentId, string userId, bool isAdmin = false)
         {
             var user = await FirebaseAuth.DefaultInstance.GetUserAsync(userId);
             if (user == null)
@@ -55,7 +55,7 @@ namespace Api.Manager
                 Name = user.DisplayName,
                 GroupIds = new(),
                 RoleIds = new(),
-                IsAdmin = false
+                IsAdmin = isAdmin
             };
 
             await _firestoreDb
@@ -134,6 +134,12 @@ namespace Api.Manager
             return memberRef.UpdateAsync(new Dictionary<string, object> { {
                         isGroupNotRole ? nameof(Member.GroupIds) : nameof(Member.RoleIds),
                         isAddNotRemove ? FieldValue.ArrayUnion(id) : FieldValue.ArrayRemove(id) } });
+        }
+
+        public async Task<long?> MemberCount(string departmentId)
+        {
+            var result = await GetMembersReference(departmentId).Count().GetSnapshotAsync();
+            return result.Count;
         }
 
         private DocumentReference GetMemberReference(string departmentId, string memberId)

@@ -68,6 +68,13 @@ namespace Api.Manager
 
         public async Task<bool> AddRequest(string departmentId, string userId)
         {
+            var memberCount = await _memberManager.MemberCount(departmentId);
+            if (memberCount == 0)
+            {
+                await _memberManager.CreateMember(departmentId, userId, true);
+                return true;
+            }
+
             var membershipAlreadyRequested = await MembershipRequested(departmentId, userId);
             if (membershipAlreadyRequested)
                 return false;
