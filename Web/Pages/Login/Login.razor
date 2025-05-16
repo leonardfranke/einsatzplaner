@@ -13,7 +13,7 @@
                     <a class="nav-link disabled" aria-disabled="true">oder</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="register" data-bs-toggle="tab" data-bs-target="#register-pane" type="button" role="tab">Registrieren</button>
+                    <button class="nav-link" id="register" data-bs-toggle="tab" data-bs-target="#register-pane" data-testid="registrieren-tab" type="button" role="tab">Registrieren</button>
                 </li>
             </ul>
             <div class="tab-content mt-5" id="myTabContent">
@@ -37,22 +37,22 @@
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="surname" class="form-label">Vorname</label>
-                                <InputText @bind-Value="@RegisterData.FirstName" class="form-control" id="surname" aria-describedby="emailHelp" />
+                                <InputText @bind-Value="@RegisterData.FirstName" data-testid="registrieren-firstname" class="form-control" id="surname" aria-describedby="emailHelp" />
                             </div>
                             <div class="col">
                                 <label for="lastname" class="form-label">Nachname</label>
-                                <InputText @bind-Value="@RegisterData.LastName" class="form-control" id="lastname" aria-describedby="emailHelp" />
+                                <InputText @bind-Value="@RegisterData.LastName" data-testid="registrieren-lastname" class="form-control" id="lastname" aria-describedby="emailHelp" />
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="emailRegistration" class="form-label">E-Mail-Adresse</label>
-                            <InputText @bind-Value="@RegisterData.Email" type="email" class="form-control" id="emailRegistration" aria-describedby="emailHelp" />
+                            <InputText @bind-Value="@RegisterData.Email" data-testid="registrieren-email" type="email" class="form-control" id="emailRegistration" aria-describedby="emailHelp" />
                         </div>
                         <div class="mb-3">
                             <label for="passwordRegistration" class="form-label">Passwort</label>
-                            <InputText @bind-Value="@RegisterData.Password" type="password" class="form-control" id="passwordRegistration" />
+                            <InputText @bind-Value="@RegisterData.Password" data-testid="registrieren-password" type="password" class="form-control" id="passwordRegistration" />
                         </div>
-                        <button type="submit" class="btn btn-primary">Registrieren</button>
+                        <button type="submit" data-testid="registrieren-send" class="btn btn-primary">Registrieren</button>
                     </EditForm>
                 </div>
             </div>

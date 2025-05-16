@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api", "Api\Api.csproj", "{B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DTO", "DTO\DTO.csproj", "{C64D6656-B568-4835-97D6-7EB9AD4234B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebsite", "TestWebsite\TestWebsite.csproj", "{1BB32FAD-671A-4CC1-83C3-F3A2B8140576}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{C64D6656-B568-4835-97D6-7EB9AD4234B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C64D6656-B568-4835-97D6-7EB9AD4234B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C64D6656-B568-4835-97D6-7EB9AD4234B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1BB32FAD-671A-4CC1-83C3-F3A2B8140576}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1BB32FAD-671A-4CC1-83C3-F3A2B8140576}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1BB32FAD-671A-4CC1-83C3-F3A2B8140576}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1BB32FAD-671A-4CC1-83C3-F3A2B8140576}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

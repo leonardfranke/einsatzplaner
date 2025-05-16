@@ -1,0 +1,1 @@
+firebase emulators:start --project emulator --import .\Export\
