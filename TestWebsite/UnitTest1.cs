@@ -25,9 +25,12 @@ namespace TestWebsite
             {
                 using var client = new HttpClient();
                 var response = await client.GetAsync("http://localhost:4400/emulators");
-                var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
-                if (emulatorList?.firestore != null && emulatorList?.auth != null)
-                    return;
+                if (response.IsSuccessStatusCode)
+                {
+                    var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
+                    if (emulatorList?.firestore != null && emulatorList?.auth != null)
+                        return;
+                }                
                 Thread.Sleep(1000);
                 i++;
             }
@@ -67,6 +70,7 @@ namespace TestWebsite
         public void StopFirebaseEmulator()
         {
             _firebaseEmulator?.Kill(true);
+            _firebaseEmulator?.Dispose();
         }
     }
 
