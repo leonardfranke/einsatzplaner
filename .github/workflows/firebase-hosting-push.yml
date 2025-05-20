@@ -7,6 +7,9 @@ on: workflow_dispatch
 jobs:
   tests_frontend:
     runs-on: ubuntu-latest
+    env:
+      FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
+      FIRESTORE_EMULATOR_HOST: '127.0.0.1:9199'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
