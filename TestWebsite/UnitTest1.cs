@@ -1,15 +1,22 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Json;
+﻿using System.Net.Http.Json;
+using Microsoft.Playwright;
 
 namespace TestWebsite
 {
     [TestFixture]
     public class Tests : PageTest
     {
+        public override BrowserNewContextOptions ContextOptions()
+        {
+            var options = base.ContextOptions() ?? new BrowserNewContextOptions();
+            options.IgnoreHTTPSErrors = true;
+            return options;
+        }
+
         [Test]
         public async Task TestFirstRegistration()
         {
-            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
+            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
             await Expect(Page).ToHaveURLAsync(new Regex(".*/login"));
             await Page.GetByTestId("registrieren-tab").ClickAsync();
 
@@ -27,9 +34,9 @@ namespace TestWebsite
             Assert.NotNull(verification);
             await httpClient.GetAsync(verification.oobLink);
 
-            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
+            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
             await Page.GetByText("Anfrage senden").ClickAsync();
-            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
+            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
 
             var createEventButton = Page.GetByText("Event erstellen");
             await Expect(createEventButton).ToBeVisibleAsync();
