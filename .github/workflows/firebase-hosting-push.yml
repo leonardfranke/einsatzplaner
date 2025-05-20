@@ -24,7 +24,8 @@ jobs:
       - run: |
           dotnet run --project Api &
           dotnet run --project Web &
-          dotnet test TestWebsite
+          cd TestWebsite
+          firebase emulators:exec "dotnet test" --config .\emulator_firebase\firebase.json --project emulator --import .\emulator_firebase\Export\
 
   tests_optimizer:
     runs-on: ubuntu-latest

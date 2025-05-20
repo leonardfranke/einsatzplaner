@@ -6,51 +6,6 @@ namespace TestWebsite
     [TestFixture]
     public class Tests : PageTest
     {
-        private Process? _firebaseEmulator;
-
-        [OneTimeSetUp]
-        public async Task StartFirebaseEmulator()
-        {
-            _firebaseEmulator = Process.Start(new ProcessStartInfo
-            { 
-                WorkingDirectory = "emulator_firebase",
-                FileName = "cmd.exe",
-                Arguments = "/c firebase emulators:exec --project emulator --import .\\Export\\",
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-            });
-            
-            int i = 0;
-            while(i < 30)
-            {
-                using var client = new HttpClient();
-                try
-                {
-                    Console.WriteLine($"Exited {_firebaseEmulator?.HasExited}");
-                    TestContext.Progress.WriteLine($"Exited {_firebaseEmulator?.HasExited}");
-                    var response = await client.GetAsync("http://localhost:4400/emulators");
-                    Console.WriteLine(response.StatusCode.ToString());
-                    TestContext.Progress.WriteLine(response.StatusCode.ToString());
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
-                        if (emulatorList?.firestore != null && emulatorList?.auth != null)
-                            return;
-                    }
-                }
-                catch (HttpRequestException ex)
-                {
-                    Console.WriteLine(ex.StackTrace);
-                    TestContext.Progress.WriteLine(ex.StackTrace);
-                }                               
-                Thread.Sleep(1000);
-                i++;
-            }
-            throw new InvalidOperationException("Firebase Emulators could not be detected");
-        }
-
         [Test]
         public async Task TestFirstRegistration()
         {
@@ -79,24 +34,6 @@ namespace TestWebsite
             var createEventButton = Page.GetByText("Event erstellen");
             await Expect(createEventButton).ToBeVisibleAsync();
         }
-
-        [OneTimeTearDown]
-        public void StopFirebaseEmulator()
-        {
-            _firebaseEmulator?.Kill(true);
-            _firebaseEmulator?.Dispose();
-        }
-    }
-
-    public class EmulatorsList
-    {
-        public Emulator firestore { get; set; }
-        public Emulator auth { get; set; }
-    }
-
-    public class Emulator
-    {
-        public string name { get; set; }
     }
 
     public class EmailVerificationListResponse
