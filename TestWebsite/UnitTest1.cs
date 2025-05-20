@@ -21,7 +21,7 @@ namespace TestWebsite
             });
             
             int i = 0;
-            while(i < 60)
+            while(i < 30)
             {
                 using var client = new HttpClient();
                 try
