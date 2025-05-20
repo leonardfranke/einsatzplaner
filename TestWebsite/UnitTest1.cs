@@ -26,7 +26,9 @@ namespace TestWebsite
                 using var client = new HttpClient();
                 try
                 {
+                    TestContext.Progress.WriteLine($"Exited {_firebaseEmulator?.HasExited}");
                     var response = await client.GetAsync("http://localhost:4400/emulators");
+                    TestContext.Progress.WriteLine(response.StatusCode.ToString());
                     if (response.IsSuccessStatusCode)
                     {
                         var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
@@ -34,9 +36,9 @@ namespace TestWebsite
                             return;
                     }
                 }
-                catch (HttpRequestException)
+                catch (HttpRequestException ex)
                 {
-
+                    TestContext.Progress.WriteLine(ex.StackTrace);
                 }                               
                 Thread.Sleep(1000);
                 i++;
