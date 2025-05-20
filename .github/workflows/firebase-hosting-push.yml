@@ -8,21 +8,18 @@ jobs:
   tests_frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
           node-version: lts/*
       
-      - name: Install dependencies
-        run: npm ci
+      - name: Install firebase
+        run: npm install -g firebase-tools
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
-      
-      - run: npm install -g firebase-tools
-
-      - name: Setup .NET
+      - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -32,6 +29,9 @@ jobs:
 
       - name: Build dotnet projects
         run: dotnet build --no-restore
+
+      - name: Install playwright browsers
+        run: pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
 
       - name: Run api, website and tests
         run: |
