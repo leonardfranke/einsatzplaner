@@ -20,12 +20,19 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
+      
+      - name: Restore dotnet dependencies
+        run: dotnet restore
 
-      - run: |
-          dotnet run --project Api &
-          dotnet run --project Web &
+      - name: Build dotnet projects
+        run: dotnet build --no-restore
+
+      - name: Run api, website and tests
+        run: |
+          dotnet run --no-build --no-restore --project Api &
+          dotnet run --no-build --no-restore --project Web &
           cd TestWebsite
-          firebase emulators:exec "dotnet test" --config .\emulator_firebase\firebase.json --project emulator --import .\emulator_firebase\Export\
+          firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/Export/"
 
   tests_optimizer:
     runs-on: ubuntu-latest
