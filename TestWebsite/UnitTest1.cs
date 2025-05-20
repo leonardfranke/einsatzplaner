@@ -24,13 +24,20 @@ namespace TestWebsite
             while(i < 60)
             {
                 using var client = new HttpClient();
-                var response = await client.GetAsync("http://localhost:4400/emulators");
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
-                    if (emulatorList?.firestore != null && emulatorList?.auth != null)
-                        return;
-                }                
+                    var response = await client.GetAsync("http://localhost:4400/emulators");
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var emulatorList = await response.Content.ReadFromJsonAsync<EmulatorsList>();
+                        if (emulatorList?.firestore != null && emulatorList?.auth != null)
+                            return;
+                    }
+                }
+                catch (HttpRequestException)
+                {
+
+                }                               
                 Thread.Sleep(1000);
                 i++;
             }
