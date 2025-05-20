@@ -14,10 +14,12 @@ namespace TestWebsite
             _firebaseEmulator = Process.Start(new ProcessStartInfo
             { 
                 WorkingDirectory = "emulator_firebase",
-                FileName = "firebase",
-                Arguments = "emulators:start --project emulator --import .\\Export\\",
-                UseShellExecute = true,
-                CreateNoWindow = true
+                FileName = "cmd.exe",
+                Arguments = "/c firebase emulators:exec --project emulator --import .\\Export\\",
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
             });
             
             int i = 0;
@@ -26,8 +28,10 @@ namespace TestWebsite
                 using var client = new HttpClient();
                 try
                 {
+                    Console.WriteLine($"Exited {_firebaseEmulator?.HasExited}");
                     TestContext.Progress.WriteLine($"Exited {_firebaseEmulator?.HasExited}");
                     var response = await client.GetAsync("http://localhost:4400/emulators");
+                    Console.WriteLine(response.StatusCode.ToString());
                     TestContext.Progress.WriteLine(response.StatusCode.ToString());
                     if (response.IsSuccessStatusCode)
                     {
@@ -38,6 +42,7 @@ namespace TestWebsite
                 }
                 catch (HttpRequestException ex)
                 {
+                    Console.WriteLine(ex.StackTrace);
                     TestContext.Progress.WriteLine(ex.StackTrace);
                 }                               
                 Thread.Sleep(1000);
