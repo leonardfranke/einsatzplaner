@@ -9,7 +9,7 @@ namespace TestWebsite
         [Test]
         public async Task TestFirstRegistration()
         {
-            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
+            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
             await Expect(Page).ToHaveURLAsync(new Regex(".*/login"));
             await Page.GetByTestId("registrieren-tab").ClickAsync();
 
@@ -27,9 +27,9 @@ namespace TestWebsite
             Assert.NotNull(verification);
             await httpClient.GetAsync(verification.oobLink);
 
-            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
+            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
             await Page.GetByText("Anfrage senden").ClickAsync();
-            await Page.GotoAsync("https://localhost:7144/dachse-badlaer");
+            await Page.GotoAsync("http://localhost:5194/dachse-badlaer");
 
             var createEventButton = Page.GetByText("Event erstellen");
             await Expect(createEventButton).ToBeVisibleAsync();
