@@ -31,7 +31,7 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Install playwright browsers
-        run: pwsh bin/Debug/net8.0/playwright.ps1 install --with-deps
+        run: pwsh bin/Debug/net8.0/playwright.ps1 install
         working-directory: TestWebsite
 
       - name: Run api, website and tests
