@@ -45,9 +45,10 @@ builder.Services.AddSingleton(sp => firestoreDbBuilder.Build());
 
 if (builder.Environment.IsProduction())
 {
+    var firebaseCredentials = Environment.GetEnvironmentVariable("FIREBASE_CREDENTIALS");
     FirebaseApp.Create(new AppOptions()
     {
-        //Credential = credentials,
+        Credential = GoogleCredential.FromJson(firebaseCredentials),
         ProjectId = "einsatzplaner",
     });
 }
