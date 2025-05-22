@@ -124,7 +124,7 @@ jobs:
           service: einsatzplaner
           region: europe-west1
           source: deploy
-          flags: '--allow-unauthenticated --base-image=dotnet8'
+          flags: '--allow-unauthenticated'
 
   deploy_frontend:
     runs-on: ubuntu-latest
