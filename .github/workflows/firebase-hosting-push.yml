@@ -77,7 +77,7 @@ jobs:
           service: optimizer
           region: europe-west1
           source: Optimizer
-          flags: '--allow-unauthenticated --function=optimize --base-image==pythDockeron312'
+          flags: '--allow-unauthenticated --function=optimize --base-image==python312'
             
 
   deploy_backend:   
