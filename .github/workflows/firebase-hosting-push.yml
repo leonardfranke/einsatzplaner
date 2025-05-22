@@ -117,6 +117,7 @@ jobs:
           mkdir deploy
           cp -r Api deploy/Api
           cp -r DTO deploy/DTO
+          cp -r Dockerfile_Api .
 
       - uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
