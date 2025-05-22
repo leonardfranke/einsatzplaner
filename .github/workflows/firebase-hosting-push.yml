@@ -112,12 +112,18 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCLOUD_SERVICE_ACCOUNT_EINSATZPLANER }}'
 
+      - name: Collect required files for deployment
+        run: |
+          mkdir deploy
+          cp -r Api deploy/Api
+          cp -r DTO deploy/DTO
+
       - uses: 'google-github-actions/deploy-cloudrun@v2'
         with:
           service: einsatzplaner
           region: europe-west1
-          source: Api
-          flags: '--allow-unauthenticated'
+          source: deploy
+          flags: '--allow-unauthenticated --base-image=dotnet8'
 
   deploy_frontend:
     runs-on: ubuntu-latest
