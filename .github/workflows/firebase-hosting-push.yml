@@ -77,7 +77,7 @@ jobs:
           service: optimizer
           region: europe-west1
           source: Optimizer
-          flags: '--allow-unauthenticated --function=optimize --base-image=python312 --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080'
+          flags: '--allow-unauthenticated --function=optimize --base-image=python312 --concurrency=1 --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080'
             
 
   deploy_backend:   
