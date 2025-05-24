@@ -14,7 +14,7 @@
 
 @foreach (var (group, groupMembers) in GroupMembersDict)
 {
-    var header = group.Name + (groupMembers.Any() ? "" : " - Ohne Mitglied");
+    var header = group.Name + (groupMembers.Any() ? "" : " - Ohne Mitglieder");
     <div class="table-responsive">
         <table class="table">
             <thead>

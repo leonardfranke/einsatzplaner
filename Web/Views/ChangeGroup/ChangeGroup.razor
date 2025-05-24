@@ -12,7 +12,7 @@ else
 {    
     <EditForm EditContext="EditContext" OnValidSubmit="SafeGroup">
         <label class="form-label">Name</label>
-        <InputText @bind-Value="GroupData.Name" class="form-control mb-3"/>    
+        <InputText @bind-Value="GroupData.Name" data-testid="group-name" class="form-control mb-3" />
 
         <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
 

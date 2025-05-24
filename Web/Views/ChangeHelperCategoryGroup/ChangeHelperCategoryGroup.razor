@@ -31,7 +31,7 @@
             var category = GetCategoryById(pair.Key);
             <label class="form-label">@category.Name</label>
             <div class="input-group mb-3">
-                <input class="form-control" type="number" min="1" value="@pair.Value" @onchange="value => SetRequirement(category.Id, (string)value.Value)" />
+                <input class="form-control" data-testid="amount-@(category.Name)" type="number" min="1" value="@pair.Value" @onchange="value => SetRequirement(category.Id, (string)value.Value)" />
                 <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveRequirement(category.Id)"><i class="bi bi-x-lg"></i></button>
             </div>
         }

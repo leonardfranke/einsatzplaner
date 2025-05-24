@@ -8,12 +8,12 @@ namespace Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class HelperCategoryGroupController : ControllerBase
+    public class RequirementGroupController : ControllerBase
     {
         private IRequirementGroupManager _helperCategoryGroupManager;
         private IUpdatedTimeManager _updatedTimeManager;
 
-        public HelperCategoryGroupController(IRequirementGroupManager helperCategoryGroupManager, IUpdatedTimeManager updatedTimeManager)
+        public RequirementGroupController(IRequirementGroupManager helperCategoryGroupManager, IUpdatedTimeManager updatedTimeManager)
         {
             _helperCategoryGroupManager = helperCategoryGroupManager;
             _updatedTimeManager = updatedTimeManager;
@@ -32,15 +32,15 @@ namespace Api.Controllers
         }
 
         [HttpDelete]
-        public Task Delete(string departmentId, string helperCategoryGroupId)
+        public Task Delete(string departmentId, string requirementGroupId)
         {
-            return _helperCategoryGroupManager.DeleteGroup(departmentId, helperCategoryGroupId);
+            return _helperCategoryGroupManager.DeleteGroup(departmentId, requirementGroupId);
         }
 
-        [HttpPost]
-        public Task UpdateOrCreate(string departmentId, string? helperCategoryGroupId, RequirementGroupDTO updateGroupDTO)
+        [HttpPost("{departmentId}")]
+        public Task UpdateOrCreate([FromRoute] string departmentId, [FromBody] RequirementGroupDTO updateGroupDTO)
         {
-            return _helperCategoryGroupManager.UpdateOrCreateGroup(departmentId, helperCategoryGroupId, updateGroupDTO.Requirements);
+            return _helperCategoryGroupManager.UpdateOrCreateGroup(departmentId, updateGroupDTO.Id, updateGroupDTO.Requirements);
         }
     }
 }

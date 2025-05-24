@@ -2,7 +2,7 @@
 {
     public class RequirementGroupDTO
     {
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         public Dictionary<string, uint> Requirements { get; set; }
     }

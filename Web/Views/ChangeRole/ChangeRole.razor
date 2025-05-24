@@ -11,11 +11,19 @@
 else
 {    
     <EditForm EditContext="EditContext" OnValidSubmit="SaveRole">
-        <label class="form-label">Name</label>
-        <InputText @bind-Value="RoleData.Name" class="form-control mb-3" />
+        <div>
+            <label class="form-label" for="name">
+                Name: 
+                <InputText id="name" @bind-Value="RoleData.Name" class="form-control mb-3" />
+            </label>
+        </div>
 
-        <label class="form-label">Sperrzeitraum</label>
-        <InputNumber class="form-control" @bind-Value="@RoleData.LockingPeriod" />
+        <div>
+            <label class="form-label">
+                Sperrzeitraum: 
+                <InputNumber class="form-control" @bind-Value="@RoleData.LockingPeriod" />
+            </label>
+        </div>
 
         <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
 

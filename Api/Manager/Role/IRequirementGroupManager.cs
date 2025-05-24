@@ -6,7 +6,7 @@ namespace Api.Manager
     {
         public Task<List<RequirementGroupDTO>> GetAllGroups(string departmentId);
 
-        public Task UpdateOrCreateGroup(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements);
+        public Task UpdateOrCreateGroup(string departmentId, string? requirementGroupId, Dictionary<string, uint> requirements);
 
         public Task DeleteGroup(string departmentId, string helperCategoryGroupId);
     }

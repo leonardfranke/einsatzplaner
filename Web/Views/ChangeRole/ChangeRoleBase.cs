@@ -77,16 +77,18 @@ namespace Web.Views
                 RoleData.LockingPeriod = _oldLockingPeriod;
                 _oldSelectedMembers = new();
                 SelectedMembers = new();
-                return;
+            }
+            else
+            {
+                Members = await _memberService.GetAll(DepartmentId);
+                RoleData.Name = Role.Name;
+                _oldName = RoleData.Name;
+                RoleData.LockingPeriod = Role.LockingPeriod;
+                _oldLockingPeriod = RoleData.LockingPeriod;
+                _oldSelectedMembers = Members.Where(member => member.RoleIds.Contains(Role.Id)).Select(member => member.Id).ToList();
+                SelectedMembers = new(_oldSelectedMembers);
             }
 
-            Members = await _memberService.GetAll(DepartmentId);
-            RoleData.Name = Role.Name;
-            _oldName = RoleData.Name;
-            RoleData.LockingPeriod = Role.LockingPeriod;
-            _oldLockingPeriod = RoleData.LockingPeriod;
-            _oldSelectedMembers = Members.Where(member => member.RoleIds.Contains(Role.Id)).Select(member => member.Id).ToList();
-            SelectedMembers = new(_oldSelectedMembers);
             IsRoleLoading = false;
         }
 

@@ -14,7 +14,7 @@
 
 @foreach (var (role, roleMembers) in RoleMembersDict)
 {
-    var header = role.Name + (roleMembers.Any() ? "" : " - Ohne Mitglied");
+    var header = role.Name + (roleMembers.Any() ? "" : " - Ohne Mitglieder");
 
     <div class="table-responsive">
         <table class="table">

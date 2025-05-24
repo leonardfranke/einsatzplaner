@@ -40,6 +40,38 @@ namespace TestWebsite
 
             var createEventButton = Page.GetByText("Event erstellen");
             await Expect(createEventButton).ToBeVisibleAsync();
+
+            await Page.GotoAsync("https://localhost:7144/dachse-badlaer/groups");
+
+            var createGroupButton = Page.GetByText("Gruppe hinzufügen", new PageGetByTextOptions { Exact = true});
+            await Expect(createGroupButton).ToBeVisibleAsync();
+            await createGroupButton.ClickAsync();
+            await Page.GetByTestId("group-name").FillAsync("Herren");
+            await Page.GetByText("Speichern").ClickAsync();
+            var groupText = Page.GetByText("Herren - Ohne Mitglieder");
+            await Expect(groupText).ToBeVisibleAsync();
+
+            var createRoleButton = Page.GetByText("Rolle hinzufügen");
+            await Expect(createRoleButton).ToBeVisibleAsync();
+            await createRoleButton.ClickAsync();
+            await Page.GetByLabel("Name").FillAsync("Anschreiber");
+            await Page.GetByLabel("Sperrzeitraum").FillAsync("20");
+            await Page.GetByText("Speichern").ClickAsync();
+            var roleText = Page.GetByText("Anschreiber - Ohne Mitglieder");
+            await Expect(roleText).ToBeVisibleAsync();
+            var roleInfoText = Page.GetByText("Sperrzeitraum: 20 Tage");
+            await Expect(roleInfoText).ToBeVisibleAsync();
+
+            var createRequirementGroupButton = Page.GetByText("Bedarfsgruppe hinzufügen");
+            await Expect(createRequirementGroupButton).ToBeVisibleAsync();
+            await createRequirementGroupButton.ClickAsync();
+            await Page.GetByText("Hinzufügen", new PageGetByTextOptions { Exact = true}).ClickAsync();
+            await Page.GetByText("Anschreiber", new PageGetByTextOptions { Exact = true }).ClickAsync();
+            await Page.GetByTestId("amount-Anschreiber").FillAsync("3");
+            await Page.GetByText("Speichern").ClickAsync();            
+            var anschreiberInfoText = Page.GetByText("3x Anschreiber");
+            await Expect(anschreiberInfoText).ToBeVisibleAsync();
+            
         }
     }
 

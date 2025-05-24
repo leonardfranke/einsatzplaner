@@ -15,29 +15,29 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public Task Delete(string departmentId, string helperCategoryGroupId)
+        public Task Delete(string departmentId, string requirementGroupId)
         {
-            var query = QueryBuilder.Build(("departmentId", departmentId), ("helperCategoryGroupId", helperCategoryGroupId));
-            return _httpClient.DeleteAsync(new Uri($"/api/HelperCategoryGroup{query}", UriKind.Relative));
+            var query = QueryBuilder.Build(("departmentId", departmentId), ("requirementGroupId", requirementGroupId));
+            return _httpClient.DeleteAsync(new Uri($"/api/RequirementGroup{query}", UriKind.Relative));
         }
 
         public async Task<List<Models.RequirementGroup>> GetAll(string departmentId)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId));
-            var response = await _httpClient.GetAsync(new Uri($"/api/HelperCategoryGroup{query}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/RequirementGroup{query}", UriKind.Relative));
             var categoryDTOs = await response.Content.ReadFromJsonAsync<List<RequirementGroupDTO>>();
             return RequirementGroupConverter.Convert(categoryDTOs);
         }
 
-        public async Task UpdateOrCreate(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements)
+        public async Task UpdateOrCreate(string departmentId, string? requirementGroupId, Dictionary<string, uint> requirements)
         {
             var updateCategoryDTO = new RequirementGroupDTO
             {
+                Id = requirementGroupId,
                 Requirements = requirements
             };
             var content = JsonContent.Create(updateCategoryDTO);
-            var query = QueryBuilder.Build(("departmentId", departmentId), ("helperCategoryGroupId", helperCategoryGroupId));
-            var res = await _httpClient.PostAsync(new Uri($"/api/HelperCategoryGroup{query}", UriKind.Relative), content);
+            var res = await _httpClient.PostAsync(new Uri($"/api/RequirementGroup/{departmentId}", UriKind.Relative), content);
         }
     }
 }

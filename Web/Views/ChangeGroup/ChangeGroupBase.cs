@@ -71,14 +71,16 @@ namespace Web.Views
                 GroupData.Name = _oldName;
                 _oldSelectedMembers = new();
                 SelectedMembers = new();
-                return;
+            }
+            else
+            {
+                Members = await _memberService.GetAll(DepartmentId);
+                _oldSelectedMembers = Members.Where(member => member.GroupIds.Contains(Group.Id)).Select(member => member.Id).ToList();
+                SelectedMembers = new(_oldSelectedMembers);
+                GroupData.Name = Group.Name;
+                _oldName = GroupData.Name;
             }
 
-            Members = await _memberService.GetAll(DepartmentId);
-            _oldSelectedMembers = Members.Where(member => member.GroupIds.Contains(Group.Id)).Select(member => member.Id).ToList();
-            SelectedMembers = new(_oldSelectedMembers);
-            GroupData.Name = Group.Name;
-            _oldName = GroupData.Name;
             IsGroupLoading = false;
         }
 
