@@ -109,7 +109,9 @@ jobs:
           service: einsatzplaner
           region: europe-west1
           source: deploy
-          env_vars: OPTIMIZER_ENDPOINT=${{ needs.deploy_optimizer.outputs.optimizer-url }}
+          env_vars: |-
+            OPTIMIZER_ENDPOINT='${{ needs.deploy_optimizer.outputs.optimizer-url }}'
+            FIREBASE_API_KEY='${{ secrets.FIREBASE_API_KEY }}'
           secrets: FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
           flags: '--allow-unauthenticated --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080'
 
