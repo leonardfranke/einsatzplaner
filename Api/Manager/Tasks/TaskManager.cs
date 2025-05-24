@@ -15,6 +15,9 @@ namespace Api.Manager
 
         public Task TriggerRecalculation(string departmentId, DateTime? dateTime = null)
         {
+            if (_optimizerEndPoint == null)
+                return Task.CompletedTask;
+
             if (dateTime == null)
             {
                 var berlinTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");

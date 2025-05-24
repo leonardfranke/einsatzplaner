@@ -26,7 +26,6 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName);
 });
 
-//var credentials = await GoogleCredential.FromFileAsync(builder.Configuration["SERVICE_ACCOUNT_CREDENTIALS"], CancellationToken.None);
 if(builder.Environment.IsProduction())
 {
     var gTasksClientBuilder = new CloudTasksClientBuilder();
@@ -74,7 +73,7 @@ builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
-var optimizerEndpoint = builder.Configuration["OPTIMIZER_END_POINT"] ?? throw new ArgumentNullException("OPTIMIZER_END_POINT", "Argument is missing in configuration file");
+var optimizerEndpoint = Environment.GetEnvironmentVariable("OPTIMIZER_ENDPOINT");
 builder.Services.AddSingleton<ITaskManager>(sp => new TaskManager(sp.GetRequiredService<CloudTasksClient>(), optimizerEndpoint));
 
 var app = builder.Build();

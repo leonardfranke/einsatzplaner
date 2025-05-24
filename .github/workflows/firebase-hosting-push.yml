@@ -66,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: tests_optimizer
     if: ${{ success() }}
+    outputs: 
+      optimizer-url: ${{ steps.optimizer-deployment.outputs.url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -73,6 +75,7 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCLOUD_SERVICE_ACCOUNT_EINSATZPLANER }}'
       - uses: 'google-github-actions/deploy-cloudrun@v2'
+        id: optimizer-deployment
         with:
           service: optimizer
           region: europe-west1
@@ -82,7 +85,7 @@ jobs:
 
   deploy_backend:   
     runs-on: ubuntu-latest
-    needs: tests_frontend
+    needs: [tests_frontend, deploy_optimizer]
     if: ${{ success() }}
     outputs: 
       backend-url: ${{ steps.backend-deployment.outputs.url }}
@@ -106,7 +109,9 @@ jobs:
           service: einsatzplaner
           region: europe-west1
           source: deploy
-          flags: '--allow-unauthenticated --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080 --set-secrets FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest'
+          env_vars: OPTIMIZER_ENDPOINT=${{ needs.deploy_optimizer.outputs.optimizer-url }}
+          secrets: FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
+          flags: '--allow-unauthenticated --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080'
 
   deploy_frontend:
     runs-on: ubuntu-latest
