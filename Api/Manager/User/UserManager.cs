@@ -62,6 +62,7 @@ namespace Api.Manager
             try
             {
                 var uri = Path.Combine(_httpClient.BaseAddress.ToString(), SendVerificationMailRequest.URL + _apiKey);
+                Console.WriteLine($"Verification mail request send to: {uri} with {requestBody}");
                 var httpResponse = await _httpClient.PostAsJsonAsync(uri, requestBody);                
             }
             catch
