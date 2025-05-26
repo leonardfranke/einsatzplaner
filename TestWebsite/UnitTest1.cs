@@ -70,8 +70,7 @@ namespace TestWebsite
             await Page.GetByTestId("amount-Anschreiber").FillAsync("3");
             await Page.GetByText("Speichern").ClickAsync();            
             var anschreiberInfoText = Page.GetByText("3x Anschreiber");
-            await Expect(anschreiberInfoText).ToBeVisibleAsync();
-            
+            await Expect(anschreiberInfoText).ToBeVisibleAsync();            
         }
     }
 
