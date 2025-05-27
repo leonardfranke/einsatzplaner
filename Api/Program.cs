@@ -71,7 +71,6 @@ builder.Services.AddSingleton<IRoleManager, RoleManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
-builder.Services.AddSingleton<IUpdatedTimeManager, UpdatedTimeManager>();
 builder.Services.AddHttpClient();
 var optimizerEndpoint = Environment.GetEnvironmentVariable("OPTIMIZER_ENDPOINT");
 builder.Services.AddSingleton<ITaskManager>(sp => new TaskManager(sp.GetRequiredService<CloudTasksClient>(), optimizerEndpoint));

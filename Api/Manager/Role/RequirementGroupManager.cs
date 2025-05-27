@@ -8,12 +8,10 @@ namespace Api.Manager
     public class RequirementGroupManager : IRequirementGroupManager
     {
         private FirestoreDb _firestoreDb;
-        private IUpdatedTimeManager _updatedTimeManager;
 
-        public RequirementGroupManager(FirestoreDb firestoreDb, IUpdatedTimeManager updatedTimeManager)
+        public RequirementGroupManager(FirestoreDb firestoreDb)
         {
             _firestoreDb = firestoreDb;
-            _updatedTimeManager = updatedTimeManager;
         }
 
         private CollectionReference GetCategoryGroupCollectionReference(string departmentId)
@@ -40,7 +38,6 @@ namespace Api.Manager
 
         public Task UpdateOrCreateGroup(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements)
         {
-            _updatedTimeManager.SetHelperCategoryGroup(departmentId);
             var categoryReference = GetCategoryGroupCollectionReference(departmentId);
             if (string.IsNullOrEmpty(helperCategoryGroupId))
             {
