@@ -11,24 +11,16 @@ namespace Api.Controllers
     public class RequirementGroupController : ControllerBase
     {
         private IRequirementGroupManager _helperCategoryGroupManager;
-        private IUpdatedTimeManager _updatedTimeManager;
 
-        public RequirementGroupController(IRequirementGroupManager helperCategoryGroupManager, IUpdatedTimeManager updatedTimeManager)
+        public RequirementGroupController(IRequirementGroupManager helperCategoryGroupManager)
         {
             _helperCategoryGroupManager = helperCategoryGroupManager;
-            _updatedTimeManager = updatedTimeManager;
         }
 
-        [HttpGet]
-        public Task<List<RequirementGroupDTO>> GetAll(string departmentId)
+        [HttpGet("{departmentId}")]
+        public Task<List<RequirementGroupDTO>> GetAll([FromRoute] string departmentId)
         {
             return _helperCategoryGroupManager.GetAllGroups(departmentId);
-        }
-
-        [HttpGet("Updated")]
-        public Task<DateTime> GetUpdatedTime(string departmentId)
-        {
-            return _updatedTimeManager.GetHelperCategory(departmentId);
         }
 
         [HttpDelete]

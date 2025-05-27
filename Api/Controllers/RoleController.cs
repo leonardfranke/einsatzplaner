@@ -10,12 +10,10 @@ namespace Api.Controllers
     {
         private IRoleManager _roleManager;
         private IMemberManager _memberManager;
-        private IUpdatedTimeManager _updatedTimeManager;
 
-        public RoleController(IRoleManager roleManager, IUpdatedTimeManager updatedTimeManager, IMemberManager memberManager)
+        public RoleController(IRoleManager roleManager, IMemberManager memberManager)
         {
             _roleManager = roleManager;
-            _updatedTimeManager = updatedTimeManager;
             _memberManager = memberManager;
         }
 
@@ -23,12 +21,6 @@ namespace Api.Controllers
         public Task<List<RoleDTO>> GetAll([FromRoute] string departmentId)
         {
             return _roleManager.GetAll(departmentId);
-        }
-
-        [HttpGet("Updated")]
-        public Task<DateTime> GetUpdatedTime(string departmentId)
-        {
-            return _updatedTimeManager.GetHelperCategory(departmentId);
         }
 
         [HttpDelete]

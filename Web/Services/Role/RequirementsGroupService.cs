@@ -23,8 +23,7 @@ namespace Web.Services
 
         public async Task<List<Models.RequirementGroup>> GetAll(string departmentId)
         {
-            var query = QueryBuilder.Build(("departmentId", departmentId));
-            var response = await _httpClient.GetAsync(new Uri($"/api/RequirementGroup{query}", UriKind.Relative));
+            var response = await _httpClient.GetAsync(new Uri($"/api/RequirementGroup/{departmentId}", UriKind.Relative));
             var categoryDTOs = await response.Content.ReadFromJsonAsync<List<RequirementGroupDTO>>();
             return RequirementGroupConverter.Convert(categoryDTOs);
         }
