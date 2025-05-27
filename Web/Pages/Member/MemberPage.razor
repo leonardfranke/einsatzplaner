@@ -26,8 +26,8 @@
             </thead>
             <tbody>
                 @foreach (var (member, index) in Members.Select((member, index) => (member, index)))
-                {                
-                    <tr @onmouseenter="() => HoveredIndex = index" @onmouseleave="() => HoveredIndex = null">
+                {
+                    <tr @onmouseenter="() => HoveredIndex = index" @onmouseleave="() => HoveredIndex = null" data-testid="tr-@(member.Name.Replace(" ", string.Empty))">
                         <td>
                             @if(string.IsNullOrEmpty(member.Name))
                             {
@@ -65,7 +65,7 @@
                             }
                         </td>
                         <td>
-                            <button @onclick="() => EditMember(member)"
+                            <button @onclick="() => EditMember(member)" data-testid="editmember-@(member.Name.Replace(" ", string.Empty))"
                                     class="btn btn-outline-dark"
                                     style="visibility: @(HoveredIndex == index ? "visible" : "hidden")">
                                 <i class="bi bi-pencil"></i>

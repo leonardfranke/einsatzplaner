@@ -68,9 +68,19 @@ namespace TestWebsite
             await Page.GetByText("Hinzufügen", new PageGetByTextOptions { Exact = true}).ClickAsync();
             await Page.GetByText("Anschreiber", new PageGetByTextOptions { Exact = true }).ClickAsync();
             await Page.GetByTestId("amount-Anschreiber").FillAsync("3");
-            await Page.GetByText("Speichern").ClickAsync();            
+            await Page.GetByText("Speichern").ClickAsync();        
             var anschreiberInfoText = Page.GetByText("3x Anschreiber");
-            await Expect(anschreiberInfoText).ToBeVisibleAsync();            
+            await Expect(anschreiberInfoText).ToBeVisibleAsync();
+
+
+            await Page.GotoAsync("https://localhost:7144/dachse-badlaer/member");
+            var memberInfoText = Page.GetByText("Leonard Franke", new PageGetByTextOptions { Exact = true });
+            await Expect(memberInfoText).ToBeVisibleAsync();
+            var memberTr = Page.GetByTestId("tr-LeonardFranke");
+            await memberTr.HoverAsync();
+            var memberEditButton = Page.GetByTestId("editmember-LeonardFranke");
+            await Expect(memberEditButton).ToBeVisibleAsync();
+            await memberEditButton.ClickAsync();
         }
     }
 
