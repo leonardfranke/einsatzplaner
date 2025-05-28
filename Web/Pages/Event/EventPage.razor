@@ -34,7 +34,7 @@
                         <th scope="col">Vorausgewählte Helfer</th>
                         <th scope="col">Verfügbare Helfer</th>
                     </AuthorizeView>
-                    <th scope="col">Verfügbare Gruppen</th>
+                    <th scope="col">Zugelassene Gruppen</th>
                     <th scope="col">Sperrzeitpunkt</th>
                 </tr>
             </thead>
@@ -56,7 +56,17 @@
                             <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
                             <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
                         </AuthorizeView>
-                        <th>@GetDisplayGroupNames(help.RequiredGroups)</th>
+                        <th>@{
+                                var ret = GetDisplayGroupNames(help.RequiredGroups);
+                                @if(ret.Item2)
+                                {
+                                    <i>@ret.Item1</i>
+                                }
+                                else
+                                {
+                                    @ret.Item1
+                                }
+                            }</th>
                         <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
                     </tr>            
                 }        

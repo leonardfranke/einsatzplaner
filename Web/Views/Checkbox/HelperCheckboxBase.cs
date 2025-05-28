@@ -21,7 +21,7 @@ namespace Web.Views
 
         public bool IsPreselectedOrAvailable { get => IsPreselected || IsAvailable;  set { } }
 
-        public bool IsMemberPermitted => Member.GroupIds.Intersect(Helper?.RequiredGroups ?? new()).Any() && Member.RoleIds.Contains(Helper?.RoleId);
+        public bool IsMemberPermitted => (Helper?.RequiredGroups.Count() == 0 || Member.GroupIds.Intersect(Helper?.RequiredGroups ?? new()).Any()) && Member.RoleIds.Contains(Helper?.RoleId);
 
         public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
 

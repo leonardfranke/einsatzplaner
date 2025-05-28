@@ -122,11 +122,11 @@ namespace Web.Pages
             return string.Join(", ", memberIds.Select(id => _members.FirstOrDefault(member => member.Id == id)?.Name ?? "Ohne Name"));
         }
 
-        protected string GetDisplayGroupNames(List<string> groupIds)
+        protected (string, bool) GetDisplayGroupNames(List<string> groupIds)
         {
             if (groupIds == null || groupIds.Count == 0)
-                return "-";
-            return string.Join(", ", groupIds.Select(id => _groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name"));
+                return ("Frei", true);
+            return (string.Join(", ", groupIds.Select(id => _groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name")), false);
         }
 
         protected async Task OpenLockedMembersSelected(Models.Helper helper)
