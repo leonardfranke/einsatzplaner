@@ -9,12 +9,6 @@ namespace Api.Models
         public string Name { get; set; }
 
         [FirestoreProperty]
-        public List<string> GroupIds { get; set; }
-
-        [FirestoreProperty]
-        public List<string> RoleIds { get; set; }
-
-        [FirestoreProperty]
         public bool IsAdmin { get; set; }
     }
 }

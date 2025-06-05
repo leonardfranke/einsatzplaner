@@ -19,8 +19,6 @@ namespace Web.Converter
             {
                 Id = member.Id,
                 Name = member.Name,
-                GroupIds = member.GroupIds,
-                RoleIds = member.RoleIds,
                 IsAdmin = member.IsAdmin
             };
         }

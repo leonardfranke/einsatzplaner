@@ -25,7 +25,7 @@ else
             </label>
         </div>
 
-        <MemberSelection SelectedMembers="SelectedMembers" Members="Members" />
+        <BlazorBootstrap.Switch @bind-Value="RoleData.IsFree" Label="Offene Rolle"/>
 
         <hr />
         @if (IsUpdate)

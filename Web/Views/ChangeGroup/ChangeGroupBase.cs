@@ -25,7 +25,7 @@ namespace Web.Views
         public IMemberService _memberService { private get; set; }
 
         [Parameter]
-        public Func<string, string, IEnumerable<string>, IEnumerable<string>, Task> UpdateGroupFunc { get; set; }
+        public Func<string, string, Task> UpdateGroupFunc { get; set; }
 
         [SupplyParameterFromForm]
         public FormModel GroupData { get; set; }
@@ -35,15 +35,10 @@ namespace Web.Views
         public bool IsGroupDeleting { get; set; }
         public bool IsGroupLoading { get; set; }
 
-        protected List<string> SelectedMembers { get; private set; }
-
-        protected List<Member> Members { get; private set; } = new();
-
         public bool IsUpdate { get; set; }
 
         private ValidationMessageStore _messageStore;
         private string _oldName;
-        private List<string> _oldSelectedMembers;
 
         protected override void OnInitialized()
         {
@@ -61,7 +56,7 @@ namespace Web.Views
                 _messageStore.Add(() => GroupData.Name, "Das Group benötigt einen Namen.");
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override void OnParametersSet()
         {
             IsGroupLoading = true;
             IsUpdate = Group != null;
@@ -69,28 +64,20 @@ namespace Web.Views
             {
                 _oldName = string.Empty;
                 GroupData.Name = _oldName;
-                _oldSelectedMembers = new();
-                SelectedMembers = new();
             }
             else
             {
-                Members = await _memberService.GetAll(DepartmentId);
-                _oldSelectedMembers = Members.Where(member => member.GroupIds.Contains(Group.Id)).Select(member => member.Id).ToList();
-                SelectedMembers = new(_oldSelectedMembers);
                 GroupData.Name = Group.Name;
                 _oldName = GroupData.Name;
             }
-
             IsGroupLoading = false;
         }
 
         public async Task SafeGroup()
         {
             IsGroupSaving = true;
-            var newGroupMembers = SelectedMembers.Except(_oldSelectedMembers);
-            var formerGroupMembers = _oldSelectedMembers.Except(SelectedMembers);
-            if (GroupData.Name != _oldName || newGroupMembers.Any() || formerGroupMembers.Any())
-                await UpdateGroupFunc(Group?.Id, GroupData.Name, newGroupMembers, formerGroupMembers);
+            if (GroupData.Name != _oldName)
+                await UpdateGroupFunc(Group?.Id, GroupData.Name);
 
             await CloseModal();
             IsGroupSaving = false;

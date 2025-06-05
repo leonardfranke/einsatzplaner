@@ -7,6 +7,9 @@ namespace Web.Views
 {
     public class HelperCheckboxBase : ComponentBase
     {
+        private Models.Role _requiredRole;
+        private IEnumerable<Models.Group> _requiredGroups;
+
         [CascadingParameter]
         public Modal Modal { get; set; }
 
@@ -19,9 +22,17 @@ namespace Web.Views
         [Parameter]
         public Models.Member Member { private get; set; }
 
+        [Parameter]
+        public IEnumerable<Models.Role> Roles { private get; set; }
+
+        [Parameter]
+        public IEnumerable<Models.Group> Groups { private get; set; }
+
         public bool IsPreselectedOrAvailable { get => IsPreselected || IsAvailable;  set { } }
 
-        public bool IsMemberPermitted => (Helper?.RequiredGroups.Count() == 0 || Member.GroupIds.Intersect(Helper?.RequiredGroups ?? new()).Any()) && Member.RoleIds.Contains(Helper?.RoleId);
+        public bool IsMemberPermitted => _requiredRole != null && _requiredGroups != null 
+            && (_requiredGroups.Count() == 0 || _requiredGroups.SelectMany(group => group.MemberIds).Contains(Member.Id)) 
+            && _requiredRole.MemberIds.Contains(Member.Id);
 
         public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
 
@@ -52,6 +63,12 @@ namespace Web.Views
         protected override async Task OnInitializedAsync()
         {
             currentUserId = (await _authManager.GetLocalUser()).Id;
+        }
+
+        protected override void OnParametersSet()
+        {
+            _requiredRole = Roles.First(role => role.Id == Helper.RoleId);
+            _requiredGroups = Groups.Where(group => Helper.RequiredGroups.Contains(group.Id));
         }
 
         protected Task<bool> SetIsAvailable(bool setHelping)

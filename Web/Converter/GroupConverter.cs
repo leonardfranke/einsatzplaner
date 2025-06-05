@@ -21,7 +21,8 @@ namespace Web.Converter
             return new Group
             {
                 Id = group.Id,
-                Name = group.Name
+                Name = group.Name,
+                MemberIds = group.MemberIds,
             };
         }
     }

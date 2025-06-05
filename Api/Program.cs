@@ -68,6 +68,7 @@ builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
 builder.Services.AddSingleton<IDepartmentManager, DepartmentManager>();
 builder.Services.AddSingleton<IGroupManager, GroupManager>();
 builder.Services.AddSingleton<IRoleManager, RoleManager>();
+builder.Services.AddSingleton<IQualificationManager, QualificationManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();

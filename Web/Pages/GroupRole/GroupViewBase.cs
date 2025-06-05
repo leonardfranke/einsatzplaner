@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeGroup;
+using Web.Views.MemberSelection;
 
 namespace Web.Pages
 {
@@ -10,9 +11,6 @@ namespace Web.Pages
     {
         private string _departmentId;
         private List<Models.Member> _members;
-        private List<Group> _groups;
-
-        public Dictionary<Group, List<Models.Member>> GroupMembersDict { get; set; } = new();
 
         [Parameter]
         public Models.Department Department { private get; set; }
@@ -24,6 +22,7 @@ namespace Web.Pages
         private IMemberService _memberService { get; set; }
 
         public string HoveredId { get; set; }
+        public List<Group> Groups { get; private set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
@@ -43,12 +42,40 @@ namespace Web.Pages
 
         private async Task LoadGroups()
         {
-            _members = await _memberService.GetAll(_departmentId); 
-            _groups = await _groupService.GetAll(_departmentId);
-            GroupMembersDict.Clear();
-            foreach (var group in _groups)
-                GroupMembersDict[group] = _members.Where(member => member.GroupIds.Contains(group.Id)).ToList();
+            var membersTask = _memberService.GetAll(_departmentId);
+            var groupsTask = _groupService.GetAll(_departmentId);
+            _members = await membersTask;
+            Groups = await groupsTask;
             StateHasChanged();
+        }
+
+        public string GetMemberNameById(string memberId)
+        {
+            return _members.Find(member => member.Id == memberId)?.Name ?? "Unbekannter Nutzer";
+        }
+
+        public async Task EditGroupMembers(Group group)
+        {
+            var oldSelectedMembers = _members
+                .Where(member => group.MemberIds.Contains(member.Id))
+                .Select(member => member.Id);
+            var currentSelectedMembers = new List<string>(oldSelectedMembers);
+            var confirmModalAction = async () =>
+            {
+                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
+                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
+                await _groupService.UpdateGroupMembers(_departmentId, group.Id, newMembers, formerMembers);
+                await LoadGroups();
+            };
+            var closeModalFunc = Modal.HideAsync;
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
+                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
+                { nameof(MemberSelectionModal.Members), _members},
+                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+            };
+            await Modal.ShowAsync<MemberSelectionModal>(title: group.Name, parameters: parameters);
         }
 
         public async Task EditOrCreateGroup(Group? group)
@@ -74,11 +101,9 @@ namespace Web.Pages
             await LoadGroups();
         }
 
-        private async Task UpdateGroup(string groupId, string name, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
+        private async Task UpdateGroup(string groupId, string name)
         {
             var newGroupId = await _groupService.UpdateOrCreateGroup(_departmentId, groupId, name);
-            if(newMembers.Any() || formerMembers.Any())
-                await _groupService.UpdateGroupMembers(_departmentId, newGroupId, newMembers.ToList(), formerMembers.ToList());
             await LoadGroups();
         }
     }

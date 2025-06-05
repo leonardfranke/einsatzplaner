@@ -16,7 +16,9 @@ namespace Web.Converter
             {
                 Id = role.Id,
                 Name = role.Name,
-                LockingPeriod = role.LockingPeriod
+                LockingPeriod = role.LockingPeriod,
+                IsFree = role.IsFree,
+                MemberIds = role.MemberIds
             };
         }
     }

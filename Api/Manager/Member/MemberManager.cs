@@ -32,16 +32,12 @@ namespace Api.Manager
             return MemberConverter.Convert(members);
         }
 
-        public async Task UpdateMember(string departmentId, string memberId, List<string> groupIds, List<string> roleIds, bool isAdmin)
+        public async Task UpdateMember(string departmentId, string memberId, bool isAdmin)
         {
             var snapshot = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
                 .Collection(Paths.MEMBER).Document(memberId);
-            await snapshot.UpdateAsync(new Dictionary<string, object> {
-                    { nameof(Member.GroupIds), groupIds},
-                    { nameof(Member.RoleIds), roleIds},
-                    { nameof(Member.IsAdmin), isAdmin}
-                }, Precondition.MustExist);
+            await snapshot.UpdateAsync(nameof(Member.IsAdmin), isAdmin, Precondition.MustExist);
         }
 
         public async Task CreateMember(string departmentId, string userId, bool isAdmin = false)
@@ -53,8 +49,6 @@ namespace Api.Manager
             var newMember = new Member
             {
                 Name = user.DisplayName,
-                GroupIds = new(),
-                RoleIds = new(),
                 IsAdmin = isAdmin
             };
 
@@ -73,6 +67,7 @@ namespace Api.Manager
             return MemberConverter.Convert(member);
         }
 
+        /*
         public Task AddGroupMembers(string departmentId, string groupId, List<string> members)
         {
             return AddOrRemoveGroupOrRoleMembers(departmentId, groupId, members, true, true);
@@ -134,7 +129,7 @@ namespace Api.Manager
             return memberRef.UpdateAsync(new Dictionary<string, object> { {
                         isGroupNotRole ? nameof(Member.GroupIds) : nameof(Member.RoleIds),
                         isAddNotRemove ? FieldValue.ArrayUnion(id) : FieldValue.ArrayRemove(id) } });
-        }
+        }*/
 
         public async Task<long?> MemberCount(string departmentId)
         {

@@ -12,29 +12,30 @@
 
 <h3>Gruppen:</h3>
 
-@foreach (var (group, groupMembers) in GroupMembersDict)
+@foreach (var group in Groups)
 {
-    var header = group.Name + (groupMembers.Any() ? "" : " - Ohne Mitglieder");
+    var header = group.Name + (group.MemberIds.Any() ? "" : " - Ohne Mitglieder");
     <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">                
                     <th scope="col">@header</th>
                     <th>
-                        <button style="visibility:  @(HoveredId == group.Id ? "visible" : "hidden")"
+                        <button style="visibility: @(HoveredId == group.Id ? "visible" : "hidden")"
                                 type="button" @onclick="() => EditOrCreateGroup(group)"
                                 class="btn btn-outline-dark">
                             <i class="bi bi-pencil"></i>
                         </button>
+                        <Button hidden="@(HoveredId != group.Id)" @onclick="() => EditGroupMembers(group)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Plus"/></Button>                        
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var member in groupMembers)
+                @foreach (var memberId in group.MemberIds)
                 {
                     <tr>
                         <td>
-                            @member.Name
+                            @GetMemberNameById(memberId)
                         </td>
                         <td></td>
                     </tr>

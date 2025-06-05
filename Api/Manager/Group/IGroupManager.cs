@@ -9,5 +9,7 @@ namespace Api.Manager
         public Task Delete(string departmentId, string groupId);
 
         public Task<string> UpdateOrCreate(string departmentId, string? groupId, string name);
+
+        public Task UpdateGroupMembers(string departmentId, string groupId, UpdateMembersListDTO updateMembersList);
     }
 }

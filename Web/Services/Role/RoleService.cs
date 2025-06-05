@@ -15,14 +15,15 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string name, int lockingPeriod)
+        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
         {
             var updateCategoryDTO = new UpdateRoleDTO
             {
                 DepartmentId = departmentId,
                 RoleId = roleId,
-                Name = name,
-                LockingPeriod = lockingPeriod
+                NewName = newName,
+                NewLockingPeriod = newLockingPeriod,
+                NewIsFree = newIsFree
             };
             var content = JsonContent.Create(updateCategoryDTO);
             var response = await _httpClient.PostAsync(new Uri($"/api/Role", UriKind.Relative), content);
@@ -49,7 +50,7 @@ namespace Web.Services
             return RoleConverter.Convert(roleDTO);
         }
 
-        public Task UpdateRoleMembers(string departmentId, string roleId, List<string> newMembers, List<string> formerMembers)
+        public Task UpdateRoleMembers(string departmentId, string roleId, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
         {
             var updateMembersListDTO = new UpdateMembersListDTO
             {

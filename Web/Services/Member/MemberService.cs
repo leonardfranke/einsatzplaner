@@ -34,18 +34,5 @@ namespace Web.Services.Member
                 return null;
             }
         }
-
-        public async Task UpdateMember(string departmentId, string userId, List<string> groupIds, List<string> roleIds, bool isAdmin)
-        {
-            var updateMemberDTO = new UpdateMemberDTO
-            {
-                GroupIds = groupIds,
-                RoleIds = roleIds,
-                IsAdmin = isAdmin
-            };
-            var content = JsonContent.Create(updateMemberDTO);
-            var query = QueryBuilder.Build(("departmentId", departmentId), ("memberId", userId));
-            var response = await _httpClient.PatchAsync(new Uri($"/api/Member{query}", UriKind.Relative), content);
-        }
     }
 }

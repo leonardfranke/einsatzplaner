@@ -1,7 +1,5 @@
-﻿using DTO;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Web.Manager;
 using Web.Models;
 using Web.Services;
 
@@ -22,13 +20,10 @@ namespace Web.Views
         public Func<string, Task> DeleteRoleFunc { get; set; }
 
         [Parameter]
-        public Func<string, string, int, IEnumerable<string>, IEnumerable<string>, Task> UpdateRoleFunc { get; set; }
+        public Func<string, string?, int?, bool?, Task> UpdateRoleFunc { get; set; }
 
         [Inject]
         public IMemberService _memberService { private get; set; }
-
-        [Inject]
-        private IAuthManager _authManager { get; set; }
 
         [SupplyParameterFromForm]
         public FormModel RoleData { get; set; }
@@ -38,16 +33,12 @@ namespace Web.Views
         public bool IsRoleDeleting { get; set; }
         public bool IsRoleLoading { get; set; }
 
-        protected List<string> SelectedMembers { get; private set; }
-
-        protected List<Member> Members { get; private set; } = new();
-
         public bool IsUpdate { get; set; }
 
         private ValidationMessageStore _messageStore;
         private string _oldName;
         private int _oldLockingPeriod;
-        private List<string> _oldSelectedMembers;
+        private bool _oldIsFree;
 
         protected override void OnInitialized()
         {
@@ -65,7 +56,7 @@ namespace Web.Views
                 _messageStore.Add(() => RoleData.Name, "Die Rolle benötigt einen Namen.");
         }
 
-        protected override async Task OnParametersSetAsync()
+        protected override void OnParametersSet()
         {
             IsRoleLoading = true;
             IsUpdate = Role != null;
@@ -75,30 +66,28 @@ namespace Web.Views
                 RoleData.Name = _oldName;
                 _oldLockingPeriod = 0;
                 RoleData.LockingPeriod = _oldLockingPeriod;
-                _oldSelectedMembers = new();
-                SelectedMembers = new();
+                _oldIsFree = true;
+                RoleData.IsFree = _oldIsFree;
             }
             else
             {
-                Members = await _memberService.GetAll(DepartmentId);
                 RoleData.Name = Role.Name;
                 _oldName = RoleData.Name;
                 RoleData.LockingPeriod = Role.LockingPeriod;
                 _oldLockingPeriod = RoleData.LockingPeriod;
-                _oldSelectedMembers = Members.Where(member => member.RoleIds.Contains(Role.Id)).Select(member => member.Id).ToList();
-                SelectedMembers = new(_oldSelectedMembers);
+                _oldIsFree = Role.IsFree;
+                RoleData.IsFree = _oldIsFree;
             }
-
             IsRoleLoading = false;
         }
 
         public async Task SaveRole()
         {
             IsRoleSaving = true;
-            var newRoleMembers = SelectedMembers.Except(_oldSelectedMembers);
-            var formerRoleMembers = _oldSelectedMembers.Except(SelectedMembers);
-            if (RoleData.Name != _oldName || RoleData.LockingPeriod != _oldLockingPeriod || newRoleMembers.Any() || formerRoleMembers.Any())
-                await UpdateRoleFunc(Role?.Id, RoleData.Name, RoleData.LockingPeriod, newRoleMembers, formerRoleMembers);
+            var newRoleName = RoleData.Name != _oldName ? RoleData.Name : null;
+            int? newLockingPeriodName = RoleData.LockingPeriod != _oldLockingPeriod ? RoleData.LockingPeriod : null;
+            bool? newIsFree = RoleData.IsFree != _oldIsFree ? RoleData.IsFree : null;
+            await UpdateRoleFunc(Role?.Id, newRoleName, newLockingPeriodName, newIsFree);
             await CloseModal();
             IsRoleSaving = false;
         }
@@ -111,12 +100,19 @@ namespace Web.Views
             IsRoleDeleting = false;
         }
 
+        public void AddQualification()
+        {
+            RoleData.Qualifications.Add((null, string.Empty));
+        }
+
         public Task CloseModal() => CloseModalFunc();
 
         public class FormModel
         {
             public string Name { get; set; }
             public int LockingPeriod { get; set; }
+            public bool IsFree { get; set; }
+            public List<(string?, string)> Qualifications { get; set; } = new();
         }
 
     }

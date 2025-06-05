@@ -17,7 +17,8 @@ namespace Api.Converter
             return new GroupDTO
             {
                 Id = group.Id,
-                Name = group.Name
+                Name = group.Name,
+                MemberIds = group.MemberIds
             };
         }
     }

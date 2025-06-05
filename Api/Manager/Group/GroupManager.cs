@@ -45,7 +45,8 @@ namespace Api.Manager
             {
                 var newGroup = new Group
                 {
-                    Name = name
+                    Name = name,
+                    MemberIds = new()
                 };
 
                 var newGroupReference = await groupReference.AddAsync(newGroup);
@@ -59,6 +60,14 @@ namespace Api.Manager
                 }, Precondition.MustExist);
                 return groupId;
             }
+        }
+
+        public async Task UpdateGroupMembers(string departmentId, string groupId, UpdateMembersListDTO updateMembersList)
+        {
+            var groupCollectionReference = GetGroupCollectionReference(departmentId);
+            var groupRef = groupCollectionReference.Document(groupId);
+            await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
+            await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
         }
     }
 }

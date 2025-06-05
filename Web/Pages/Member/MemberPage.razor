@@ -40,7 +40,7 @@
                         </td>
                         <td>
                             @{
-                                var groupName = GetGroupNamesByIds(member.GroupIds);
+                                var groupName = GetGroupNamesByIds(member.Id);
                             }
                             @if (string.IsNullOrEmpty(groupName))
                             {
@@ -53,7 +53,7 @@
                         </td>
                         <td>
                             @{
-                                var roleNames = GetRoleNamesByIds(member.RoleIds);
+                                var roleNames = GetRoleNamesByIds(member.Id);
                             }
                             @if (string.IsNullOrEmpty(roleNames))
                             {

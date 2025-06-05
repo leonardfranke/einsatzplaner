@@ -26,7 +26,7 @@ namespace Web.Views
         public Func<string, Task> DeleteMemberFunc { get; set; }
 
         [Parameter]
-        public Func<string, List<string>, List<string>, bool, Task> SaveMemberFunc { get; set; }
+        public Func<string, bool?, IEnumerable<string>, IEnumerable<string>, IEnumerable<string>, IEnumerable<string>, Task> SaveMemberFunc { get; set; }
 
         [Inject]
         public IRoleService _roleService { private get; set; }
@@ -81,10 +81,10 @@ namespace Web.Views
         protected override void OnParametersSet()
         {
             MemberData = new FormModel();
-            MemberData.GroupIds = Member.GroupIds ?? new();
+            MemberData.GroupIds = Groups.Where(group => group.MemberIds.Contains(Member.Id)).Select(group => group.Id).ToList();
             _oldGroupIds.Clear();
             _oldGroupIds.AddRange(MemberData.GroupIds);
-            MemberData.RoleIds = Member.RoleIds ?? new();
+            MemberData.RoleIds = Roles.Where(role => role.MemberIds.Contains(Member.Id)).Select(role => role.Id).ToList();
             _oldRoleIds.Clear();
             _oldRoleIds.AddRange(MemberData.RoleIds);
             MemberData.IsAdmin = Member.IsAdmin;
@@ -108,10 +108,13 @@ namespace Web.Views
         public async Task SaveMember()
         {
             IsMemberSaving = true;
-            if (_oldGroupIds.Count != MemberData.GroupIds.Count || _oldGroupIds.Any(oldGroup => !MemberData.GroupIds.Contains(oldGroup))
-                || _oldRoleIds.Count != MemberData.RoleIds.Count || _oldRoleIds.Any(oldRole => !MemberData.RoleIds.Contains(oldRole))
-                || _oldIsAdmin != MemberData.IsAdmin)
-                await SaveMemberFunc(Member.Id, MemberData.GroupIds, MemberData.RoleIds, MemberData.IsAdmin);
+            var newGroups = MemberData.GroupIds.Except(_oldGroupIds);
+            var formerGroups = _oldGroupIds.Except(MemberData.GroupIds);
+            var newRoles = MemberData.RoleIds.Except(_oldRoleIds);
+            var formerRoles = _oldRoleIds.Except(MemberData.RoleIds);
+            bool? newIsAdmin = _oldIsAdmin != MemberData.IsAdmin ? MemberData.IsAdmin : null;
+            if (newGroups.Any() || formerGroups.Any() || newRoles.Any() || formerRoles.Any() || newIsAdmin != null)
+                await SaveMemberFunc(Member.Id, newIsAdmin, newGroups, formerGroups, newRoles, formerRoles);
             await CloseModal();
             IsMemberSaving = false;
         }

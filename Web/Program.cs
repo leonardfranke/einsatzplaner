@@ -34,6 +34,7 @@ builder.Services.AddScoped<IHelperService, HelperService>();
 builder.Services.AddScoped<IEventCategoryService, EventCategoryService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IQualificationService, QualificationService>();
 builder.Services.AddScoped<IRequirementGroupService, RequirementsGroupService>();
 builder.Services.AddScoped<ILoginCheck, LoginCheck>();
 builder.Services.AddScoped<IMemberService, MemberService>();

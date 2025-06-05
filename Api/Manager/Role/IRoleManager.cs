@@ -8,6 +8,8 @@ namespace Api.Manager
 
         public Task Delete(string departmentId, string roleId);
 
-        public Task<string> UpdateOrCreate(string departmentId, string? roleId, string name, int lockingPeriod);
+        public Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree);
+
+        public Task UpdateRoleMembers(string departmentId, string groupId, UpdateMembersListDTO updateMembersList);
     }
 }

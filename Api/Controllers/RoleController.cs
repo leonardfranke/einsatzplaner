@@ -9,12 +9,10 @@ namespace Api.Controllers
     public class RoleController : ControllerBase
     {
         private IRoleManager _roleManager;
-        private IMemberManager _memberManager;
 
-        public RoleController(IRoleManager roleManager, IMemberManager memberManager)
+        public RoleController(IRoleManager roleManager)
         {
             _roleManager = roleManager;
-            _memberManager = memberManager;
         }
 
         [HttpGet("{departmentId}")]
@@ -26,23 +24,19 @@ namespace Api.Controllers
         [HttpDelete]
         public Task DeleteRole(string departmentId, string roleId)
         {
-            var roleTask = _roleManager.Delete(departmentId, roleId);
-            var memberTask = _memberManager.RemoveAllRoleMembers(departmentId, roleId);
-            return Task.WhenAll(roleTask, memberTask);
+            return _roleManager.Delete(departmentId, roleId);
         }
 
         [HttpPost]
         public Task<string> UpdateOrCreate([FromBody] UpdateRoleDTO updateDTO)
         {
-            return _roleManager.UpdateOrCreate(updateDTO.DepartmentId, updateDTO.RoleId, updateDTO.Name, updateDTO.LockingPeriod);
+            return _roleManager.UpdateOrCreate(updateDTO.DepartmentId, updateDTO.RoleId, updateDTO.NewName, updateDTO.NewLockingPeriod, updateDTO.NewIsFree);
         }
 
         [HttpPatch("{departmentId}/{roleId}")]
-        public Task UpdateRoleMembers([FromRoute] string departmentId, [FromRoute] string roleId, [FromBody] UpdateMembersListDTO updateMemberList)
+        public async Task UpdateRoleMembers([FromRoute] string departmentId, [FromRoute] string roleId, [FromBody] UpdateMembersListDTO updateMembersList)
         {
-            var addTask = _memberManager.AddRoleMembers(departmentId, roleId, updateMemberList.NewMembers);
-            var removeTask = _memberManager.RemoveRoleMembers(departmentId, roleId, updateMemberList.FormerMembers);
-            return Task.WhenAll(addTask, removeTask);
+            await _roleManager.UpdateRoleMembers(departmentId, roleId, updateMembersList);
         }
     }
 }

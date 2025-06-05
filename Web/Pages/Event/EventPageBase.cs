@@ -133,7 +133,18 @@ namespace Web.Pages
         {
             var role = GetRoleById(helper.RoleId);
             var lockedMembers = new List<string>(helper.LockedMembers);
-            var permittedMembers = _members.Where(member => helper.LockedMembers.Contains(member.Id) || member.GroupIds.Intersect(helper.RequiredGroups).Any() && member.RoleIds.Contains(helper.RoleId));
+            var permittedMembers = 
+                _members.Where(member => {
+                    if (helper.LockedMembers.Contains(member.Id))
+                        return true;
+                    var requiredRole = _roles.Find(role => helper.RoleId == role.Id);
+                    if (!requiredRole.IsFree && !requiredRole.MemberIds.Contains(member.Id))
+                        return false;
+                    var requiredGroups = helper.RequiredGroups.Select(requiredGroup => _groups.Find(group => group.Id == requiredGroup));
+                    if (requiredGroups.Count() == 0)
+                        return true;
+                    return requiredGroups.SelectMany(group => group.MemberIds).Contains(member.Id);
+                });
             var confirmModalAction = async () =>
             {
                 var lockedMembersToRemove = helper.LockedMembers.Except(lockedMembers).ToList();

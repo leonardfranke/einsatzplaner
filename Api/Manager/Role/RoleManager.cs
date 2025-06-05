@@ -8,10 +8,12 @@ namespace Api.Manager
     public class RoleManager : IRoleManager
     {
         private FirestoreDb _firestoreDb;
+        private IQualificationManager _qualificationManager;
 
-        public RoleManager(FirestoreDb firestoreDb)
+        public RoleManager(FirestoreDb firestoreDb, IQualificationManager qualificationManager)
         {
             _firestoreDb = firestoreDb;
+            _qualificationManager = qualificationManager;
         }
 
         private CollectionReference GetRoleCollectionReference(string departmentId)
@@ -36,15 +38,19 @@ namespace Api.Manager
             return RoleConverter.Convert(roles);
         }
 
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string name, int lockingPeriod)
+        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
         {
             var roleReference = GetRoleCollectionReference(departmentId);
             if (string.IsNullOrEmpty(roleId))
             {
+                if(newName == null || newLockingPeriod == null || newIsFree == null)
+                    throw new ArgumentNullException("Name, LockingPeriod or IsFree were null when creating a new role");
                 var newRole = new Role
                 {
-                    Name = name,
-                    LockingPeriod = lockingPeriod
+                    Name = newName,
+                    LockingPeriod = newLockingPeriod.Value,
+                    IsFree = newIsFree.Value,
+                    MemberIds = new()
                 };
 
                 var newRoleRef = await roleReference.AddAsync(newRole);
@@ -52,13 +58,34 @@ namespace Api.Manager
             }
             else
             {
-                await roleReference.Document(roleId)
-                .UpdateAsync(new Dictionary<string, object> {
-                    { nameof(Role.Name), name },
-                    { nameof(Role.LockingPeriod), lockingPeriod }
-                }, Precondition.MustExist);
+                var updates = new Dictionary<string, object>();
+                if (newName != null)
+                    updates.Add(nameof(Role.Name), newName);
+                if (newLockingPeriod != null)
+                    updates.Add(nameof(Role.LockingPeriod), newLockingPeriod);
+                if (newIsFree != null)
+                {
+                    updates.Add(nameof(Role.IsFree), newIsFree);
+                    if (newIsFree == true)
+                        updates.Add(nameof(Role.MemberIds), new List<string>());
+                    else
+                        await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, null);
+                }
+
+                await roleReference.Document(roleId).UpdateAsync(updates, Precondition.MustExist);
                 return roleId;
             }
+        }
+
+        public async Task UpdateRoleMembers(string departmentId, string roleId, UpdateMembersListDTO updateMembersList)
+        {
+            var roleCollectionReference = GetRoleCollectionReference(departmentId);
+            var roleRef = roleCollectionReference.Document(roleId);
+            await roleRef.UpdateAsync(nameof(Role.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
+            await roleRef.UpdateAsync(nameof(Role.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
+
+            if (updateMembersList.FormerMembers.Any())
+                await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, updateMembersList.FormerMembers);
         }
     }
 }

@@ -27,9 +27,7 @@ namespace Api.Controllers
         [HttpDelete]
         public Task DeleteGroup(string departmentId, string groupId) 
         {
-            var groupTask = _groupManager.Delete(departmentId, groupId);
-            var memberTask = _memberManager.RemoveAllGroupMembers(departmentId, groupId);
-            return Task.WhenAll(groupTask, memberTask);
+            return _groupManager.Delete(departmentId, groupId);
         }
 
         [HttpPost]
@@ -39,11 +37,9 @@ namespace Api.Controllers
         }
 
         [HttpPatch("{departmentId}/{groupId}")]
-        public Task UpdateGroupMembers([FromRoute] string departmentId, [FromRoute] string groupId, [FromBody] UpdateMembersListDTO updateMemberList)
+        public Task UpdateGroupMembers([FromRoute] string departmentId, [FromRoute] string groupId, [FromBody] UpdateMembersListDTO updateMembersList)
         {
-            var addTask = _memberManager.AddGroupMembers(departmentId, groupId, updateMemberList.NewMembers);
-            var removeTask = _memberManager.RemoveGroupMembers(departmentId, groupId, updateMemberList.FormerMembers);
-            return Task.WhenAll(addTask, removeTask);
+            return _groupManager.UpdateGroupMembers(departmentId, groupId, updateMembersList);
         }
     }
 }

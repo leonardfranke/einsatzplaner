@@ -10,5 +10,11 @@ namespace Api.Models
 
         [FirestoreProperty]
         public int LockingPeriod { get; set; }
+
+        [FirestoreProperty]
+        public bool IsFree { get; set; }
+
+        [FirestoreProperty]
+        public List<string> MemberIds { get; set; }
     }
 }

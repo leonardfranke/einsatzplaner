@@ -12,36 +12,72 @@
 
 <h3>Rollen:</h3>
 
-@foreach (var (role, roleMembers) in RoleMembersDict)
+@foreach (var role in Roles)
 {
-    var header = role.Name + (roleMembers.Any() ? "" : " - Ohne Mitglieder");
-
     <div class="table-responsive">
         <table class="table">
             <thead>
                 <tr @onmouseenter="() => HoveredId = role.Id" @onmouseleave="() => HoveredId = null">
-                    <th scope="col">@header</th>
+                    <th scope="col">@GetRoleHeader(role)</th>
                     <th>Sperrzeitraum: @role.LockingPeriod Tage</th>
                     <th>
                         <button style="visibility:  @(HoveredId == role.Id ? "visible" : "hidden")"
-                                type="button" @onclick="() => EditOrCreateRole(role)"
-                                class="btn btn-outline-dark">
+                        type="button" @onclick="() => EditOrCreateRole(role)"
+                        class="btn btn-outline-dark">
                             <i class="bi bi-pencil"></i>
                         </button>
+                        @if(role.IsFree == false)
+                        {
+                            <Button hidden="@(HoveredId != role.Id)" @onclick="() => EditRoleMembers(role)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Person" /></Button> 
+                        }
+                        <Button hidden="@(HoveredId != role.Id)" @onclick="() => EditOrCreateQualification(role, null)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Pass" /></Button>
                     </th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var member in roleMembers)
+                @foreach (var member in role.MemberIds)
                 {
-                    <tr>
+                    <tr @onmouseenter="() => HoveredId = member" @onmouseleave="() => HoveredId = null">
                         <td>
-                            @member.Name
+                            @GetMemberNameById(member)
                         </td>
                         <td></td>
                         <td></td>
                     </tr>
                 }
+                @foreach(var qualification in GetQualificationsOfRole(role.Id))
+                {
+                    <tr>
+                        <td colspan="4">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr @onmouseenter="() => HoveredId = qualification.Id" @onmouseleave="() => HoveredId = null">
+                                            <th>@qualification.Name</th>
+                                            <th>
+                                                <div hidden ="@(HoveredId != qualification.Id)">
+                                                    <Button @onclick="() => EditOrCreateQualification(role, qualification)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Pencil" /></Button>
+                                                    <Button @onclick="() => EditQualificationMembers(qualification)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Person" /></Button>
+                                                </div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var member in qualification.MemberIds)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @GetMemberNameById(member)
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                }                
             </tbody>
         </table>
     </div>

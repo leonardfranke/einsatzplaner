@@ -3,19 +3,22 @@ using Microsoft.AspNetCore.Components;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeHelperCategoryGroup;
+using Web.Views.ChangeQualifications;
 using Web.Views.ChangeRole;
+using Web.Views.MemberSelection;
 
 namespace Web.Pages
 {
     public class RoleViewBase : ComponentBase
     {
         private List<Models.Member> _members;
-        private List<Role> _roles;
-
-        public Dictionary<Role, List<Models.Member>> RoleMembersDict { get; set; } = new();
+        private List<Models.Qualification> _qualifications;
 
         [Parameter]
         public Models.Department Department { private get; set; }
+
+        [Inject]
+        private IQualificationService _qualificationService { get; set; }
 
         [Inject]
         private IRoleService _roleService { get; set; }
@@ -28,9 +31,10 @@ namespace Web.Pages
 
         public string HoveredId { get; set; }
 
+        public List<Role> Roles { get; set; }
+
         [CascadingParameter]
         public Modal Modal { get; set; }
-
         public List<RequirementGroup> RequirementGroups { get; set; }
         public bool IsViewLoading { get; set; }
 
@@ -43,14 +47,16 @@ namespace Web.Pages
             var membersTask = _memberService.GetAll(Department.Id);
             await LoadRoles();
             var requirementGroupsTask = LoadRequirementGroups();
+            var loadQualificationsTask = LoadQualifications();
             _members = await membersTask;
             await requirementGroupsTask;
+            await loadQualificationsTask;
             IsViewLoading = false;
         }
 
-        protected IEnumerable<Models.Member> GetMembersWithRoleId(string roleId)
+        public string GetMemberNameById(string memberId)
         {
-            return _members?.Where(member => member.RoleIds.Contains(roleId)) ?? new List<Models.Member>();
+            return _members.Find(member => member.Id == memberId)?.Name ?? "Unbekannter Nutzer";
         }
 
         private async Task LoadRequirementGroups()
@@ -61,11 +67,16 @@ namespace Web.Pages
 
         private async Task LoadRoles()
         {
-            _members = await _memberService.GetAll(Department.Id);
-            _roles = await _roleService.GetAll(Department.Id);
-            RoleMembersDict.Clear();
-            foreach (var role in _roles)
-                RoleMembersDict[role] = _members.Where(member => member.RoleIds.Contains(role.Id)).ToList();
+            var membersTask = _memberService.GetAll(Department.Id);
+            var rolesTask = _roleService.GetAll(Department.Id);
+            _members = await membersTask;
+            Roles = await rolesTask;
+            StateHasChanged();
+        }
+
+        private async Task LoadQualifications()
+        {
+            _qualifications = await _qualificationService.GetAll(Department.Id);
             StateHasChanged();
         }
 
@@ -73,15 +84,10 @@ namespace Web.Pages
         {
             var names = group.Requirements.Select(requirement =>
             {
-                var category = GetCategoryById(requirement.Key);
+                var category = Roles.Find(category => category.Id == requirement.Key);
                 return $"{requirement.Value}x {category?.Name ?? "Keine Bezeichnung"}";
             });
             return string.Join(Environment.NewLine, names);
-        }
-
-        public Role GetCategoryById(string categoryId)
-        {
-            return _roles.Find(category => category.Id == categoryId);
         }
 
         public async Task EditOrCreateRole(Role? role)
@@ -107,12 +113,107 @@ namespace Web.Pages
             await LoadRoles();
         }
 
-        private async Task UpdateRole(string roleId, string name, int lockingPeriod, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
+        private async Task UpdateRole(string roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
         {
-            var newRoleId = await _roleService.UpdateOrCreate(Department.Id, roleId, name, lockingPeriod);
-            if (newMembers.Any() || formerMembers.Any())
-                await _roleService.UpdateRoleMembers(Department.Id, newRoleId, newMembers.ToList(), formerMembers.ToList());            
-            await LoadRoles();
+            if(newName != null || newLockingPeriod != null || newIsFree != null)
+            {
+                await _roleService.UpdateOrCreate(Department.Id, roleId, newName, newLockingPeriod, newIsFree);           
+                await LoadRoles();
+                if (newIsFree == false)
+                    await LoadQualifications();
+            }
+        }
+
+        public async Task EditRoleMembers(Role role)
+        {
+            var oldSelectedMembers = role.MemberIds;
+            var currentSelectedMembers = new List<string>(oldSelectedMembers);
+            var confirmModalAction = async () =>
+            {
+                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
+                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
+                await _roleService.UpdateRoleMembers(Department.Id, role.Id, newMembers, formerMembers);
+                await LoadRoles();
+                if (formerMembers.Any())
+                    await LoadQualifications();
+            };
+            var closeModalFunc = Modal.HideAsync;
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
+                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
+                { nameof(MemberSelectionModal.Members), _members},
+                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+            };
+            await Modal.ShowAsync<MemberSelectionModal>(title: role.Name, parameters: parameters);
+        }
+        public async Task EditQualificationMembers(Qualification qualification)
+        {
+         
+            var oldSelectedMembers = qualification.MemberIds;
+            var roleOfQualification = Roles.First(role => role.Id == qualification.RoleId);
+            var permittedMembers = roleOfQualification.IsFree ?
+                _members : 
+                _members.Where(member => roleOfQualification.MemberIds.Union(oldSelectedMembers).Contains(member.Id));
+            var currentSelectedMembers = new List<string>(oldSelectedMembers);
+            var confirmModalAction = async () =>
+            {
+                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
+                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
+                await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.Id, newMembers, formerMembers);
+                await LoadQualifications();
+            };
+            var closeModalFunc = Modal.HideAsync;
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
+                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
+                { nameof(MemberSelectionModal.Members), permittedMembers},
+                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+            };
+            await Modal.ShowAsync<MemberSelectionModal>(title: qualification.Name, parameters: parameters);
+        }
+
+        public string GetRoleHeader(Role role)
+        {
+            var memberInfo = role.IsFree ? " - Offene Rolle" : (role.MemberIds.Any() ? "" : " - Ohne Mitglieder");
+            return role.Name + memberInfo;
+        }
+
+        public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
+        {
+            return _qualifications.Where(qualification => qualification.RoleId == roleId);
+        }
+
+        public async Task EditOrCreateQualification(Role? role, Qualification? qualification)
+        {
+            var closeModalFunc = Modal.HideAsync;
+            var safeHelperCategoryFunc = SaveRequirementGroup;
+            var parameters = new Dictionary<string, object>
+            {
+                { nameof(ChangeQualification.Role), role},
+                { nameof(ChangeQualification.Qualification), qualification},
+                { nameof(ChangeQualification.CloseModalFunc), closeModalFunc },
+                { nameof(ChangeQualification.DeleteQualificationFunc), DeleteQualification },
+                { nameof(ChangeQualification.UpdateQualificationFunc), UpdateQualification }
+            };
+            var title = qualification == null ? "Qualifikation erstellen" : "Qualifikation bearbeiten";
+            await Modal.ShowAsync<ChangeQualification>(title: title, parameters: parameters);
+        }
+
+        private async Task DeleteQualification(string qualificationId)
+        {
+            await _qualificationService.Delete(Department.Id, qualificationId);
+            await LoadQualifications();
+        }
+
+        private async Task UpdateQualification(string roleId, string qualificationId, string newName)
+        {
+            if(qualificationId == null || newName != null)
+            {
+                await _qualificationService.UpdateOrCreate(Department.Id, roleId, qualificationId, newName);
+                await LoadQualifications();
+            }
         }
 
         public async Task EditOrCreateRequirementGroup(RequirementGroup? categoryGroup)
@@ -123,7 +224,7 @@ namespace Web.Pages
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ChangeHelperCategoryGroup.HelperCategoryGroup), categoryGroup},
-                { nameof(ChangeHelperCategoryGroup.Roles), _roles},
+                { nameof(ChangeHelperCategoryGroup.Roles), Roles},
                 { nameof(ChangeHelperCategoryGroup.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeHelperCategoryGroup.DeleteHelperCategoryGroupFunc), deleteHelperCategoryFunc },
                 { nameof(ChangeHelperCategoryGroup.SaveHelperCategoryGroupFunc), safeHelperCategoryFunc }

@@ -42,7 +42,7 @@ namespace Web.Services
             return GroupConverter.Convert(groupDTO);
         }
 
-        public Task UpdateGroupMembers(string departmentId, string groupId, List<string> newMembers, List<string> formerMembers)
+        public Task UpdateGroupMembers(string departmentId, string groupId, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
         {
             var updateMembersListDTO = new UpdateMembersListDTO
             {

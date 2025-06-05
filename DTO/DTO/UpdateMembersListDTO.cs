@@ -2,7 +2,7 @@
 {
     public class UpdateMembersListDTO
     {
-        public List<string> FormerMembers { get; set; }
-        public List<string> NewMembers { get; set; }
+        public IEnumerable<string> FormerMembers { get; set; }
+        public IEnumerable<string> NewMembers { get; set; }
     }
 }

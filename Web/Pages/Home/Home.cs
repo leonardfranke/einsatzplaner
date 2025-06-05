@@ -19,6 +19,7 @@ namespace Web.Pages
         private const string _hidePastEventsKey = "HidePastEvents";
         private const string _hideEventsWithoutEnteringKey = "HideEventsWithoutEntering"; 
         private string _currentUserId;
+        public List<Role> _roles;
 
         [CascadingParameter]
         public Modal Modal { get; set; }
@@ -74,12 +75,8 @@ namespace Web.Pages
         [Inject]
         private IHelperService _helperService { get; set; }
 
-        public List<string> MemberGroupIds { get; set; }
-
-
         public List<Group> Groups { get; private set; }
 
-        public List<Role> Roles { get; private set; }
 
         public List<Models.Helper> Helpers { get; private set; }
 
@@ -133,7 +130,7 @@ namespace Web.Pages
         private List<Models.Event> events;
         private List<Models.EventCategory> eventCategories;
         private List<Models.Member> members;
-        private List<string> _memberRoleIds;
+        private IEnumerable<string> _memberRoleIds;
         private List<RequirementGroup> helperCategoryGroups;
         private string _departmentId;
         private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
@@ -162,9 +159,8 @@ namespace Web.Pages
             var eventCategoriesTask = _eventCategoryService.GetAll(_departmentId);
             members = await membersTask;
             Member = members.FirstOrDefault(member => member.Id == _currentUserId);
-            MemberGroupIds = Member.GroupIds ?? new();
-            _memberRoleIds = Member.RoleIds ?? new();
-            Roles = await rolesTask;
+            _roles = await rolesTask;
+            _memberRoleIds = _roles.Where(role => role.MemberIds.Contains(Member.Id)).Select(role => role.Id);
             eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
             GroupByGroup = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
@@ -217,7 +213,7 @@ namespace Web.Pages
             var rolesWithEvent = allHelpers.Select(helper => helper.RoleId);
             var rolesWithUserEntered = allHelpers
                 .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
-                .Select(helper => helper.RoleId);
+                .Select(role => role.Id);
             var relevantRoles = rolesWithEvent.Intersect(_memberRoleIds).Union(rolesWithUserEntered).Distinct();
             return relevantRoles.Select(GetRoleById);
         }
@@ -273,7 +269,7 @@ namespace Web.Pages
                 }).ToList());
         }
 
-        protected Role GetRoleById(string roleId) => Roles.Find(role => role.Id == roleId);
+        protected Role GetRoleById(string roleId) => _roles.Find(role => role.Id == roleId);
 
         protected Group GetGroupById(string groupId) => Groups.Find(group => group.Id == groupId);
 

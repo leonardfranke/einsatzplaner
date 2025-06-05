@@ -30,7 +30,7 @@ namespace Api.Controllers
         [HttpPatch]
         public Task UpdateMember([FromQuery] string departmentId, [FromQuery] string memberId, [FromBody] UpdateMemberDTO updateMemberDTO) 
         {
-            return _memberManager.UpdateMember(departmentId, memberId, updateMemberDTO.GroupIds, updateMemberDTO.RoleIds, updateMemberDTO.IsAdmin);
+            return _memberManager.UpdateMember(departmentId, memberId, updateMemberDTO.IsAdmin);
         }
     }
 }

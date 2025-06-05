@@ -84,19 +84,15 @@ namespace Web.Pages
             StateHasChanged();
         }
 
-        public string GetGroupNamesByIds(List<string> groupIds)
+        public string GetGroupNamesByIds(string memberId)
         {
-            if (groupIds == null)
-                return string.Empty;
-            var memberGroups = groupIds.Select(groupId => Groups.FirstOrDefault(group => group.Id == groupId)?.Name ?? "Unbekannte Gruppe");
+            var memberGroups = Groups.Where(group => group.MemberIds.Contains(memberId));
             return string.Join(", ", memberGroups);
         }
 
-        public string GetRoleNamesByIds(List<string> roleIds)
+        public string GetRoleNamesByIds(string memberId)
         {
-            if (roleIds == null)
-                return string.Empty;
-            var memberRoles = roleIds.Select(roleId => Roles.FirstOrDefault(role => role.Id == roleId)?.Name ?? "Unbekannte Rolle");
+            var memberRoles = Roles.Where(role => role.MemberIds.Contains(memberId));
             return string.Join(", ", memberRoles);
         }
 
@@ -128,9 +124,8 @@ namespace Web.Pages
             await LoadMembers();
         }
 
-        private async Task SaveMember(string memberId, List<string> groupIds, List<string> roleIds, bool isAdmin)
+        private async Task SaveMember(string memberId, bool? newIsAdmin, IEnumerable<string> newGroups, IEnumerable<string> formerGroups, IEnumerable<string> newRoles, IEnumerable<string> formerRoles)
         {
-            await _memberService.UpdateMember(_departmentId, memberId, groupIds, roleIds, isAdmin);
             await LoadMembers();
         }
     }
