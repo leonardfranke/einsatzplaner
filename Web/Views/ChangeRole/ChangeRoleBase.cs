@@ -84,9 +84,9 @@ namespace Web.Views
         public async Task SaveRole()
         {
             IsRoleSaving = true;
-            var newRoleName = RoleData.Name != _oldName ? RoleData.Name : null;
-            int? newLockingPeriodName = RoleData.LockingPeriod != _oldLockingPeriod ? RoleData.LockingPeriod : null;
-            bool? newIsFree = RoleData.IsFree != _oldIsFree ? RoleData.IsFree : null;
+            var newRoleName = RoleData.Name != _oldName || !IsUpdate ? RoleData.Name : null;
+            int? newLockingPeriodName = RoleData.LockingPeriod != _oldLockingPeriod || !IsUpdate ? RoleData.LockingPeriod : null;
+            bool? newIsFree = RoleData.IsFree != _oldIsFree || !IsUpdate ? RoleData.IsFree : null;
             await UpdateRoleFunc(Role?.Id, newRoleName, newLockingPeriodName, newIsFree);
             await CloseModal();
             IsRoleSaving = false;
@@ -100,11 +100,6 @@ namespace Web.Views
             IsRoleDeleting = false;
         }
 
-        public void AddQualification()
-        {
-            RoleData.Qualifications.Add((null, string.Empty));
-        }
-
         public Task CloseModal() => CloseModalFunc();
 
         public class FormModel
@@ -112,7 +107,6 @@ namespace Web.Views
             public string Name { get; set; }
             public int LockingPeriod { get; set; }
             public bool IsFree { get; set; }
-            public List<(string?, string)> Qualifications { get; set; } = new();
         }
 
     }

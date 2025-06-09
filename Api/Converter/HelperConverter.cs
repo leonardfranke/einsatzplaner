@@ -19,7 +19,8 @@ namespace Api.Converter
                     RequiredAmount = helper.RequiredAmount,
                     EventId = gameId,
                     RequiredGroups = helper.RequiredGroups,
-                    LockingTime = helper.LockingTime
+                    LockingTime = helper.LockingTime,
+                    RequiredQualifications = helper.RequiredQualifications
                 };
             }).ToList();            
         }

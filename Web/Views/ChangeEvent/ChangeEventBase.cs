@@ -16,28 +16,7 @@ namespace Web.Views
         public string DepartmentId { get; set; }
 
         [Inject]
-        private IJSRuntime js { get; set; }
-
-        [Inject]
-        private ILocalStorageService _localStorage { get; set; }
-
-        [Inject]
         private IHelperService _helperService { get; set; }
-
-        [Inject]
-        private IGroupService _groupService { get; set; }
-
-        [Inject]
-        private IRoleService _roleService { get; set; }
-
-        [Inject]
-        private IEventCategoryService _eventCategoryService { get; set; }
-
-        [Inject]
-        private IRequirementGroupService _requirementGroupService { get; set; }
-
-        [Inject]
-        private IAuthManager _authManager { get; set; }
 
         [Parameter]
         public Event? Event { get; set; }
@@ -48,13 +27,19 @@ namespace Web.Views
         [Parameter]
         public Func<string, Task> DeleteGameFunc { get; set; }
 
-        public List<Group> Groups { get; private set; }
+        [Parameter]
+        public List<Role> Roles { get;  set; }
 
-        public List<Role> Roles { get; private set; }
+        [Parameter]
+        public List<EventCategory> EventCategories { get;  set; }
 
-        public List<EventCategory> EventCategories { get; private set; }
+        [Parameter]
+        public List<Group> Groups { get; set; }
 
-        public List<RequirementGroup> RequirementGroups { get; private set; }
+        public List<RequirementGroup> RequirementGroups { get; set; }
+
+        [Parameter]
+        public List<Qualification> Qualifications { get; set; }
 
         public RealTimeMap EventMap { get; set; }
 
@@ -63,7 +48,7 @@ namespace Web.Views
         public bool IsEventLoading { get; set; }
 
         [Parameter]
-        public Func<string?, string?, string?, DateTime, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>>>, bool, Task> SaveEventFunc { get; set; }
+        public Func<string?, string?, string?, DateTime, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
 
         public ElementReference GroupSelect;
 
@@ -74,22 +59,14 @@ namespace Web.Views
         public EditContext EditContext { get; set; }
         public bool IsUpdate { get; set; }
 
-        private ValidationMessageStore _messageStore;
-
         protected override void OnParametersSet()
         {
-            CreateFormContext();
+            EventData = new();
         }
 
         protected override async Task OnParametersSetAsync()
         {
-            IsEventLoading = true;
-            Roles = await _roleService.GetAll(DepartmentId);
-            Groups = await _groupService.GetAll(DepartmentId);
-            EventCategories = await _eventCategoryService.GetAll(DepartmentId);
-            RequirementGroups = await _requirementGroupService.GetAll(DepartmentId);
-
-            
+            IsEventLoading = true;            
             IsUpdate = Event != null;
             if (IsUpdate)
             {
@@ -102,7 +79,7 @@ namespace Web.Views
                 {
                     var lockingTime = helper.LockingTime;
                     var lockingPeriod = Event.EventDate.Subtract(lockingTime).Days;
-                    AddCategoryToGame(helper.RoleId, helper.RequiredAmount, lockingPeriod, helper.RequiredGroups);
+                    AddCategoryToGame(helper.RoleId, helper.RequiredAmount, lockingPeriod, helper.RequiredGroups, helper.RequiredQualifications);
                 }
             }
             else
@@ -112,21 +89,14 @@ namespace Web.Views
             IsEventLoading = false;
         }
 
-        private void CreateFormContext()
-        {
-            EventData = new();
-            EditContext = new(EventData);
-            _messageStore = new(EditContext);
-        }
-
         public async Task SaveGame()
         {
             IsEventSaving = true;
-            var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>>>();
+            var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>();
             foreach (var helper in EventData.Helpers)
             {
                 var lockingTime = EventData.Date.AddDays(-helper.LockingPeriod);
-                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups));
+                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups, helper.RequiredQualifications));
             }
 
             var dateHasChanged = IsUpdate && EventData.Date != Event?.EventDate;
@@ -172,7 +142,7 @@ namespace Web.Views
             EventData.Helpers.Clear();
         }
 
-        public void AddCategoryToGame(string categoryId, int requiredAmount, int? lockingPeriod = null, List<string> requiredGroups = null)
+        public void AddCategoryToGame(string categoryId, int requiredAmount, int? lockingPeriod = null, List<string> requiredGroups = null, Dictionary<string, int> requiredQualifications = null)
         {
             var category = GetRoleById(categoryId);
             var defaultLockingPeriod = category?.LockingPeriod ?? 0;
@@ -181,18 +151,29 @@ namespace Web.Views
                 RoleId = categoryId,
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
-                RequiredGroups = requiredGroups ?? new()
+                RequiredGroups = requiredGroups ?? new(),
+                RequiredQualifications = requiredQualifications ?? new()
             });
         }
+
+        public void AddQualificationToRole(HelperFormModel helperForm, string qualificationId)
+        {
+            helperForm.RequiredQualifications.Add(qualificationId, 1);
+        }
+
+        public void RemoveQualificationFromRole(HelperFormModel helperForm, string qualificationId)
+        {
+            helperForm.RequiredQualifications.Remove(qualificationId);
+        }        
 
         public void RemoveCategoryFromGame(HelperFormModel helperForm)
         {
             EventData.Helpers.Remove(helperForm);
         }
 
-        private HelperFormModel GetHelperFormModel(string categoryId)
+        public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
         {
-            return EventData.Helpers.FirstOrDefault(helper => helper.RoleId == categoryId);
+            return Qualifications.Where(qualification => qualification.RoleId == roleId);
         }
 
         public void SetLockingPeriod(HelperFormModel helperForm, string value)
@@ -245,6 +226,7 @@ namespace Web.Views
             public int LockingPeriod { get; set; }
             public int RequiredAmount { get; set; }
             public List<string> RequiredGroups { get; set; } = new();
+            public Dictionary<string, int> RequiredQualifications { get; set; } = new();
         }
     }
 }

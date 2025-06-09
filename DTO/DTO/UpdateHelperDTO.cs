@@ -9,5 +9,7 @@
         public DateTime LockingTime { get; set; }
 
         public List<string> RequiredGroups { get; set; }
+
+        public Dictionary<string, int> RequiredQualifications { get; set; }
     }
 }

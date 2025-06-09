@@ -19,6 +19,8 @@ namespace Api.Models
         public List<string> PreselectedMembers { get; set; }
         [FirestoreProperty]
         public List<string> AvailableMembers { get; set; }
+        [FirestoreProperty]
+        public Dictionary<string, int> RequiredQualifications { get; set; }
 
     }
 }

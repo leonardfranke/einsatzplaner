@@ -86,6 +86,7 @@ namespace Api.Manager
                     var requiredGroups = updateHelper.RequiredGroups;
                     var lockingTime = updateHelper.LockingTime.Date;
                     var lockingTimeUTC = lockingTime.ToUniversalTime();
+                    var requiredQualifications = updateHelper.RequiredQualifications;
                     if (currentHelper == null)
                     {
                         var newHelper = new Helper
@@ -96,7 +97,8 @@ namespace Api.Manager
                             RequiredGroups = requiredGroups,
                             LockedMembers = new(),
                             PreselectedMembers = new(),
-                            AvailableMembers = new()
+                            AvailableMembers = new(),
+                            RequiredQualifications = requiredQualifications
                         };
                         var addTask = helpersRef.AddAsync(newHelper);
                         dataChangesTasks.Add(addTask);
@@ -107,7 +109,8 @@ namespace Api.Manager
                             { nameof(Helper.RoleId), roleId },
                             { nameof(Helper.RequiredAmount), requiredAmount },
                             { nameof(Helper.LockingTime), lockingTimeUTC },
-                            { nameof(Helper.RequiredGroups), requiredGroups }
+                            { nameof(Helper.RequiredGroups), requiredGroups },
+                            { nameof(Helper.RequiredQualifications), requiredQualifications }
                         };
                         if (removeMembers)
                         {

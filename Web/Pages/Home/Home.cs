@@ -67,10 +67,10 @@ namespace Web.Pages
         private IEventService _eventService { get; set; }
 
         [Inject]
-        private IDepartmentService _departmentService { get; set; }
+        private IGroupService _groupService { get; set; }
 
         [Inject]
-        private IGroupService _groupService { get; set; }
+        private IQualificationService _qualificationService { get; set; }
 
         [Inject]
         private IHelperService _helperService { get; set; }
@@ -132,6 +132,7 @@ namespace Web.Pages
         private List<Models.Member> members;
         private IEnumerable<string> _memberRoleIds;
         private List<RequirementGroup> helperCategoryGroups;
+        private List<Qualification> _qualifications;
         private string _departmentId;
         private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
         private Lazy<List<IGrouping<object, Models.Event>>> _groupEventGrouping;
@@ -155,6 +156,7 @@ namespace Web.Pages
             var rolesTask = _roleService.GetAll(_departmentId);
             var groupsTask = _groupService.GetAll(_departmentId);
             var membersTask = _memberService.GetAll(_departmentId);
+            var qualificationsTask = _qualificationService.GetAll(_departmentId);
 
             var eventCategoriesTask = _eventCategoryService.GetAll(_departmentId);
             members = await membersTask;
@@ -163,6 +165,7 @@ namespace Web.Pages
             _memberRoleIds = _roles.Where(role => role.MemberIds.Contains(Member.Id)).Select(role => role.Id);
             eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
+            _qualifications = await qualificationsTask;
             GroupByGroup = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
             GroupByEventCategory = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
             HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
@@ -282,24 +285,7 @@ namespace Web.Pages
             return Helpers.Where(helper => helper.EventId == @event.Id).ToList();
         }
 
-        public async Task CreateGame()
-        {
-            if(helperCategoryGroups == null)
-                helperCategoryGroups = await _requirementsGroupService.GetAll(_departmentId);
-
-            var closeModalFunc = Modal.HideAsync;
-            var saveGameFunc = SaveGame;
-            var parameters = new Dictionary<string, object>
-            {
-                { nameof(ChangeEvent.DepartmentId), _departmentId},
-                { nameof(ChangeEvent.CloseModalFunc), closeModalFunc },
-                { nameof(ChangeEvent.SaveEventFunc), saveGameFunc },
-                { nameof(ChangeEvent.Event), null }
-            };
-            await Modal.ShowAsync<ChangeEvent>(title: "Event bearbeiten", parameters: parameters);
-        }
-
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool dateHasChanged)
+        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
         {
             var sendChangesFunc = async (bool removeMembers) =>
             {
@@ -339,18 +325,18 @@ namespace Web.Pages
 
         public async Task EditGame(Models.Event? @event)
         {
-            var closeModalFunc = Modal.HideAsync;
-            var deleteGameFunc = DeleteGame;
-            var saveGameFunc = SaveGame;
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ChangeEvent.DepartmentId), _departmentId },
                 { nameof(ChangeEvent.Event), @event },
-                { nameof(ChangeEvent.CloseModalFunc), closeModalFunc },
-                { nameof(ChangeEvent.DeleteGameFunc), deleteGameFunc },
-                { nameof(ChangeEvent.SaveEventFunc), saveGameFunc }
+                { nameof(ChangeEvent.CloseModalFunc), Modal.HideAsync },
+                { nameof(ChangeEvent.DeleteGameFunc), DeleteGame },
+                { nameof(ChangeEvent.SaveEventFunc), SaveGame },
+                { nameof(ChangeEvent.Roles), _roles },
+                { nameof(ChangeEvent.Groups), Groups },
+                { nameof(ChangeEvent.Qualifications), _qualifications }
             };
-            await Modal.ShowAsync<ChangeEvent>(title: "Event bearbeiten", parameters: parameters);
+            await Modal.ShowAsync<ChangeEvent>(title: @event == null ? "Event erstellen" : "Event bearbeiten", parameters: parameters);
         }
 
         private async Task DeleteGame(string gameId)

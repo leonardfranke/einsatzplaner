@@ -15,7 +15,7 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>>> helpers, bool removeMembers)
+        public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool removeMembers)
         {
             try
             {                
@@ -39,12 +39,14 @@ namespace Web.Services
                         var requiredAmount = value.Item1;
                         var lockingTime = value.Item2;
                         var requiredGroups = value.Item3;
+                        var requiredQualifications = value.Item4;
                         return new UpdateHelperDTO
                         {
                             RoleId = roleId,
                             RequiredAmount = requiredAmount,
                             LockingTime = lockingTime,
-                            RequiredGroups = requiredGroups
+                            RequiredGroups = requiredGroups,
+                            RequiredQualifications = requiredQualifications
                         };                        
                     });
                     updateEventDTO.Helpers = updateHelpers.ToList();

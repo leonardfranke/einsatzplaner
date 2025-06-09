@@ -18,7 +18,8 @@ namespace Web.Converter
                     EventId = helper.EventId,
                     RequiredGroups = helper.RequiredGroups,
                     LockingTime = helper.LockingTime,
-                    RequiredAmount = helper.RequiredAmount
+                    RequiredAmount = helper.RequiredAmount,
+                    RequiredQualifications = helper.RequiredQualifications
                 };
             }).ToList();
         }
