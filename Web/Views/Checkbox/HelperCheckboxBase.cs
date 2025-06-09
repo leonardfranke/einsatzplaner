@@ -7,7 +7,6 @@ namespace Web.Views
 {
     public class HelperCheckboxBase : ComponentBase
     {
-        private Models.Role _requiredRole;
         private IEnumerable<Models.Group> _requiredGroups;
 
         [CascadingParameter]
@@ -23,16 +22,16 @@ namespace Web.Views
         public Models.Member Member { private get; set; }
 
         [Parameter]
-        public IEnumerable<Models.Role> Roles { private get; set; }
+        public Models.Role Role { private get; set; }
 
         [Parameter]
         public IEnumerable<Models.Group> Groups { private get; set; }
 
         public bool IsPreselectedOrAvailable { get => IsPreselected || IsAvailable;  set { } }
 
-        public bool IsMemberPermitted => _requiredRole != null && _requiredGroups != null 
+        public bool IsMemberPermitted => Role != null && _requiredGroups != null 
             && (_requiredGroups.Count() == 0 || _requiredGroups.SelectMany(group => group.MemberIds).Contains(Member.Id)) 
-            && _requiredRole.MemberIds.Contains(Member.Id);
+            && (Role.MemberIds.Contains(Member.Id) || Role.IsFree);
 
         public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
 
@@ -67,7 +66,6 @@ namespace Web.Views
 
         protected override void OnParametersSet()
         {
-            _requiredRole = Roles.First(role => role.Id == Helper.RoleId);
             _requiredGroups = Groups.Where(group => Helper.RequiredGroups.Contains(group.Id));
         }
 

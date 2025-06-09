@@ -119,7 +119,7 @@ else
             }  
 
             <Dropdown Color="DropdownColor.Secondary">
-                <DropdownToggleButton>Hinzufügen</DropdownToggleButton>
+                <DropdownToggleButton>Qualifikation hinzufügen</DropdownToggleButton>
                 <DropdownMenu>
                     @{
                         var qualificationsToShow = GetQualificationsOfRole(helperForm.RoleId).Where(qualification => !helperForm.RequiredQualifications.ContainsKey(qualification.Id));
@@ -144,7 +144,7 @@ else
                 var qualificationAmount = qualificationRequirement.Value;
 
                 <div class="input-group mb-3">
-                    <NumberInput TValue="int" Value="qualificationAmount" ValueChanged="@(v => helperForm.RequiredQualifications[qualificationRequirement.Key] = v)" ValueExpression="@(() => qualificationAmount)" />
+                    <NumberInput TValue="int" EnableMinMax="true" Min="1" Max="@helperForm.RequiredAmount" Value="qualificationAmount" ValueChanged="@(v => helperForm.RequiredQualifications[qualificationRequirement.Key] = v)" ValueExpression="@(() => qualificationAmount)" />
                     <button class="btn btn-outline-secondary" type="button" @onclick="() => RemoveQualificationFromRole(helperForm, qualification.Id)"><Icon Name="IconName.X" /></button>
                 </div>
             }

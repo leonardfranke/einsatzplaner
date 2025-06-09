@@ -130,7 +130,6 @@ namespace Web.Pages
         private List<Models.Event> events;
         private List<Models.EventCategory> eventCategories;
         private List<Models.Member> members;
-        private IEnumerable<string> _memberRoleIds;
         private List<RequirementGroup> helperCategoryGroups;
         private List<Qualification> _qualifications;
         private string _departmentId;
@@ -162,7 +161,6 @@ namespace Web.Pages
             members = await membersTask;
             Member = members.FirstOrDefault(member => member.Id == _currentUserId);
             _roles = await rolesTask;
-            _memberRoleIds = _roles.Where(role => role.MemberIds.Contains(Member.Id)).Select(role => role.Id);
             eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
             _qualifications = await qualificationsTask;
@@ -213,11 +211,15 @@ namespace Web.Pages
         protected IEnumerable<Role> GetRelevantRoles()
         {
             var allHelpers = FilteredEvents.SelectMany(GetHelpers);
-            var rolesWithEvent = allHelpers.Select(helper => helper.RoleId);
             var rolesWithUserEntered = allHelpers
                 .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
-                .Select(role => role.Id);
-            var relevantRoles = rolesWithEvent.Intersect(_memberRoleIds).Union(rolesWithUserEntered).Distinct();
+                .Select(role => role.RoleId);
+            var rolesWithEvent = allHelpers.Select(helper => helper.RoleId);
+            var relevantRoles = rolesWithEvent.Where(roleId =>
+            {
+                var role = GetRoleById(roleId);
+                return role.IsFree || role.MemberIds.Contains(_currentUserId);                
+            }).Union(rolesWithUserEntered);
             return relevantRoles.Select(GetRoleById);
         }
 
