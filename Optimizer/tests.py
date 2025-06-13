@@ -21,8 +21,8 @@ class Tests(unittest.TestCase):
 
     def test_TrivialCaseInfluences(self):
         events : list[Event] = [Event(Id="E1", Date=datetime.now(timezone.utc) + timedelta(days=2), Requirements=[
-            Requirement("1", "E1", "Z", datetime.now(timezone.utc) + timedelta(days=1), 4, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2", "3", "4", "5"], RequiredQualifications={}),
-            Requirement("2", "E1", "Z", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["3"], RequiredQualifications={})
+            Requirement("1", "E1", "R1", datetime.now(timezone.utc) + timedelta(days=1), 4, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2", "3", "4", "5"], RequiredQualifications={}),
+            Requirement("2", "E1", "R2", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["3"], RequiredQualifications={})
         ])]
         filledCategories = Optimize(events, [])
         allSetMembers = set(filledCategories[0][1].NewPreselectedMembers).union(filledCategories[1][1].NewPreselectedMembers)
@@ -130,8 +130,17 @@ class Tests(unittest.TestCase):
     def test_QualificationRequired(self):
         qualifications : list[Qualification] = [Qualification("Q1", "R1", ["2"])]
         events : list[Event] = [Event(Id="E1", Date=datetime.now(timezone.utc) + timedelta(days=2), Requirements=[
-            Requirement("1", "E1", "R1", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=["2"], PreselectedMembers=[], AvailableMembers=[], RequiredQualifications={}),
-            Requirement("2", "E1", "R1", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2"], RequiredQualifications={"Q1":1})
+            Requirement("1", "E1", "R1", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2"], RequiredQualifications={"Q1":1})
+        ])]
+        filledCategories = Optimize(events, qualifications)
+        self.assertEqual(filledCategories[0][1].NewPreselectedMembers[0], "2")
+
+    def test_QualificationInfluences(self):
+        qualifications : list[Qualification] = [Qualification("Q1", "R1", ["2"])]
+        events : list[Event] = [Event(Id="E1", Date=datetime.now(timezone.utc) + timedelta(days=2), Requirements=[
+            Requirement("1", "E1", "R1", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=["2"], PreselectedMembers=[], AvailableMembers=[], RequiredQualifications={})
+        ]),Event(Id="E2", Date=datetime.now(timezone.utc) + timedelta(days=2), Requirements=[
+            Requirement("2", "E2", "R1", datetime.now(timezone.utc) + timedelta(days=1), 1, LockedMembers=[], PreselectedMembers=[], AvailableMembers=["1", "2"], RequiredQualifications={"Q1":1})
         ])]
         filledCategories = Optimize(events, qualifications)
         self.assertEqual(filledCategories[1][1].NewPreselectedMembers[0], "2")

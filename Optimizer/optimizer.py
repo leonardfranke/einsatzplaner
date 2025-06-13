@@ -73,7 +73,7 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
     # print(B_erq_dict)
     # print(A_mer_dict)
     # print(P_mer_dict)
-    # print(S_mrq_dict)
+    print(S_mrq_dict)
     
     X_erq_m_dict = defaultdict[tuple[str, str, str], list[mathopt.Variable]](list)
     X_mr_e_dict = defaultdict[tuple[str, str], list[mathopt.Variable]](list)
@@ -94,7 +94,7 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
                 for requiredQualificationOfEvent in requirementOfEvent.RequiredQualifications.keys():
                     X_merq = model.add_binary_variable(name=f"{requirementOfEvent.EventId}, {requirementOfEvent.RoleId}, {requiredQualificationOfEvent}: {member}")
                     X_mer_q_list.append(X_merq)
-                    model.add_linear_constraint(X_merq <= S_mrq_dict[(member, event.Id, requirementOfEvent.Id)])
+                    model.add_linear_constraint(X_merq <= S_mrq_dict[(member, requirementOfEvent.RoleId, requiredQualificationOfEvent)])
                     X_erq_m_dict[(event.Id, requirementOfEvent.RoleId, requiredQualificationOfEvent)].append(X_merq)
                 X_merq = model.add_binary_variable(name=f"{requirementOfEvent.EventId}, {requirementOfEvent.RoleId}, None: {member}")
                 X_mer_q_list.append(X_merq)
@@ -104,7 +104,7 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
             model.add_linear_constraint(mathopt.LinearSum(X_me) <= 1)
 
     # print(X_erq_m_dict)
-    # print(X_mr_e_dict)
+    print(X_mr_e_dict)
     # print(X_mer_dict)
     # print(X_er_m_dict)
 
@@ -141,7 +141,7 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
     model.minimize(max_D * (max_E * mathopt.LinearSum(V_erq_list) + mathopt.QuadraticSum(E_mr_squared_list)) + mathopt.LinearSum(D_mer_list))
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
 
-    # print(result)
+    print(result)
 
     filledHelpers : list[(Requirement, Updates)] = []
     for requirement in [requirement for event in events for requirement in event.Requirements]:
