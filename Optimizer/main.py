@@ -4,7 +4,7 @@ import traceback
 from datetime import datetime
 from google.cloud import firestore
 from google.cloud.firestore_v1 import ArrayUnion  # Optional: ArrayRemove, falls benötigt
-from optimizer import Event, Helper, Optimize
+from optimizer import Event, Requirement, Optimize
 
 db = firestore.Client()
 
@@ -18,12 +18,12 @@ def optimizeDepartment(departmentId : str):
 		eventSnapshot = eventRef.get().to_dict()
 		no_events = False
 		helpers = eventRef.collection("Helper").get()
-		event = Event(Date=eventSnapshot["Date"], Helpers=[])
+		event = Event(Date=eventSnapshot["Date"], Requirements=[])
 		for helperRef in helpers:
 			helperSnapshot = helperRef.to_dict()
 			try:
-				helper = Helper(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["LockingTime"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"])
-				event.Helpers.append(helper)
+				helper = Requirement(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["LockingTime"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"])
+				event.Requirements.append(helper)
 			except Exception as e:
 				traceback.print_exc()
 			
