@@ -68,12 +68,6 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
     for qualification in qualifications:
         for member in qualification.Members:
             S_mrq_dict[(member, qualification.RoleId, qualification.Id)] = True
-
-    # print(F_mr)
-    # print(B_erq_dict)
-    # print(A_mer_dict)
-    # print(P_mer_dict)
-    print(S_mrq_dict)
     
     X_erq_m_dict = defaultdict[tuple[str, str, str], list[mathopt.Variable]](list)
     X_mr_e_dict = defaultdict[tuple[str, str], list[mathopt.Variable]](list)
@@ -103,11 +97,6 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
         for X_me in X_me_r_dict.values():
             model.add_linear_constraint(mathopt.LinearSum(X_me) <= 1)
 
-    # print(X_erq_m_dict)
-    print(X_mr_e_dict)
-    # print(X_mer_dict)
-    # print(X_er_m_dict)
-
     V_erq_list = []
     for ((eventId, roleId, qualificationId), X_erq_m) in X_erq_m_dict.items():
         V_erq = B_erq_dict[(eventId, roleId, qualificationId)] - mathopt.LinearSum(X_erq_m)
@@ -129,19 +118,9 @@ def OptimizeOverfilled(events : list[Event], qualifications : list[Qualification
             model.add_linear_constraint(D_mer >= P_mer - X_mer_dict[(memberId, eventId, roleId)])
             D_mer_list.append(D_mer)       
     max_D = len(D_mer_list) + 1
-
-    
-    # print(V_erq_list)
-    # print(E_mr_squared_list)
-    # print(D_mer_list)
-
-    # print(max_E)
-    # print(max_D)
                
     model.minimize(max_D * (max_E * mathopt.LinearSum(V_erq_list) + mathopt.QuadraticSum(E_mr_squared_list)) + mathopt.LinearSum(D_mer_list))
     result = mathopt.solve(model, mathopt.SolverType.GSCIP)
-
-    print(result)
 
     filledHelpers : list[(Requirement, Updates)] = []
     for requirement in [requirement for event in events for requirement in event.Requirements]:
