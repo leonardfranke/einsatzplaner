@@ -12,7 +12,7 @@ namespace Web.Pages
     public class RoleViewBase : ComponentBase
     {
         private List<Models.Member> _members;
-        private List<Models.Qualification> _qualifications;
+
 
         [Parameter]
         public Models.Department Department { private get; set; }
@@ -32,6 +32,7 @@ namespace Web.Pages
         public string HoveredId { get; set; }
 
         public List<Role> Roles { get; set; }
+        public IEnumerable<Qualification> Qualifications { get; set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
@@ -76,18 +77,8 @@ namespace Web.Pages
 
         private async Task LoadQualifications()
         {
-            _qualifications = await _qualificationService.GetAll(Department.Id);
+            Qualifications = await _qualificationService.GetAll(Department.Id);
             StateHasChanged();
-        }
-
-        public string GetGroupDisplayText(RequirementGroup group)
-        {
-            var names = group.Requirements.Select(requirement =>
-            {
-                var category = Roles.Find(category => category.Id == requirement.Key);
-                return $"{requirement.Value}x {category?.Name ?? "Keine Bezeichnung"}";
-            });
-            return string.Join(Environment.NewLine, names);
         }
 
         public async Task EditOrCreateRole(Role? role)
@@ -182,7 +173,7 @@ namespace Web.Pages
 
         public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
         {
-            return _qualifications.Where(qualification => qualification.RoleId == roleId);
+            return Qualifications.Where(qualification => qualification.RoleId == roleId);
         }
 
         public async Task EditOrCreateQualification(Role? role, Qualification? qualification)
@@ -220,14 +211,14 @@ namespace Web.Pages
         {
             var closeModalFunc = Modal.HideAsync;
             var deleteHelperCategoryFunc = DeleteRequirementGroup;
-            var safeHelperCategoryFunc = SaveRequirementGroup;
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ChangeHelperCategoryGroup.HelperCategoryGroup), categoryGroup},
                 { nameof(ChangeHelperCategoryGroup.Roles), Roles},
+                { nameof(ChangeHelperCategoryGroup.Qualifications), Qualifications },
                 { nameof(ChangeHelperCategoryGroup.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeHelperCategoryGroup.DeleteHelperCategoryGroupFunc), deleteHelperCategoryFunc },
-                { nameof(ChangeHelperCategoryGroup.SaveHelperCategoryGroupFunc), safeHelperCategoryFunc }
+                { nameof(ChangeHelperCategoryGroup.SaveHelperCategoryGroupFunc), SaveRequirementGroup }
             };
             var title = categoryGroup == null ? "Gruppe erstellen" : "Gruppe bearbeiten";
             await Modal.ShowAsync<ChangeHelperCategoryGroup>(title: title, parameters: parameters);
@@ -239,9 +230,9 @@ namespace Web.Pages
             await LoadRequirementGroups();
         }
 
-        private async Task SaveRequirementGroup(string helperCategoryId, Dictionary<string, uint> requirements)
+        private async Task SaveRequirementGroup(string requirementGroupId, Dictionary<string, int> newRoleRequirements, IEnumerable<string> formerRoleRequirements, Dictionary<string, int> newQualificationsRequirements, IEnumerable<string> formerQualificationsRequirements)
         {
-            await _requirementGroupService.UpdateOrCreate(Department.Id, helperCategoryId, requirements);
+            await _requirementGroupService.UpdateOrCreate(Department.Id, requirementGroupId, newRoleRequirements, formerRoleRequirements, newQualificationsRequirements, formerQualificationsRequirements);
             await LoadRequirementGroups();
         }
     }

@@ -12,7 +12,8 @@ namespace Web.Converter
                 return new RequirementGroup
                 {
                     Id = category.Id,
-                    Requirements = category.Requirements
+                    RequirementsRoles = category.RequirementsRoles,
+                    RequirementsQualifications = category.RequirementsQualifications
                 };
             }).ToList();            
         }

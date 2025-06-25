@@ -7,6 +7,6 @@ namespace Api.FirestoreModels
     public class HelperGroup : FirebaseDocument
     {
         [FirestoreProperty]
-        public Dictionary<string, uint> Requirements { get; set; }
+        public Dictionary<string, int> Requirements { get; set; }
     }
 }

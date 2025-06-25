@@ -28,12 +28,16 @@ namespace Web.Services
             return RequirementGroupConverter.Convert(categoryDTOs);
         }
 
-        public async Task UpdateOrCreate(string departmentId, string? requirementGroupId, Dictionary<string, uint> requirements)
+        public async Task UpdateOrCreate(string departmentId, string requirementGroupId, Dictionary<string, int> newRoleRequirements, IEnumerable<string> formerRoleRequirements, Dictionary<string, int> newQualificationsRequirements, IEnumerable<string> formerQualificationsRequirements)
         {
-            var updateCategoryDTO = new RequirementGroupDTO
+            var updateCategoryDTO = new UpdateRequirementGroupDTO
             {
                 Id = requirementGroupId,
-                Requirements = requirements
+                NewRequirementsRole = newRoleRequirements,
+                FormerRequirementsRole = formerRoleRequirements,
+                NewRequirementsQualifications = newQualificationsRequirements,
+                FormerRequirementsQualifications = formerQualificationsRequirements
+                
             };
             var content = JsonContent.Create(updateCategoryDTO);
             var res = await _httpClient.PostAsync(new Uri($"/api/RequirementGroup/{departmentId}", UriKind.Relative), content);

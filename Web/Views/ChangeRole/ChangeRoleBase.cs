@@ -73,7 +73,7 @@ namespace Web.Views
             {
                 RoleData.Name = Role.Name;
                 _oldName = RoleData.Name;
-                RoleData.LockingPeriod = Role.LockingPeriod;
+                RoleData.LockingPeriod = (int)Role.LockingPeriod;
                 _oldLockingPeriod = RoleData.LockingPeriod;
                 _oldIsFree = Role.IsFree;
                 RoleData.IsFree = _oldIsFree;
@@ -87,7 +87,7 @@ namespace Web.Views
             var newRoleName = RoleData.Name != _oldName || !IsUpdate ? RoleData.Name : null;
             int? newLockingPeriodName = RoleData.LockingPeriod != _oldLockingPeriod || !IsUpdate ? RoleData.LockingPeriod : null;
             bool? newIsFree = RoleData.IsFree != _oldIsFree || !IsUpdate ? RoleData.IsFree : null;
-            await UpdateRoleFunc(Role?.Id, newRoleName, newLockingPeriodName, newIsFree);
+            await UpdateRoleFunc(Role?.Id, newRoleName, (int?)newLockingPeriodName, newIsFree);
             await CloseModal();
             IsRoleSaving = false;
         }

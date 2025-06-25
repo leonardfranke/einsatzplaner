@@ -30,9 +30,9 @@ namespace Api.Controllers
         }
 
         [HttpPost("{departmentId}")]
-        public Task UpdateOrCreate([FromRoute] string departmentId, [FromBody] RequirementGroupDTO updateGroupDTO)
+        public Task UpdateOrCreate([FromRoute] string departmentId, [FromBody] UpdateRequirementGroupDTO updateGroupDTO)
         {
-            return _helperCategoryGroupManager.UpdateOrCreateGroup(departmentId, updateGroupDTO.Id, updateGroupDTO.Requirements);
+            return _helperCategoryGroupManager.UpdateOrCreateGroup(departmentId, updateGroupDTO);
         }
     }
 }

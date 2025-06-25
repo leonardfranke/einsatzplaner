@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.Extensions.Primitives;
 using Web.Models;
 
 namespace Web.Views
@@ -16,10 +17,13 @@ namespace Web.Views
         public Func<Task> CloseModalFunc { get; set; }
 
         [Parameter]
+        public IEnumerable<Qualification> Qualifications { get; set; }
+
+        [Parameter]
         public Func<string, Task> DeleteHelperCategoryGroupFunc { get; set; }
 
         [Parameter]
-        public Func<string, Dictionary<string, uint>, Task> SaveHelperCategoryGroupFunc { get; set; }
+        public Func<string, Dictionary<string, int>, IEnumerable<string>, Dictionary<string, int>, IEnumerable<string>, Task> SaveHelperCategoryGroupFunc { get; set; }
 
         [SupplyParameterFromForm]
         public FormModel RequirementGroupData { get; set; }
@@ -31,7 +35,8 @@ namespace Web.Views
         public bool IsUpdate { get; set; }
 
         private ValidationMessageStore _messageStore;
-        private Dictionary<string, uint> _oldRequirements = new();
+        private Dictionary<string, int> _oldRequirementsRoles = new();
+        private Dictionary<string, int> _oldRequirementsQualifications = new();
 
         protected override void OnInitialized()
         {
@@ -50,53 +55,88 @@ namespace Web.Views
         {
             IsUpdate = HelperCategoryGroup != null;
             if (IsUpdate)
-                RequirementGroupData.Requirements = HelperCategoryGroup.Requirements ?? new();
+            {
+                RequirementGroupData.RequirementsRoles = HelperCategoryGroup.RequirementsRoles.ToDictionary(pair => pair.Key, pair => (int)pair.Value);
+                RequirementGroupData.RequirementsQualifications = HelperCategoryGroup.RequirementsQualifications;
+            }
             else
-                RequirementGroupData.Requirements.Clear();
+            {
+                RequirementGroupData.RequirementsRoles.Clear();
+                RequirementGroupData.RequirementsQualifications.Clear();
 
-            _oldRequirements = new(RequirementGroupData.Requirements);
+            }
+
+            _oldRequirementsRoles = new(RequirementGroupData.RequirementsRoles);
+            _oldRequirementsQualifications = new(RequirementGroupData.RequirementsQualifications);
         }
 
-        public Role GetCategoryById(string helperCategoryId)
+        public Role GetRoleById(string helperCategoryId)
         {
             return Roles.Find(category => category.Id == helperCategoryId);
         }
 
-        public void AddRequirement(string categoryId)
+        public void AddRoleRequirement(string roleId)
         {
-            RequirementGroupData.Requirements.TryAdd(categoryId, 1);
+            RequirementGroupData.RequirementsRoles.TryAdd(roleId, 1);
         }
 
-        public void RemoveRequirement(string categoryId)
+        public void RemoveRoleRequirement(string roleId)
         {
-            RequirementGroupData.Requirements.Remove(categoryId);
+            RequirementGroupData.RequirementsRoles.Remove(roleId);
         }
 
-        public void SetRequirement(string categoryId, string stringValue)
+        public void SetRoleRequirement(string roleId, string stringValue)
         {
-            var parsed = uint.TryParse(stringValue, out uint value);
-            if(!parsed)
+            var parsed = int.TryParse(stringValue, out int value);
+            if (!parsed)
                 value = 1;
-            RequirementGroupData.Requirements[categoryId] = value;
+            RequirementGroupData.RequirementsRoles[roleId] = value;
+        }
+
+        public void AddQualificationRequirement(string qualificationId)
+        {
+            RequirementGroupData.RequirementsQualifications.TryAdd(qualificationId, 1);
+        }
+
+        public void RemoveQualificationRequirement(string qualificationId)
+        {
+            RequirementGroupData.RequirementsQualifications.Remove(qualificationId);
+        }
+
+        public void SetQualificationRequirement(string qualificationId, string stringValue)
+        {
+            var parsed = int.TryParse(stringValue, out int value);
+            if (!parsed)
+                value = 1;
+            RequirementGroupData.RequirementsQualifications[qualificationId] = value;
         }
 
         public async Task SaveHelperCategoryGroup()
         {
             IsHelperCategoryGroupSaving = true;
-            if(RequirementGroupData.Requirements.Count != _oldRequirements.Count 
-                || RequirementGroupData.Requirements.Any(requirement =>
+            var newRoleRequirements = RequirementGroupData.RequirementsRoles
+                .Where(pair => !_oldRequirementsRoles.ContainsKey(pair.Key) || _oldRequirementsRoles[pair.Key] != pair.Value).ToDictionary();
+            var formerRoleRequirements = _oldRequirementsRoles.Where(pair => !RequirementGroupData.RequirementsRoles.ContainsKey(pair.Key)).Select(pair => pair.Key);
+            var newQualificationsRequirements = RequirementGroupData.RequirementsQualifications
+                .Where(pair => !_oldRequirementsQualifications.ContainsKey(pair.Key) || _oldRequirementsQualifications[pair.Key] != pair.Value).ToDictionary();
+            var formerQualificationsRequirements = _oldRequirementsQualifications.Where(pair => !RequirementGroupData.RequirementsQualifications.ContainsKey(pair.Key)).Select(pair => pair.Key);
+
+            if (newRoleRequirements.Any() || formerRoleRequirements.Any() || newQualificationsRequirements.Any() || formerQualificationsRequirements.Any())
             {
-                var exists = _oldRequirements.TryGetValue(requirement.Key, out var value);
-                if (!exists)
-                    return true;
-                return requirement.Value != value;
-            }))
-            {
-                await SaveHelperCategoryGroupFunc(HelperCategoryGroup?.Id, 
-                    RequirementGroupData.Requirements);
+                await SaveHelperCategoryGroupFunc(HelperCategoryGroup?.Id, newRoleRequirements, formerRoleRequirements, newQualificationsRequirements, formerQualificationsRequirements);
             }
             await CloseModal();
             IsHelperCategoryGroupSaving = false;
+        }
+
+        public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
+        {
+            return Qualifications.Where(qualification => qualification.RoleId == roleId);
+        }
+
+        public Qualification GetQualificationById(string qualificationId)
+        {
+            return Qualifications.First(qualification => qualification.Id == qualificationId);
         }
 
         public async Task DeleteHelperCategoryGroup()
@@ -111,7 +151,8 @@ namespace Web.Views
 
         public class FormModel
         {
-            public Dictionary<string, uint> Requirements { get; set; } = new();
+            public Dictionary<string, int> RequirementsRoles { get; set; } = new ();
+            public Dictionary<string, int> RequirementsQualifications { get; set; } = new();
         }
 
     }

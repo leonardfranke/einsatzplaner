@@ -1,4 +1,5 @@
 ﻿@inherits ChangeHelperCategoryGroupBase
+@using BlazorBootstrap
 @using Web.Extensions
 
 <EditForm EditContext="EditContext" OnValidSubmit="SaveHelperCategoryGroup">
@@ -6,7 +7,7 @@
         <button class="btn btn-secondary dropdown-toggle mb-2" data-bs-toggle="dropdown">Hinzufügen</button>
         <ul class="dropdown-menu">
             @{
-                var dropdownList = Roles.Where(category => RequirementGroupData.Requirements?.ContainsKey(category.Id) == false);
+                var dropdownList = Roles.Where(category => RequirementGroupData.RequirementsRoles?.ContainsKey(category.Id) == false);
                 if (dropdownList.Count() == 0)
                 {
                     <div class="text-body-secondary p-4">
@@ -17,23 +18,61 @@
                 {
                     foreach (var category in dropdownList)
                     {
-                        <li><button @onclick="() => AddRequirement(category.Id)" type="button" class="dropdown-item" href="#">@category.Name</button></li>
+                        <li><button @onclick="() => AddRoleRequirement(category.Id)" type="button" class="dropdown-item" href="#">@category.Name</button></li>
                     }
                 }
             }
         </ul>
     </div>
 
-    @if (RequirementGroupData.Requirements != null)
+    @if (RequirementGroupData.RequirementsRoles != null)
     {
-        @foreach (var pair in RequirementGroupData.Requirements)
+        var groupedQualificationRequírements = RequirementGroupData.RequirementsQualifications
+            .ToDictionary(pair => GetQualificationById(pair.Key), pair => pair.Value)
+            .GroupBy(pair => pair.Key.RoleId);
+        @foreach (var roleRequirement in RequirementGroupData.RequirementsRoles)
         {
-            var category = GetCategoryById(pair.Key);
-            <label class="form-label">@category.Name</label>
+            var role = GetRoleById(roleRequirement.Key);
+            <label class="form-label">@role.Name</label>
             <div class="input-group mb-3">
-                <input class="form-control" data-testid="amount-@(category.Name)" type="number" min="1" value="@pair.Value" @onchange="value => SetRequirement(category.Id, (string)value.Value)" />
-                <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveRequirement(category.Id)"><i class="bi bi-x-lg"></i></button>
+                @{
+                    var testId = $"amount-{role.Name}";
+                }
+                <input class="form-control" data-testid="@testId" type="number" min="1" value="@roleRequirement.Value" @onchange="value => SetRoleRequirement(role.Id, (string)value.Value)" />
+                <button class="btn btn-outline-danger" type="button" @onclick="() =>  RemoveRoleRequirement(role.Id)"><Icon Name="IconName.XLg" /></button>
             </div>
+
+            <Dropdown Color="DropdownColor.Secondary">
+                <DropdownToggleButton>Qualifikation hinzufügen</DropdownToggleButton>
+                <DropdownMenu>
+                    @{
+                        var qualificationsToShow = GetQualificationsOfRole(role.Id).Where(qualification => !RequirementGroupData.RequirementsQualifications.ContainsKey(qualification.Id));
+                    }
+                    @if (qualificationsToShow.Any())
+                    {
+                        @foreach (var qualification in qualificationsToShow)
+                        {
+                            <DropdownItem Type="DropdownItemType.Button" @onclick="() => AddQualificationRequirement(qualification.Id)">@qualification.Name</DropdownItem>
+                        }
+                    }
+                    else
+                    {
+                        <p class="p-3">Keine weiteren Qualifikationen</p>
+                    }
+                </DropdownMenu>
+            </Dropdown>
+
+            var qualificationsOfRole = groupedQualificationRequírements.FirstOrDefault(group => group.Key == role.Id);
+            if (qualificationsOfRole != null)
+            {
+                @foreach(var qualificationRequirement in qualificationsOfRole)
+                {
+                    <div class="input-group mb-3">
+                        <input class="form-control" type="number" min="1" max="@roleRequirement.Value" value="@qualificationRequirement.Value" @onchange="value => SetQualificationRequirement(qualificationRequirement.Key.Id, (string)value.Value)" />
+                        <button class="btn btn-outline-danger" type="button" @onclick="() => RemoveQualificationRequirement(qualificationRequirement.Key.Id)"><Icon Name="IconName.XLg" /></button>
+                    </div>
+                }
+            }
         }
     }
 

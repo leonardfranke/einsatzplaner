@@ -32,28 +32,44 @@ namespace Api.Manager
         {
             var categoryReference = GetCategoryGroupCollectionReference(departmentId);
             var snapshot = await categoryReference.GetSnapshotAsync();
-            var groups = snapshot.Select(doc => doc.ConvertTo<HelperCategoryGroup>()).ToList();
+            var groups = snapshot.Select(doc => doc.ConvertTo<RequirementGroup>()).ToList();
             return RequirementGroupConverter.Convert(groups);
         }
 
-        public Task UpdateOrCreateGroup(string departmentId, string? helperCategoryGroupId, Dictionary<string, uint> requirements)
+        public Task UpdateOrCreateGroup(string departmentId, UpdateRequirementGroupDTO updateRequirementGroupDTO)
         {
             var categoryReference = GetCategoryGroupCollectionReference(departmentId);
-            if (string.IsNullOrEmpty(helperCategoryGroupId))
+            if (string.IsNullOrEmpty(updateRequirementGroupDTO.Id))
             {
-                var newGroup = new HelperCategoryGroup
+                var newGroup = new RequirementGroup
                 {
-                    Requirements = requirements
+                    RequirementsRoles = updateRequirementGroupDTO.NewRequirementsRole,
+                    RequirementsQualifications = updateRequirementGroupDTO.NewRequirementsQualifications
                 };
 
                 return categoryReference.AddAsync(newGroup);
             }
             else
             {
-                return categoryReference.Document(helperCategoryGroupId)
-                .UpdateAsync(new Dictionary<string, object> {
-                    { nameof(HelperCategoryGroup.Requirements), requirements}
-                }, Precondition.MustExist);
+                var updateDict = new Dictionary<string, object>();
+                foreach(var formerRole in updateRequirementGroupDTO.FormerRequirementsRole)
+                {
+                    updateDict.Add($"{nameof(RequirementGroup.RequirementsRoles)}.{formerRole}", FieldValue.Delete);
+                }
+                foreach (var newRole in updateRequirementGroupDTO.NewRequirementsRole)
+                {
+                    updateDict.Add($"{nameof(RequirementGroup.RequirementsRoles)}.{newRole.Key}", newRole.Value);
+                }
+                foreach (var formerQualification in updateRequirementGroupDTO.FormerRequirementsQualifications)
+                {
+                    updateDict.Add($"{nameof(RequirementGroup.RequirementsQualifications)}.{formerQualification}", FieldValue.Delete);
+                }
+                foreach (var newQualification in updateRequirementGroupDTO.NewRequirementsQualifications)
+                {
+                    updateDict.Add($"{nameof(RequirementGroup.RequirementsQualifications)}.{newQualification.Key}", newQualification.Value);
+                }
+
+                return categoryReference.Document(updateRequirementGroupDTO.Id).UpdateAsync(updateDict, Precondition.MustExist);
             }
         }
     }

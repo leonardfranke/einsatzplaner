@@ -1,5 +1,6 @@
 ﻿@using BlazorBootstrap
 @using Web.Extensions
+@using Web.Models
 @inherits RoleViewBase
 
 @if(IsViewLoading)
@@ -104,7 +105,7 @@
                 {
                     <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">
                         <td>
-                            @GetGroupDisplayText(group)
+                            @group.GetRequirementGroupDisplayText(Roles, Qualifications)
                         </td>
                         <td>
                             <button @onclick="() => EditOrCreateRequirementGroup(group)"

@@ -4,7 +4,7 @@
     {
         public Task<List<Models.RequirementGroup>> GetAll(string departmentId);
 
-        public Task UpdateOrCreate(string departmentId, string? requirementsGroupId, Dictionary<string, uint> requirements);
+        public Task UpdateOrCreate(string departmentId, string requirementGroupId, Dictionary<string, int> newRoleRequirements, IEnumerable<string> formerRoleRequirements, Dictionary<string, int> newQualificationsRequirements, IEnumerable<string> formerQualificationsRequirements);
 
         public Task Delete(string departmentId, string requirementsGroupId);
     }

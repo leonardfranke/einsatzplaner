@@ -16,7 +16,7 @@ namespace Web.Services
         }
 
         public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool removeMembers)
-        {
+        {            
             try
             {                
                 var updateEventDTO = new UpdateEventDTO

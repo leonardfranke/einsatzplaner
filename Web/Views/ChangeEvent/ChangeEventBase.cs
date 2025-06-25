@@ -78,8 +78,8 @@ namespace Web.Views
                 foreach (var helper in helpers)
                 {
                     var lockingTime = helper.LockingTime;
-                    var lockingPeriod = Event.EventDate.Subtract(lockingTime).Days;
-                    AddCategoryToGame(helper.RoleId, helper.RequiredAmount, lockingPeriod, helper.RequiredGroups, helper.RequiredQualifications);
+                    var lockingPeriod = (int)Event.EventDate.Subtract(lockingTime).Days;
+                    AddCategoryToGame(helper.RoleId, (int)helper.RequiredAmount, lockingPeriod, helper.RequiredGroups, helper.RequiredQualifications);
                 }
             }
             else
@@ -96,7 +96,7 @@ namespace Web.Views
             foreach (var helper in EventData.Helpers)
             {
                 var lockingTime = EventData.Date.AddDays(-helper.LockingPeriod);
-                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, helper.RequiredGroups, helper.RequiredQualifications));
+                categoryData.Add(helper.RoleId, new((int)helper.RequiredAmount, lockingTime, helper.RequiredGroups, helper.RequiredQualifications.ToDictionary(pair => pair.Key, pair => (int)pair.Value)));
             }
 
             var dateHasChanged = IsUpdate && EventData.Date != Event?.EventDate;
@@ -118,22 +118,15 @@ namespace Web.Views
 
         public Role GetRoleById(string id) => Roles.Find(role => role.Id == id);
 
-        public string GetGroupDisplayText(RequirementGroup helperCategoryGroup)
-        {
-            var names = helperCategoryGroup.Requirements.Select(requirement =>
-            {
-                var category = GetRoleById(requirement.Key);
-                return $"{requirement.Value}x {category?.Name ?? "Kein Name"}";
-            });
-            return string.Join(Environment.NewLine, names);
-        }
-
         public void SetHelperGroup(RequirementGroup helperCategoryGroup)
         {
             ClearCategories();
-            foreach (var requirement in helperCategoryGroup.Requirements)
+            var groupedQualificationRequirements = helperCategoryGroup.RequirementsQualifications
+                .ToDictionary(pair => Qualifications.First(qualification => qualification.Id == pair.Key), pair => pair.Value)
+                .GroupBy(pair => pair.Key.RoleId);
+            foreach (var requirement in helperCategoryGroup.RequirementsRoles)
             {
-                AddCategoryToGame(requirement.Key, (int)requirement.Value);
+                AddCategoryToGame(requirement.Key, (int)requirement.Value, requiredQualifications: groupedQualificationRequirements.FirstOrDefault(group => group.Key == requirement.Key).ToDictionary(pair => pair.Key.Id, pair => pair.Value));
             }
         }
 
@@ -152,7 +145,7 @@ namespace Web.Views
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
                 RequiredGroups = requiredGroups ?? new(),
-                RequiredQualifications = requiredQualifications ?? new()
+                RequiredQualifications = requiredQualifications.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
             });
         }
 
