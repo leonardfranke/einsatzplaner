@@ -57,7 +57,7 @@ namespace TestWebsite
             await Page.GetByLabel("Name").FillAsync("Anschreiber");
             await Page.GetByLabel("Sperrzeitraum").FillAsync("20");
             await Page.GetByText("Speichern").ClickAsync();
-            var roleText = Page.GetByText("Anschreiber - Ohne Mitglieder");
+            var roleText = Page.GetByText("Anschreiber - Offene Rolle");
             await Expect(roleText).ToBeVisibleAsync();
             var roleInfoText = Page.GetByText("Sperrzeitraum: 20 Tage");
             await Expect(roleInfoText).ToBeVisibleAsync();

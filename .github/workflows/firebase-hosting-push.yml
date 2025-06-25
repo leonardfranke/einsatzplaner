@@ -42,7 +42,7 @@ jobs:
           dotnet run --no-build --no-restore --project Api &
           dotnet run --no-build --no-restore --project Web &
           cd TestWebsite
-          firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/Export/"
+          firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/EmptyDepartment/"
 
   tests_optimizer:
     runs-on: ubuntu-latest
