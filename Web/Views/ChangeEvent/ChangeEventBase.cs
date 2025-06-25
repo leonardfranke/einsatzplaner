@@ -18,6 +18,9 @@ namespace Web.Views
         [Inject]
         private IHelperService _helperService { get; set; }
 
+        [Inject]
+        private IRequirementGroupService _requirementGroupService { get; set; }
+
         [Parameter]
         public Event? Event { get; set; }
 
@@ -66,7 +69,8 @@ namespace Web.Views
 
         protected override async Task OnParametersSetAsync()
         {
-            IsEventLoading = true;            
+            IsEventLoading = true;
+            var requirementGroupsTask = _requirementGroupService.GetAll(DepartmentId);
             IsUpdate = Event != null;
             if (IsUpdate)
             {
@@ -86,6 +90,7 @@ namespace Web.Views
             {
                 EventData.Date = DateTime.Today.AddDays(1);
             }
+            RequirementGroups = await requirementGroupsTask;
             IsEventLoading = false;
         }
 
