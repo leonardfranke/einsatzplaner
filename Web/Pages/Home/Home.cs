@@ -128,7 +128,7 @@ namespace Web.Pages
             .Where(@event => !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
 
         private List<Models.Event> events;
-        private List<Models.EventCategory> eventCategories;
+        private List<Models.EventCategory> _eventCategories;
         private List<Models.Member> members;
         private List<RequirementGroup> helperCategoryGroups;
         private List<Qualification> _qualifications;
@@ -161,7 +161,7 @@ namespace Web.Pages
             members = await membersTask;
             Member = members.FirstOrDefault(member => member.Id == _currentUserId);
             _roles = await rolesTask;
-            eventCategories = await eventCategoriesTask;
+            _eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
             _qualifications = await qualificationsTask;
             GroupByGroup = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
@@ -229,7 +229,7 @@ namespace Web.Pages
                 FilteredEvents.GroupBy<Models.Event, object>(game =>
                 {
                     var group = Groups.FirstOrDefault(group => group.Id.Equals(game.GroupId));
-                    var eventCategory = eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId));
+                    var eventCategory = _eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId));
                     return (group, eventCategory);
                 })
                 .OrderBy(eventGroup =>
@@ -244,9 +244,9 @@ namespace Web.Pages
 
                     int eventCategoryIndex;
                     if (key.Item2 is Models.EventCategory eventCategory)
-                        eventCategoryIndex = eventCategories.IndexOf(eventCategory);
+                        eventCategoryIndex = _eventCategories.IndexOf(eventCategory);
                     else
-                        eventCategoryIndex = eventCategories.Count;
+                        eventCategoryIndex = _eventCategories.Count;
 
                     return groupIndex * Groups.Count + eventCategoryIndex;
 
@@ -264,13 +264,13 @@ namespace Web.Pages
                 }).ToList());
             _categoryEventGrouping = new(() =>
                 FilteredEvents.GroupBy<Models.Event, object>(game =>
-                    eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId)))
+                    _eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId)))
                 .OrderBy(eventGroup =>
                 {
                     if (eventGroup.Key is Models.EventCategory eventCategory)
-                        return eventCategories.IndexOf(eventCategory);
+                        return _eventCategories.IndexOf(eventCategory);
                     else
-                        return eventCategories.Count;
+                        return _eventCategories.Count;
                 }).ToList());
         }
 
@@ -278,7 +278,7 @@ namespace Web.Pages
 
         protected Group GetGroupById(string groupId) => Groups.Find(group => group.Id == groupId);
 
-        protected Models.EventCategory GetEventCategoryById(string categoryId) => eventCategories.FirstOrDefault(category => category.Id == categoryId);
+        protected Models.EventCategory GetEventCategoryById(string categoryId) => _eventCategories.FirstOrDefault(category => category.Id == categoryId);
 
         protected List<Models.Helper> GetHelpers(Models.Event @event)
         {
@@ -335,6 +335,7 @@ namespace Web.Pages
                 { nameof(ChangeEvent.DeleteGameFunc), DeleteGame },
                 { nameof(ChangeEvent.SaveEventFunc), SaveGame },
                 { nameof(ChangeEvent.Roles), _roles },
+                { nameof(ChangeEvent.EventCategories), _eventCategories },
                 { nameof(ChangeEvent.Groups), Groups },
                 { nameof(ChangeEvent.Qualifications), _qualifications }
             };
