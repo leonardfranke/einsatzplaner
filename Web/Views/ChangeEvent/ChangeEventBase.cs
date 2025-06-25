@@ -131,7 +131,7 @@ namespace Web.Views
                 .GroupBy(pair => pair.Key.RoleId);
             foreach (var requirement in helperCategoryGroup.RequirementsRoles)
             {
-                AddCategoryToGame(requirement.Key, (int)requirement.Value, requiredQualifications: groupedQualificationRequirements.FirstOrDefault(group => group.Key == requirement.Key).ToDictionary(pair => pair.Key.Id, pair => pair.Value));
+                AddCategoryToGame(requirement.Key, requirement.Value, requiredQualifications: groupedQualificationRequirements.FirstOrDefault(group => group.Key == requirement.Key)?.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
             }
         }
 

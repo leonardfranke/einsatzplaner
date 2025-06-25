@@ -19,8 +19,6 @@
             <thead>
                 <tr>
                     <th scope="col">Name</th>
-                    <th scope="col">Gruppen</th>
-                    <th scope="col">Rollen</th>
                     <th scope="col" />
                 </tr>
             </thead>
@@ -36,32 +34,6 @@
                             else
                             {
                                 @member.Name
-                            }
-                        </td>
-                        <td>
-                            @{
-                                var groupName = GetGroupNamesByIds(member.Id);
-                            }
-                            @if (string.IsNullOrEmpty(groupName))
-                            {
-                                <i>ohne Gruppen</i>
-                            }
-                            else
-                            {
-                                @groupName
-                            }
-                        </td>
-                        <td>
-                            @{
-                                var roleNames = GetRoleNamesByIds(member.Id);
-                            }
-                            @if (string.IsNullOrEmpty(roleNames))
-                            {
-                                <i>ohne Rollen</i>
-                            }
-                            else
-                            {
-                                @roleNames
                             }
                         </td>
                         <td>

@@ -1,7 +1,6 @@
 ﻿using DTO;
 using System.Net.Http.Json;
 using Web.Converter;
-using Web.Helper;
 
 namespace Web.Services.Member
 {
@@ -33,6 +32,16 @@ namespace Web.Services.Member
             {
                 return null;
             }
+        }
+
+        public Task UpdateMember(string departmentId, string memberId, bool isAdmin)
+        {
+            var updateMembersDTO = new UpdateMemberDTO
+            {
+                IsAdmin = isAdmin
+            };
+            var content = JsonContent.Create(updateMembersDTO);
+            return _httpClient.PatchAsync(new Uri($"/api/Member/{departmentId}/{memberId}", UriKind.Relative), content);
         }
     }
 }

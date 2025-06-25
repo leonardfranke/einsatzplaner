@@ -27,8 +27,8 @@ namespace Api.Controllers
             return _memberManager.GetMember(departmentId, memberId);
         }
 
-        [HttpPatch]
-        public Task UpdateMember([FromQuery] string departmentId, [FromQuery] string memberId, [FromBody] UpdateMemberDTO updateMemberDTO) 
+        [HttpPatch("{departmentId}/{memberId}")]
+        public Task UpdateMember([FromRoute] string departmentId, [FromRoute] string memberId, [FromBody] UpdateMemberDTO updateMemberDTO) 
         {
             return _memberManager.UpdateMember(departmentId, memberId, updateMemberDTO.IsAdmin);
         }

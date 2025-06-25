@@ -100,20 +100,21 @@ namespace Web.Pages
         {
             await _departmentService.AnswerRequest(_departmentId, requestId, accept);
             await LoadRequests();
+            if (accept)
+                await LoadMembers();
         }
 
         public async Task EditMember(Models.Member member)
         {
             var closeModalFunc = Modal.HideAsync;
             var deleteMemberFunc = DeleteMember;
-            var saveMemberFunc = SaveMember;
             var parameters = new Dictionary<string, object>
             {
                 { nameof(ChangeMember.DepartmentId), _departmentId },
                 { nameof(ChangeMember.Member), member },
                 { nameof(ChangeMember.CloseModalFunc), closeModalFunc },
                 { nameof(ChangeMember.DeleteMemberFunc), deleteMemberFunc },
-                { nameof(ChangeMember.SaveMemberFunc), saveMemberFunc }
+                { nameof(ChangeMember.SaveMemberFunc), SaveMember }
             };
             await Modal.ShowAsync<ChangeMember>(title: "Mitglied bearbeiten", parameters: parameters);
         }
@@ -124,9 +125,13 @@ namespace Web.Pages
             await LoadMembers();
         }
 
-        private async Task SaveMember(string memberId, bool? newIsAdmin, IEnumerable<string> newGroups, IEnumerable<string> formerGroups, IEnumerable<string> newRoles, IEnumerable<string> formerRoles)
+        private async Task SaveMember(string memberId, bool? newIsAdmin)
         {
-            await LoadMembers();
+            if(newIsAdmin != null)
+            {
+                await _memberService.UpdateMember(_departmentId, memberId, (bool)newIsAdmin);
+                await LoadMembers();
+            }
         }
     }
 }
