@@ -117,27 +117,31 @@ else
                         <input class="form-check-input" type="checkbox" checked="@IsGroupSetForCategory(helperForm, group.Id)" @onchange="(value) => SetRequiredGroup(helperForm, group.Id, (bool)value.Value)" />
                     </div>
                 }
-            }  
+            }
 
-            <Dropdown Color="DropdownColor.Secondary">
-                <DropdownToggleButton>Qualifikation hinzufügen</DropdownToggleButton>
-                <DropdownMenu>
-                    @{
-                        var qualificationsToShow = GetQualificationsOfRole(helperForm.RoleId).Where(qualification => !helperForm.RequiredQualifications.ContainsKey(qualification.Id));
-                    }
-                    @if(qualificationsToShow.Any())
-                    {
-                        @foreach (var qualification in qualificationsToShow)
-                        {
-                            <DropdownItem Type="DropdownItemType.Button" @onclick="() => AddQualificationToRole(helperForm, qualification.Id)">@qualification.Name</DropdownItem>
+            var qualificationsOfRole = GetQualificationsOfRole(helperForm.RoleId);
+            @if(qualificationsOfRole.Any())
+            {
+                <Dropdown Color="DropdownColor.Secondary">
+                    <DropdownToggleButton>Qualifikation hinzufügen</DropdownToggleButton>
+                    <DropdownMenu>
+                        @{
+                            var qualificationsToShow = qualificationsOfRole.Where(qualification => !helperForm.RequiredQualifications.ContainsKey(qualification.Id));
                         }
-                    }
-                    else
-                    {
-                        <p class="p-3">Keine weiteren Qualifikationen</p>
-                    }
-                </DropdownMenu>
-            </Dropdown>
+                        @if(qualificationsToShow.Any())
+                        {
+                            @foreach (var qualification in qualificationsToShow)
+                            {
+                                <DropdownItem Type="DropdownItemType.Button" @onclick="() => AddQualificationToRole(helperForm, qualification.Id)">@qualification.Name</DropdownItem>
+                            }
+                        }
+                        else
+                        {
+                            <p class="p-3">Keine weiteren Qualifikationen</p>
+                        }
+                    </DropdownMenu>
+                </Dropdown>                
+            }
 
             @foreach(var qualificationRequirement in helperForm.RequiredQualifications)
             {
