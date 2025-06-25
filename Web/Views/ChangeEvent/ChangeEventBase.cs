@@ -150,7 +150,7 @@ namespace Web.Views
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
                 RequiredGroups = requiredGroups ?? new(),
-                RequiredQualifications = requiredQualifications.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
+                RequiredQualifications = requiredQualifications?.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
             });
         }
 
