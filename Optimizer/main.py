@@ -1,10 +1,8 @@
 import functions_framework
 import flask
 import traceback
-from datetime import datetime
 from google.cloud import firestore
-from google.cloud.firestore_v1 import ArrayUnion  # Optional: ArrayRemove, falls benötigt
-from optimizer import Event, Requirement, Optimize
+from optimizer import Event, Requirement, Qualification, Optimize
 
 db = firestore.Client()
 
@@ -13,16 +11,16 @@ def optimizeDepartment(departmentId : str):
 	eventDocuments = eventsRef.list_documents()
 
 	no_events = True
-	events = []
+	events : list[Event] = []
 	for eventRef in eventDocuments:
 		eventSnapshot = eventRef.get().to_dict()
 		no_events = False
 		helpers = eventRef.collection("Helper").get()
-		event = Event(Date=eventSnapshot["Date"], Requirements=[])
+		event = Event(Id=eventRef.id,Date=eventSnapshot["Date"], Requirements=[])
 		for helperRef in helpers:
 			helperSnapshot = helperRef.to_dict()
 			try:
-				helper = Requirement(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["LockingTime"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"])
+				helper = Requirement(helperRef.id, eventRef.id, helperSnapshot["RoleId"], helperSnapshot["LockingTime"], helperSnapshot["RequiredAmount"], helperSnapshot["LockedMembers"], helperSnapshot["PreselectedMembers"], helperSnapshot["AvailableMembers"], helperSnapshot["RequiredQualifications"])
 				event.Requirements.append(helper)
 			except Exception as e:
 				traceback.print_exc()
@@ -32,7 +30,15 @@ def optimizeDepartment(departmentId : str):
 	if no_events:
 		return "No events found in department", 404
 	
-	filledHelpers = Optimize(events)
+	relevantQualificationIds = [qualificationId for event in events for requirement in event.Requirements for qualificationId in requirement.RequiredQualifications]
+	
+	qualificationsRef = db.collection("Department").document(departmentId).collection("Qualification")
+	qualificationsSnapshots = [{**docRef.get().to_dict(), "id": docRef.id} for docRef in qualificationsRef.list_documents() if docRef.id in relevantQualificationIds]
+	qualifications = [Qualification(Id=qualiSnapshot["id"],RoleId=qualiSnapshot["RoleId"],Members=qualiSnapshot["MemberIds"]) for qualiSnapshot in qualificationsSnapshots]
+
+	print(events)
+	print(qualifications)
+	filledHelpers = Optimize(events, qualifications)
 	
 	for filledHelper in filledHelpers:
 		oldHelper = filledHelper[0]
