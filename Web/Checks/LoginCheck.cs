@@ -25,7 +25,7 @@ namespace Web.Checks
             _departmentService = departmentService;
         }
 
-        public async Task<bool> CheckLogin(Department department = null, bool requiresAdminRole = false)
+        public async Task<bool> CheckLogin(string departmentUrl, Department department = null, bool requiresAdminRole = false)
         {
             if (department == null && requiresAdminRole)
                 throw new ArgumentException("Requires admin role but no department passed", nameof(requiresAdminRole));
@@ -35,14 +35,14 @@ namespace Web.Checks
             var authenticated = authState?.User?.Identity?.IsAuthenticated == true;
             if (!authenticated)
             {
-                NavigateToLogin(department);
+                NavigateToLogin(departmentUrl);
                 return false;
             }
 
             var verified = authState.User.HasClaim(IAuthManager.EmailVerifiedClaim, true.ToString());
             if (!verified)
             {
-                NavigateToLogin(department);
+                NavigateToLogin(departmentUrl);
                 return false;
             }
 
@@ -52,30 +52,27 @@ namespace Web.Checks
             var currentUser = await _authManager.GetLocalUser();
             if (await _departmentService.IsMemberInDepartment(currentUser.Id, department.Id) == false)
             {
-                NavigateToMembership(department);
+                NavigateToMembership(departmentUrl);
                 return false;
             }
 
             if(requiresAdminRole && !authState.User.HasClaim(ClaimTypes.Role, IAuthManager.AdminClaim))
             {
-                NavigateToLogin(department);
+                NavigateToLogin(departmentUrl);
                 return false;
             }  
 
             return true;
         }
 
-        private void NavigateToLogin(Department department)
+        private void NavigateToLogin(string departmentUrl)
         {
-            if(department == null)
-                _navigationManager.NavigateToLogin("./login");
-            else
-                _navigationManager.NavigateToLogin($"./{department.URL}/login");
+            _navigationManager.NavigateToLogin($"./{departmentUrl}/login");
         }
 
-        private void NavigateToMembership(Department department)
+        private void NavigateToMembership(string departmentUrl)
         {
-            _navigationManager.NavigateToLogin($"./{department.URL}/membership");
+            _navigationManager.NavigateToLogin($"./{departmentUrl}/membership");
         }
     }
 }

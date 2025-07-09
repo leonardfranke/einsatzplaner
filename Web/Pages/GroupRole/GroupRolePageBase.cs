@@ -23,7 +23,7 @@ namespace Web.Pages.GroupRole
             IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
-            if (!await _loginCheck.CheckLogin(department, true))
+            if (!await _loginCheck.CheckLogin(DepartmentUrl, department, true))
                 return;
             Department = department;
             IsPageLoading = false;

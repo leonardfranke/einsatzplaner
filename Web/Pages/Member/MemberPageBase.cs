@@ -57,7 +57,7 @@ namespace Web.Pages
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             _departmentId = department.Id;
-            if (!await _loginCheck.CheckLogin(department, true))
+            if (!await _loginCheck.CheckLogin(DepartmentUrl, department, true))
                 return;
 
             var groupTask = _groupService.GetAll(_departmentId);

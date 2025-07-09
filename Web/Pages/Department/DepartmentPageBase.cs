@@ -36,7 +36,7 @@ namespace Web.Pages
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             Department = department;
-            if (!await _loginCheck.CheckLogin())
+            if (!await _loginCheck.CheckLogin(DepartmentUrl))
                 return;
 
             currentUser = await _authManager.GetLocalUser();
