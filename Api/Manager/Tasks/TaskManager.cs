@@ -15,16 +15,18 @@ namespace Api.Manager
 
         public Task TriggerRecalculation(string departmentId, DateTime? dateTime = null)
         {
-            if (_optimizerEndPoint == null)
-                return Task.CompletedTask;
-
-            if (dateTime == null)
+            try
             {
-                var berlinTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
-                dateTime = TimeZoneInfo.ConvertTime(DateTime.Today.AddDays(1), berlinTimeZone);
-            }
-            else if (dateTime.Value.Kind != DateTimeKind.Local)
-                throw new ArgumentException("dateTime", "DateTime kind must be local");
+                if (_optimizerEndPoint == null)
+                    return Task.CompletedTask;
+
+                if (dateTime == null)
+                {
+                    var berlinTimeZone = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
+                    dateTime = TimeZoneInfo.ConvertTime(DateTime.Today.AddDays(1), berlinTimeZone);
+                }
+                else if (dateTime.Value.Kind != DateTimeKind.Local)
+                    throw new ArgumentException("dateTime", "DateTime kind must be local");
 
                 var httpRequest = new GTask.HttpRequest()
                 {
@@ -32,18 +34,24 @@ namespace Api.Manager
                     HttpMethod = GTask.HttpMethod.Get
                 };
 
-            var queueName = new GTask.QueueName("einsatzplaner", "europe-west1", "Optimization");
-            var taskId = $"{departmentId}-{dateTime.Value.ToString("yyyy-MM-dd")}";
-            var taskHash = Math.Abs(taskId.GetHashCode()).ToString();
-            var taskName = new GTask.TaskName(queueName.ProjectId, queueName.LocationId, queueName.QueueId, taskHash);
-            var googleTask = new GTask.Task()
+                var queueName = new GTask.QueueName("einsatzplaner", "europe-west1", "Optimization");
+                var taskId = $"{departmentId}-{dateTime.Value.ToString("yyyy-MM-dd")}";
+                var taskHash = Math.Abs(taskId.GetHashCode()).ToString();
+                var taskName = new GTask.TaskName(queueName.ProjectId, queueName.LocationId, queueName.QueueId, taskHash);
+                var googleTask = new GTask.Task()
+                {
+                    HttpRequest = httpRequest,
+                    TaskName = taskName
+                };
+                var secondsSinceEpoch = new DateTimeOffset(dateTime.Value.ToUniversalTime()).ToUnixTimeSeconds();
+                googleTask.ScheduleTime = new Google.Protobuf.WellKnownTypes.Timestamp { Seconds = secondsSinceEpoch };
+                return _client.CreateTaskAsync(queueName, googleTask);
+            }
+            catch (Exception ex)
             {
-                HttpRequest = httpRequest,
-                TaskName = taskName
-            };
-            var secondsSinceEpoch = new DateTimeOffset(dateTime.Value.ToUniversalTime()).ToUnixTimeSeconds();
-            googleTask.ScheduleTime = new Google.Protobuf.WellKnownTypes.Timestamp { Seconds = secondsSinceEpoch };
-            return _client.CreateTaskAsync(queueName, googleTask);
+                Console.WriteLine(ex);
+                return Task.CompletedTask;
+            }
         }
     }
 }
