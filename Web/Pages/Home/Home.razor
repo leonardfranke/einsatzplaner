@@ -68,6 +68,10 @@
                     <InputCheckbox @bind-Value="HideEventsWithoutEntering" />
                     Events ohne Eintragung ausblenden
                 </DropdownItem>
+                <DropdownItem Type="DropdownItemType.Button" @onclick="() => ShowAllRoles = !ShowAllRoles">
+                    <InputCheckbox @bind-Value="ShowAllRoles" />
+                    Alle Rollen anzeigen
+                </DropdownItem>
             </DropdownMenu>
         </Dropdown>
     </div>

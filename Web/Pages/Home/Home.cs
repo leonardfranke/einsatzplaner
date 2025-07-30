@@ -14,6 +14,7 @@ namespace Web.Pages
 
     public class HomeBase : ComponentBase
     {
+        private const string _showAllRolesKey = "ShowAllRoles";
         private const string _groupByGroupKey = $"GroupByGroup{nameof(Home)}";
         private const string _groupByEventCategoryKey = $"GroupByEventCategory{nameof(Home)}";
         private const string _hidePastEventsKey = "HidePastEvents";
@@ -61,9 +62,6 @@ namespace Web.Pages
         private IRoleService _roleService { get; set; }
 
         [Inject]
-        private IRequirementGroupService _requirementsGroupService { get; set; }
-
-        [Inject]
         private IEventService _eventService { get; set; }
 
         [Inject]
@@ -101,6 +99,15 @@ namespace Web.Pages
                 _localStorage.SetItemAsync(_groupByEventCategoryKey, value);
             }
         }
+        public bool ShowAllRoles
+        {
+            get => _showAllRoles;
+            set
+            {
+                _showAllRoles = value;
+                _localStorage.SetItemAsync(_showAllRolesKey, value);
+            }
+        }
         public bool HidePastEvents { 
             get => _hidePastEvents;
             set 
@@ -130,7 +137,6 @@ namespace Web.Pages
         private List<Models.Event> events;
         private List<Models.EventCategory> _eventCategories;
         private List<Models.Member> members;
-        private List<RequirementGroup> helperCategoryGroups;
         private List<Qualification> _qualifications;
         private string _departmentId;
         private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
@@ -140,6 +146,7 @@ namespace Web.Pages
         private bool _hideEventsWithoutEntering;
         private bool _groupByGroup;
         private bool _groupByEventCategory;
+        private bool _showAllRoles;
 
         protected override async Task OnInitializedAsync()
         {
@@ -167,6 +174,8 @@ namespace Web.Pages
             GroupByGroup = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
             GroupByEventCategory = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
             HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
+            HideEventsWithoutEntering = await _localStorage.GetItemAsync<bool>(_hideEventsWithoutEnteringKey);
+            ShowAllRoles = await _localStorage.GetItemAsync<bool>(_showAllRolesKey);
             await LoadEventData();
             IsPageLoading = false;
         }
@@ -215,12 +224,12 @@ namespace Web.Pages
                 .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
                 .Select(role => role.RoleId);
             var rolesWithEvent = allHelpers.Select(helper => helper.RoleId);
-            var relevantRoles = rolesWithEvent.Where(roleId =>
+            var relevantRoles = ShowAllRoles ? rolesWithEvent : rolesWithEvent.Where(roleId =>
             {
                 var role = GetRoleById(roleId);
                 return role.IsFree || role.MemberIds.Contains(_currentUserId);                
-            }).Union(rolesWithUserEntered);
-            return relevantRoles.Select(GetRoleById);
+            });
+            return relevantRoles.Union(rolesWithUserEntered).Select(GetRoleById);
         }
 
         private void RecalculateGrouping()
