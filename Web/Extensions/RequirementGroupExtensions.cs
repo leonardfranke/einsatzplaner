@@ -1,4 +1,6 @@
-﻿namespace Web.Models
+﻿using Web.Models;
+
+namespace Web.Extensions
 {
     public static class RequirementGroupExtensions
     {

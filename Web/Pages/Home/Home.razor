@@ -1,5 +1,6 @@
 ﻿@page "/{departmentUrl}/"
 @using BlazorBootstrap
+@using Web.Extensions
 @using Web.Views.Checkbox
 @inherits HomeBase
 
@@ -150,7 +151,12 @@
                             <td>
                                 @if (helper != null)
                                 {
-                                    <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" Role="role" Groups="Groups"/>
+                                    <div class="d-flex align-items-baseline gap-3">
+                                        <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" Role="role" Groups="Groups"/>
+                                        <AuthorizeView Roles="IsAdmin">                                            
+                                            <p>@(helper.GetRegistrationCount())</p>
+                                        </AuthorizeView>
+                                    </div>
                                 }
                             </td>
                         }
