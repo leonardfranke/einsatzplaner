@@ -2,6 +2,7 @@
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Web.Checks;
+using Web.Manager;
 using Web.Models;
 using Web.Services;
 using Web.Views.MemberSelection;
@@ -38,6 +39,9 @@ namespace Web.Pages
         private IRoleService _roleService { get; set; }
 
         [Inject]
+        private IAuthManager _authManager { get; set; }
+
+        [Inject]
         private IEventCategoryService _eventCategoryService { get; set; }
 
         [Inject]
@@ -50,11 +54,12 @@ namespace Web.Pages
         private IGroupService _groupService { get; set; }
         [Inject]
         private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
+        public Models.Member Member { get; private set; }
+        public List<Group> Groups { get; private set; }
 
         public bool IsPageLoading { get; set; }
 
         private List<Models.Member> _members;
-        private List<Group> _groups;
         private List<Role> _roles;
         private Models.EventCategory _eventCategory;
         private Models.Group _group;
@@ -90,8 +95,8 @@ namespace Web.Pages
             var groupsTask = _groupService.GetAll(department.Id);
             var rolesTask = _roleService.GetAll(department.Id);
             var membersTask = _memberService.GetAll(department.Id);
-            _groups = await groupsTask;
-            _group = _groups?.Find(group => group.Id == Event.GroupId);
+            Groups = await groupsTask;
+            _group = Groups?.Find(group => group.Id == Event.GroupId);
             if (!string.IsNullOrEmpty(Event.EventCategoryId))
             {
                 var eventCategoriesTask = _eventCategoryService.GetById(department.Id, Event.EventCategoryId);
@@ -100,7 +105,10 @@ namespace Web.Pages
 
             _roles = await rolesTask;
             _members = await membersTask;
-            await ReloadHelpers();
+            var reloadHelpersTask = ReloadHelpers();
+            var currentUserId = (await _authManager.GetLocalUser()).Id;
+            Member = _members.FirstOrDefault(member => member.Id == currentUserId);
+            await reloadHelpersTask;
             IsPageLoading = false;
         }
 
@@ -126,7 +134,7 @@ namespace Web.Pages
         {
             if (groupIds == null || groupIds.Count == 0)
                 return ("Frei", true);
-            return (string.Join(", ", groupIds.Select(id => _groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name")), false);
+            return (string.Join(", ", groupIds.Select(id => Groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name")), false);
         }
 
         protected async Task OpenLockedMembersSelected(Models.Helper helper)
@@ -140,7 +148,7 @@ namespace Web.Pages
                     var requiredRole = _roles.Find(role => helper.RoleId == role.Id);
                     if (!requiredRole.IsFree && !requiredRole.MemberIds.Contains(member.Id))
                         return false;
-                    var requiredGroups = helper.RequiredGroups.Select(requiredGroup => _groups.Find(group => group.Id == requiredGroup));
+                    var requiredGroups = helper.RequiredGroups.Select(requiredGroup => Groups.Find(group => group.Id == requiredGroup));
                     if (requiredGroups.Count() == 0)
                         return true;
                     return requiredGroups.SelectMany(group => group.MemberIds).Contains(member.Id);

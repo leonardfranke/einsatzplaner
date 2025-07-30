@@ -1,5 +1,6 @@
 ﻿@page "/{departmentUrl}/event/{gameId}"
 @using LeafletForBlazor
+@using Web.Views.Checkbox
 @inherits EventPageBase
 
 @if (IsPageLoading)
@@ -27,6 +28,7 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th scope="col">Eintragung</th>
                     <th scope="col">Kategorie</th>
                     <th scope="col">Bedarf</th>
                     <th scope="col">Feste Helfer</th>
@@ -41,9 +43,10 @@
             <tbody>
                 @foreach (var help in Helpers)
                 {
-                    var category = GetRoleById(help.RoleId);
+                    var role = GetRoleById(help.RoleId);
                     <tr>
-                        <th>@category.Name</th>
+                        <th><HelperCheckbox Event="Event" Helper="help" Role="role" Member="Member" Groups="Groups" ValueChangedCallback="StateHasChanged" /></th>
+                        <th>@role.Name</th>
                         <th>@help.RequiredAmount</th>
                         <th class="position-relative">
                             @(GetDisplayMemberNames(help.LockedMembers))

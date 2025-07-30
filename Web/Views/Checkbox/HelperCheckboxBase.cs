@@ -13,6 +13,9 @@ namespace Web.Views
         public Modal Modal { get; set; }
 
         [Parameter]
+        public Action ValueChangedCallback { get; set; }
+
+        [Parameter]
         public Models.Event Event{ private get; set; }
 
         [Parameter]
@@ -84,9 +87,9 @@ namespace Web.Views
             return _helperService.SetIsAvailable(Event.DepartmentId, Event.Id, Helper.Id, currentUserId, setHelping);
         }
 
-
         public Task ChangeHelpingEvent()
         {
+            ValueChangedCallback?.Invoke();
             return SetIsAvailable(!IsPreselectedOrAvailable);         
         }
     }
