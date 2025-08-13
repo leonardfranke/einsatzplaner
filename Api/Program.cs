@@ -61,6 +61,8 @@ builder.Services.AddSingleton<IQualificationManager, QualificationManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
+builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
+builder.Services.AddSingleton<IHelperNotificationManager, HelperNotificationManager>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

@@ -2,7 +2,7 @@
 {
     internal static class Paths
     {
-        internal static string GAME_MODE = "GameMode";
+        internal static string HelperNotification = "HelperNotification";
         internal static string REQUIREMENT_GROUP = "RequirementGroup";
         internal static string DEPARTMENT = "Department";
         internal static string GROUP = "Group";
