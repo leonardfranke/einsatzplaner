@@ -80,6 +80,8 @@ namespace Web.Pages
 
         public Models.Member Member { get; private set; }
 
+        public List<Models.Member> Members { get; private set; }
+
         public bool IsPageLoading { get; set; }
 
         public bool GroupByGroup {
@@ -136,7 +138,6 @@ namespace Web.Pages
 
         private List<Models.Event> events;
         private List<Models.EventCategory> _eventCategories;
-        private List<Models.Member> members;
         private List<Qualification> _qualifications;
         private string _departmentId;
         private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
@@ -165,8 +166,8 @@ namespace Web.Pages
             var qualificationsTask = _qualificationService.GetAll(_departmentId);
 
             var eventCategoriesTask = _eventCategoryService.GetAll(_departmentId);
-            members = await membersTask;
-            Member = members.FirstOrDefault(member => member.Id == _currentUserId);
+            Members = await membersTask;
+            Member = Members.FirstOrDefault(member => member.Id == _currentUserId);
             _roles = await rolesTask;
             _eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
