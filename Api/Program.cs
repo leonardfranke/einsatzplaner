@@ -1,5 +1,4 @@
 using Api.Manager;
-using Api.Manager.Tasks;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
@@ -25,16 +24,6 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.CustomSchemaIds(type => type.FullName);
 });
-
-if(builder.Environment.IsProduction())
-{
-    var gTasksClientBuilder = new CloudTasksClientBuilder();
-    builder.Services.AddSingleton(sp => gTasksClientBuilder.Build());
-}
-else
-{
-    builder.Services.AddSingleton<CloudTasksClient>(sp => new CloudTaskMock());
-}
 
     var firestoreDbBuilder =
         builder.Environment.IsProduction() ?
@@ -73,8 +62,6 @@ builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddHttpClient();
-var optimizerEndpoint = Environment.GetEnvironmentVariable("OPTIMIZER_ENDPOINT");
-builder.Services.AddSingleton<ITaskManager>(sp => new TaskManager(sp.GetRequiredService<CloudTasksClient>(), optimizerEndpoint));
 
 var app = builder.Build();
 app.UseHttpsRedirection();

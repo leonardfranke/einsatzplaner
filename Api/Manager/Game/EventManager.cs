@@ -9,13 +9,11 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
         private IHelperManager _helperManager;
-        private ITaskManager _taskManager;
 
-        public EventManager(FirestoreDb firestoreDb, IHelperManager helperManager, ITaskManager taskManager)
+        public EventManager(FirestoreDb firestoreDb, IHelperManager helperManager)
         {
             _firestoreDb = firestoreDb;
             _helperManager = helperManager;
-            _taskManager = taskManager;
         }
 
         public async Task UpdateOrCreate(UpdateEventDTO updateEventDTO)
@@ -133,10 +131,6 @@ namespace Api.Manager
             }
             
             await Task.WhenAll(dataChangesTasks);  
-            foreach(var lockingTime in optimizerDatetimes)
-            {
-                await _taskManager.TriggerRecalculation(departmentId, lockingTime);
-            }
         }
 
         public async Task DeleteEvent(string departmentId, string eventId)

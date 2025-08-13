@@ -8,12 +8,12 @@ namespace Api.Manager
     public class HelperManager : IHelperManager
     {
         private FirestoreDb _firestoreDb;
-        private ITaskManager _taskManager;
+        private IHelperNotificationManager _helperNotificationManager;
 
-        public HelperManager(FirestoreDb firestoreDb, ITaskManager taskManager)
+        public HelperManager(FirestoreDb firestoreDb, IHelperNotificationManager helperNotificationManager)
         {
             _firestoreDb = firestoreDb;
-            _taskManager = taskManager;
+            _helperNotificationManager = helperNotificationManager;
         }
 
         public async Task<List<HelperDTO>> GetAll(string departmentId)

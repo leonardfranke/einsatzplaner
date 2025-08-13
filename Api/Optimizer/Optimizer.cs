@@ -14,7 +14,7 @@ namespace Optimizer
             public List<string> NewAvailableMembers { get; set; }
         }
 
-        public static Dictionary<HelperDTO, Updates> Optimize(List<Event> events, List<HelperDTO> requirements, List<Qualification> qualifications) 
+        public static Dictionary<HelperDTO, Updates> Optimize(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications) 
         {
             var lockedMemberAssignments = new Dictionary<(string, string), int>();
             foreach (var requirement in requirements) 
@@ -30,7 +30,7 @@ namespace Optimizer
             return OptimizeOverfilled(eventsToOptimize.ToList(), requirementsToOptimize.ToList(), qualifications, lockedMemberAssignments);
         }
 
-        private static Dictionary<HelperDTO, Updates> OptimizeOverfilled(List<Event> events, List<HelperDTO> requirements, List<Qualification> qualifications, Dictionary<(string, string), int> lockedMemberAssignments)
+        private static Dictionary<HelperDTO, Updates> OptimizeOverfilled(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications, Dictionary<(string, string), int> lockedMemberAssignments)
         {
             var F_mr_dict = lockedMemberAssignments;
             var B_erq_dict = new Dictionary<(string, string, string), int>();
@@ -183,11 +183,6 @@ namespace Optimizer
             model.Minimize(max_D * (LinearExpr.Sum(E_diffs) + maxDiffSum * LinearExpr.Sum(V_erq_list)) + LinearExpr.Sum(D_mer_list));
             var solver = new CpSolver();
             var status = solver.Solve(model);
-
-            foreach(var variable in X_mer_dict.Values.Union(E_diffs))
-            {
-                Console.WriteLine($"{variable.ToString()}: {solver.Value(variable)}");
-            }
 
             var filledHelpers = new Dictionary<HelperDTO, Updates>();
             foreach(var requirement in requirements)
