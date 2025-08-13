@@ -87,7 +87,7 @@ namespace Api.Manager
                     var requiredQualifications = updateHelper.RequiredQualifications;
                     if (currentHelper == null)
                     {
-                        var newHelper = new Helper
+                        var newHelper = new Requirement
                         {
                             RoleId = roleId,
                             RequiredAmount = requiredAmount,
@@ -104,17 +104,17 @@ namespace Api.Manager
                     else
                     {
                         var updateDict = new Dictionary<string, object> {
-                            { nameof(Helper.RoleId), roleId },
-                            { nameof(Helper.RequiredAmount), requiredAmount },
-                            { nameof(Helper.LockingTime), lockingTimeUTC },
-                            { nameof(Helper.RequiredGroups), requiredGroups },
-                            { nameof(Helper.RequiredQualifications), requiredQualifications }
+                            { nameof(Requirement.RoleId), roleId },
+                            { nameof(Requirement.RequiredAmount), requiredAmount },
+                            { nameof(Requirement.LockingTime), lockingTimeUTC },
+                            { nameof(Requirement.RequiredGroups), requiredGroups },
+                            { nameof(Requirement.RequiredQualifications), requiredQualifications }
                         };
                         if (removeMembers)
                         {
-                            updateDict.Add(nameof(Helper.LockedMembers), new List<string>());
-                            updateDict.Add(nameof(Helper.PreselectedMembers), new List<string>());
-                            updateDict.Add(nameof(Helper.AvailableMembers), new List<string>());
+                            updateDict.Add(nameof(Requirement.LockedMembers), new List<string>());
+                            updateDict.Add(nameof(Requirement.PreselectedMembers), new List<string>());
+                            updateDict.Add(nameof(Requirement.AvailableMembers), new List<string>());
                         }
                         var helperRef = helpersRef.Document(currentHelper.Id);
                         var updateTask = helperRef.UpdateAsync(updateDict);
@@ -130,7 +130,7 @@ namespace Api.Manager
                 }
             }
             
-            await Task.WhenAll(dataChangesTasks);  
+            await Task.WhenAll(dataChangesTasks);
         }
 
         public async Task DeleteEvent(string departmentId, string eventId)

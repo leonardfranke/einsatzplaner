@@ -2,7 +2,6 @@ using Api.Manager;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
-using Google.Cloud.Tasks.V2;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -25,10 +24,10 @@ builder.Services.AddSwaggerGen(options =>
     options.CustomSchemaIds(type => type.FullName);
 });
 
-    var firestoreDbBuilder =
-        builder.Environment.IsProduction() ?
-        new FirestoreDbBuilder() { ProjectId = "einsatzplaner" } :
-        new FirestoreDbBuilder() { EmulatorDetection = Google.Api.Gax.EmulatorDetection.EmulatorOnly, ProjectId = "emulator" };
+var firestoreDbBuilder =
+    builder.Environment.IsProduction() ?
+    new FirestoreDbBuilder() { ProjectId = "einsatzplaner" } :
+    new FirestoreDbBuilder() { EmulatorDetection = Google.Api.Gax.EmulatorDetection.EmulatorOnly, ProjectId = "emulator" };
 builder.Services.AddSingleton(sp => firestoreDbBuilder.Build());
 
 if (builder.Environment.IsProduction())

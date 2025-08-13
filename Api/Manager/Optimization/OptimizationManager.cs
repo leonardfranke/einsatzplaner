@@ -1,7 +1,5 @@
-﻿
-using Api.Models;
+﻿using Api.Models;
 using Google.Cloud.Firestore;
-using Optimizer;
 
 namespace Api.Manager
 {
@@ -11,13 +9,15 @@ namespace Api.Manager
         private IEventManager _eventManager;
         private IHelperManager _helperManager;
         private IQualificationManager _qualificationManager;
+        private IHelperNotificationManager _helperNotificationManager;
 
-        public OptimizationManager(FirestoreDb firestoreDb, IEventManager eventManager, IHelperManager helperManager, IQualificationManager qualificationManager) 
+        public OptimizationManager(FirestoreDb firestoreDb, IEventManager eventManager, IHelperManager helperManager, IQualificationManager qualificationManager, IHelperNotificationManager helperNotificationManager) 
         {
             _firestoreDb = firestoreDb;
             _eventManager = eventManager;
             _helperManager = helperManager;
             _qualificationManager = qualificationManager;
+            _helperNotificationManager = helperNotificationManager;
         }
 
         public async Task OptimizeDepartment(string departmentId)
@@ -73,6 +73,35 @@ namespace Api.Manager
                         .Collection(Paths.HELPER).Document(requirement.Id);
                     updateTasks.Add(requirementRef.UpdateAsync(updates,Precondition.MustExist));
                 }
+
+                updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
+                    departmentId, 
+                    requirement.EventId, 
+                    requirement.RoleId, 
+                    lockedMembersToAdd.Except(oldPreselectedMembers), 
+                    FirestoreModels.HelperStatus.Available, 
+                    FirestoreModels.HelperStatus.Locked));
+                updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
+                    departmentId,
+                    requirement.EventId,
+                    requirement.RoleId,
+                    lockedMembersToAdd.Except(oldAvailableMembers),
+                    FirestoreModels.HelperStatus.Preselected,
+                    FirestoreModels.HelperStatus.Locked));
+                updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
+                    departmentId,
+                    requirement.EventId,
+                    requirement.RoleId,
+                    preselectedMembersToAdd,
+                    FirestoreModels.HelperStatus.Available,
+                    FirestoreModels.HelperStatus.Preselected));
+                updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
+                    departmentId,
+                    requirement.EventId,
+                    requirement.RoleId,
+                    availableMembersToAdd,
+                    FirestoreModels.HelperStatus.Preselected,
+                    FirestoreModels.HelperStatus.Available));
             }
 
             await Task.WhenAll(updateTasks);

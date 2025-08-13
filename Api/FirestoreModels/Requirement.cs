@@ -3,7 +3,7 @@
 namespace Api.Models
 {
     [FirestoreData]
-    public class Helper : FirebaseDocument
+    public class Requirement : FirebaseDocument
     {
         [FirestoreProperty]
         public string RoleId { get; set; }

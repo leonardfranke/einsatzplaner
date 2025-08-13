@@ -5,7 +5,7 @@ namespace Api.Converter
 {
     public static class HelperConverter
     {
-        public static List<HelperDTO> Convert(List<Helper> helpers, string gameId)
+        public static List<HelperDTO> Convert(List<Requirement> helpers, string gameId)
         {
             return helpers.Select(helper =>
             {
