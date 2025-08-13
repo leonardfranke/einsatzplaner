@@ -47,24 +47,28 @@ jobs:
   tests_optimizer:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4      
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
         with:
-          python-version: '3.12'
-          
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-        working-directory: Optimizer
-          
-      - run: |
-          python -m unittest
-        working-directory: Optimizer
+          dotnet-version: '8.0.x'
+      
+      - name: Restore dotnet dependencies
+        run: dotnet restore
+
+      - name: Build dotnet projects
+        run: dotnet build --no-restore
+
+      - name: Run api, website and tests
+        run: |
+          cd TestOptimizer
+          dotnet test --no-build --no-restore
             
   deploy_backend:   
     runs-on: ubuntu-latest
-    needs: [tests_frontend]
+    needs: [tests_frontend, tests_optimizer]
     if: ${{ success() }}
     outputs: 
       backend-url: ${{ steps.backend-deployment.outputs.url }}

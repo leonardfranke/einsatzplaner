@@ -1,5 +1,0 @@
-firebase-admin
-functions-framework
-asyncio
-ortools
-flask
