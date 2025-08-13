@@ -66,7 +66,6 @@ namespace Api.Manager
                 if (!helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(memberId))
                 {
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
-                    await _taskManager.TriggerRecalculation(departmentId);
                 }
             }
             else
@@ -74,7 +73,7 @@ namespace Api.Manager
                 if(helper.PreselectedMembers.Contains(memberId))
                 {
                     await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
-                    await _taskManager.TriggerRecalculation(departmentId);
+                    await helperReference.UpdateAsync(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
                 }
                 if (helper.AvailableMembers.Contains(memberId))
                     await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);                
@@ -96,7 +95,6 @@ namespace Api.Manager
             await helperReference.UpdateAsync(nameof(Helper.LockedMembers), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
             await helperReference.UpdateAsync(nameof(Helper.PreselectedMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
             await helperReference.UpdateAsync(nameof(Helper.AvailableMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
-            await _taskManager.TriggerRecalculation(departmentId);
         }
     }
 }
