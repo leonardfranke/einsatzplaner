@@ -59,7 +59,8 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(preselectedMembersToRemove.ToArray()));
                 if (availableMembersToRemove.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(availableMembersToRemove.ToArray()));
-                batch.Update(requirementRef, updates, Precondition.MustExist);
+                if (updates.Any())
+                    batch.Update(requirementRef, updates, Precondition.MustExist);
 
                 var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
                 var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
@@ -72,7 +73,8 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayUnion(preselectedMembersToAdd.ToArray()));
                 if (availableMembersToAdd.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(availableMembersToAdd.ToArray()));
-                batch.Update(requirementRef, updates, Precondition.MustExist);
+                if(updates.Any())
+                    batch.Update(requirementRef, updates, Precondition.MustExist);
             }
             await batch.CommitAsync();
 
