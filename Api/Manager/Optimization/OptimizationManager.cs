@@ -32,9 +32,14 @@ namespace Api.Manager
 
             var optimizerDict = Optimizer.Optimizer.Optimize(events, requirements, qualifications);
 
-            var updateTasks = new List<Task>();
+            var batch = _firestoreDb.StartBatch();
             foreach (var (requirement, update) in optimizerDict)
             {
+                var requirementRef = _firestoreDb
+                    .Collection(Paths.DEPARTMENT).Document(departmentId)
+                    .Collection(Paths.EVENT).Document(requirement.EventId)
+                    .Collection(Paths.HELPER).Document(requirement.Id);
+
                 var newLockedMembers = update.NewLockedMembers;
                 var newPreselectedMembers = update.NewPreselectedMembers;
                 var newAvailableMembers = update.NewAvailableMembers;
@@ -54,14 +59,7 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(preselectedMembersToRemove.ToArray()));
                 if (availableMembersToRemove.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(availableMembersToRemove.ToArray()));
-                if(updates.Any())
-                {
-                    var requirementRef = _firestoreDb
-                        .Collection(Paths.DEPARTMENT).Document(departmentId)
-                        .Collection(Paths.EVENT).Document(requirement.EventId)
-                        .Collection(Paths.HELPER).Document(requirement.Id);
-                    updateTasks.Add(requirementRef.UpdateAsync(updates,Precondition.MustExist));
-                }
+                batch.Update(requirementRef, updates, Precondition.MustExist);
 
                 var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
                 var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
@@ -74,21 +72,40 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayUnion(preselectedMembersToAdd.ToArray()));
                 if (availableMembersToAdd.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(availableMembersToAdd.ToArray()));
-                if (updates.Any())
-                {
-                    var requirementRef = _firestoreDb
-                        .Collection(Paths.DEPARTMENT).Document(departmentId)
-                        .Collection(Paths.EVENT).Document(requirement.EventId)
-                        .Collection(Paths.HELPER).Document(requirement.Id);
-                    updateTasks.Add(requirementRef.UpdateAsync(updates, Precondition.MustExist));
-                }
+                batch.Update(requirementRef, updates, Precondition.MustExist);
+            }
+            await batch.CommitAsync();
+
+            var updateTasks = new List<Task>();
+            foreach (var (requirement, update) in optimizerDict)
+            {
+                var requirementRef = _firestoreDb
+                    .Collection(Paths.DEPARTMENT).Document(departmentId)
+                    .Collection(Paths.EVENT).Document(requirement.EventId)
+                    .Collection(Paths.HELPER).Document(requirement.Id);
+
+                var newLockedMembers = update.NewLockedMembers;
+                var newPreselectedMembers = update.NewPreselectedMembers;
+                var newAvailableMembers = update.NewAvailableMembers;
+
+                var oldLockedMembers = requirement.LockedMembers;
+                var oldPreselectedMembers = requirement.PreselectedMembers;
+                var oldAvailableMembers = requirement.AvailableMembers;
+
+                var lockedMembersToRemove = oldLockedMembers.Except(newLockedMembers);
+                var preselectedMembersToRemove = oldPreselectedMembers.Except(newPreselectedMembers);
+                var availableMembersToRemove = oldAvailableMembers.Except(newAvailableMembers);
+
+                var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
+                var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
+                var availableMembersToAdd = newAvailableMembers.Except(oldAvailableMembers);
 
                 updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
-                    departmentId, 
-                    requirement.EventId, 
-                    requirement.RoleId, 
-                    lockedMembersToAdd.Except(oldPreselectedMembers), 
-                    FirestoreModels.HelperStatus.Available, 
+                    departmentId,
+                    requirement.EventId,
+                    requirement.RoleId,
+                    lockedMembersToAdd.Except(oldPreselectedMembers),
+                    FirestoreModels.HelperStatus.Available,
                     FirestoreModels.HelperStatus.Locked));
                 updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
                     departmentId,
@@ -112,7 +129,6 @@ namespace Api.Manager
                     FirestoreModels.HelperStatus.Preselected,
                     FirestoreModels.HelperStatus.Available));
             }
-
             await Task.WhenAll(updateTasks);
         }
     }
