@@ -43,28 +43,17 @@ namespace Api.Manager
                 var oldPreselectedMembers = requirement.PreselectedMembers;
                 var oldAvailableMembers = requirement.AvailableMembers;
 
-                var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
-                var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
-                var availableMembersToAdd = newAvailableMembers.Except(oldAvailableMembers);
-
                 var lockedMembersToRemove = oldLockedMembers.Except(newLockedMembers);
                 var preselectedMembersToRemove = oldPreselectedMembers.Except(newPreselectedMembers);
                 var availableMembersToRemove = oldAvailableMembers.Except(newAvailableMembers);
 
                 var updates = new Dictionary<string, object>();
-                if (lockedMembersToAdd.Any())
-                    updates.Add(nameof(Requirement.LockedMembers), FieldValue.ArrayUnion(lockedMembersToAdd.ToArray()));
-                if(preselectedMembersToAdd.Any())
-                    updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayUnion(preselectedMembersToAdd.ToArray()));
-                if(availableMembersToAdd.Any())
-                    updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(availableMembersToAdd.ToArray()));
                 if (lockedMembersToRemove.Any())
                     updates.Add(nameof(Requirement.LockedMembers), FieldValue.ArrayRemove(lockedMembersToRemove.ToArray()));
                 if (preselectedMembersToRemove.Any())
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(preselectedMembersToRemove.ToArray()));
                 if (availableMembersToRemove.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(availableMembersToRemove.ToArray()));
-
                 if(updates.Any())
                 {
                     var requirementRef = _firestoreDb
@@ -72,6 +61,26 @@ namespace Api.Manager
                         .Collection(Paths.EVENT).Document(requirement.EventId)
                         .Collection(Paths.HELPER).Document(requirement.Id);
                     updateTasks.Add(requirementRef.UpdateAsync(updates,Precondition.MustExist));
+                }
+
+                var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
+                var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
+                var availableMembersToAdd = newAvailableMembers.Except(oldAvailableMembers);
+
+                updates.Clear();
+                if (lockedMembersToAdd.Any())
+                    updates.Add(nameof(Requirement.LockedMembers), FieldValue.ArrayUnion(lockedMembersToAdd.ToArray()));
+                if (preselectedMembersToAdd.Any())
+                    updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayUnion(preselectedMembersToAdd.ToArray()));
+                if (availableMembersToAdd.Any())
+                    updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(availableMembersToAdd.ToArray()));
+                if (updates.Any())
+                {
+                    var requirementRef = _firestoreDb
+                        .Collection(Paths.DEPARTMENT).Document(departmentId)
+                        .Collection(Paths.EVENT).Document(requirement.EventId)
+                        .Collection(Paths.HELPER).Document(requirement.Id);
+                    updateTasks.Add(requirementRef.UpdateAsync(updates, Precondition.MustExist));
                 }
 
                 updateTasks.Add(_helperNotificationManager.UpdateChangedStatus(
