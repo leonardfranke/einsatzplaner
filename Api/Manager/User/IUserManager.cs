@@ -48,5 +48,15 @@ namespace Api.Manager
             public string requestType => "VERIFY_EMAIL";
             public string idToken { get; set; }
         }
+
+        internal class AuthRestApiErrorResponse
+        {
+            public InnerError error { get; set; }
+
+            internal class InnerError
+            {
+                public string message { get; set; }
+            }
+        }
     }
 }
