@@ -18,7 +18,7 @@
             </ul>
             <div class="tab-content mt-5" id="myTabContent">
                 <div class="tab-pane fade show active" id="login-pane" role="tabpanel" tabindex="0">
-                    <EditForm EditContext="@EditContextLogin" Context="editContext" OnSubmit="SubmitLogin">
+                    <EditForm EditContext="@EditContextLogin" Context="editContext">
                         <div class="mb-3">
                             <label for="emailLogin" class="form-label">E-Mail-Adresse</label>
                             <InputText @bind-Value="@LoginData.Email" type="email" class="form-control" id="emailLogin" aria-describedby="emailHelp" />
@@ -29,11 +29,11 @@
                         </div>
                         <a class="btn btn-link mb-2" onclick="@ForgotPassword">Password vergessen?</a>
                         <br/>
-                        <button type="submit" class="btn btn-primary">Einloggen</button>
+                        <BlazorBootstrap.Button @onclick="SubmitLogin" Loading="@AuthLoading" LoadingText="Einloggen" Color="BlazorBootstrap.ButtonColor.Primary">Einloggen</BlazorBootstrap.Button>
                     </EditForm>
                 </div>
                 <div class="tab-pane fade" id="register-pane" role="tabpanel" tabindex="0">
-                    <EditForm EditContext="@EditContextLogin" Context="editContext" OnSubmit="SubmitRegister">
+                    <EditForm EditContext="@EditContextLogin" Context="editContext">
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="surname" class="form-label">Vorname</label>
@@ -52,7 +52,7 @@
                             <label for="passwordRegistration" class="form-label">Passwort</label>
                             <InputText @bind-Value="@RegisterData.Password" data-testid="registrieren-password" type="password" class="form-control" id="passwordRegistration" />
                         </div>
-                        <button type="submit" data-testid="registrieren-send" class="btn btn-primary">Registrieren</button>
+                        <BlazorBootstrap.Button data-testid="registrieren-send" @onclick="SubmitRegister" Loading="@AuthLoading" LoadingText="Registrieren" Color="BlazorBootstrap.ButtonColor.Primary">Registrieren</BlazorBootstrap.Button>
                     </EditForm>
                 </div>
             </div>

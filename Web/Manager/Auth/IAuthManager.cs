@@ -15,5 +15,19 @@ namespace Web.Manager
         Task<User?> GetLocalUser();
         Task SetCurrentDepartment(string departmentId);
 
+        public class AuthException : Exception
+        {
+            public AuthError Error { get; set; }
+
+            public enum AuthError
+            {
+                InvalidPassword,
+                EmailAlreadyExists,
+                EmailNotFound,
+                UserDisabled,
+                Unknown
+            }
+        }
+
     }
 }

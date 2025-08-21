@@ -39,6 +39,20 @@ namespace Web.Manager
             var tokenDTOTask = isSignUp ? _authService.SignUpUser(email, password, displayName) : _authService.SignInUser(email, password);
             var tokenDTO = await tokenDTOTask;
 
+            if(tokenDTO.Error != null)
+            {
+                if (tokenDTO.Error == TokenDTO.AuthError.InvalidPassword)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.InvalidPassword };
+                else if (tokenDTO.Error == TokenDTO.AuthError.EmailAlreadyExists)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.EmailAlreadyExists };
+                else if (tokenDTO.Error == TokenDTO.AuthError.EmailNotFound)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.EmailNotFound };
+                else if (tokenDTO.Error == TokenDTO.AuthError.UserDisabled)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.UserDisabled };
+                else //if (tokenDTO.Error == TokenDTO.AuthError.Unknown)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.Unknown };
+            }
+
             var user = new User()
             {
                 Id = tokenDTO.Uid,

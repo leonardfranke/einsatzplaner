@@ -6,6 +6,7 @@ using Web.Manager;
 using Web.Navigation;
 using Web.Pages.Login;
 using Web.Views.ResetPassword;
+using static Web.Manager.IAuthManager;
 
 namespace Web.Pages
 {
@@ -20,6 +21,9 @@ namespace Web.Pages
 
         [Inject]
         private NavigationManager NavigationManager { get; set; }
+
+        [Inject]
+        protected ToastService _toastService { get; set; }
         [Inject]
         private IAuthManager _authManager { get; set; }
         [Inject]
@@ -29,6 +33,8 @@ namespace Web.Pages
 
         public EditContext EditContextLogin { get; set; }
         public EditContext EditContextRegister { get; set; }
+
+        public bool AuthLoading { get; set; }
 
         [SupplyParameterFromForm]
         public LoginModel LoginData { get; set; }
@@ -113,18 +119,22 @@ namespace Web.Pages
 
         public async Task SubmitLogin()
         {
+            AuthLoading = true;
             if (await LoginUser())
             {
                 NavigationManager.TryNavigateToReturnUrl();
             }
+            AuthLoading = false;
         }
 
         public async Task SubmitRegister()
         {
+            AuthLoading = true;
             if (await RegisterUser())
             {
                 NavigationManager.TryNavigateToReturnUrl();
             }
+            AuthLoading = false;
         }
 
         public void SignOut()
@@ -140,11 +150,17 @@ namespace Web.Pages
                 var credetials = await _authManager.Authenticate(LoginData.Email, LoginData.Password, null, false);
                 return true;
             }
-            catch (Exception ex)
+            catch (AuthException ex)
             {
-                _logger.LogError($"Unknown registration error: {ex.Message}, {LoginData.Email}, {LoginData.Password}");
+                var message = ex.Error switch
+                {
+                    AuthException.AuthError.EmailNotFound => "E-Mail-Adresse oder Passwort ist falsch.",
+                    AuthException.AuthError.InvalidPassword => "E-Mail-Adresse oder Passwort ist falsch.",
+                    AuthException.AuthError.UserDisabled => "Das Benutzerkonto wurde deaktiviert.",
+                    _ => "Unbekannter Fehler"
+                };
+                _toastService.Notify(new ToastMessage(ToastType.Warning, "Registrierung fehlgeschlagen", message));
                 return false;
-
             }
         }
 
@@ -155,12 +171,16 @@ namespace Web.Pages
                 var credentials = await _authManager.Authenticate(RegisterData.Email, RegisterData.Password, $"{RegisterData.FirstName} {RegisterData.LastName}", true);
                 return true;
             }
-            catch (Exception ex)
+            catch (AuthException ex)
             {
-                _logger.LogError($"Unknown registration error: {ex.Message}, {RegisterData.Email}, {RegisterData.Password}, {RegisterData.FirstName}, {RegisterData.LastName}");
+                var message = ex.Error switch
+                {
+                    AuthException.AuthError.EmailAlreadyExists => "Die E-Mail-Adresse ist bereits registriert.",
+                    _ => "Unbekannter Fehler"
+                };
+                _toastService.Notify(new ToastMessage(ToastType.Warning, "Login fehlgeschlagen", message));
                 return false;
             }
-
         }
 
         public class LoginModel
