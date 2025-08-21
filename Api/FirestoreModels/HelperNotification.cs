@@ -18,9 +18,11 @@ namespace Api.FirestoreModels
 
     public enum HelperStatus : int
     {
-        Locked,
-        Preselected,
-        Available,
-        NotAvailable
+        Locked = 0,
+        Preselected = 1,
+        Available = 2,
+        NotAvailable = 3,
+        EventDeleted = 4,
+        RequirementDeleted = 5
     }
 }

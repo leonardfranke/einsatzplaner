@@ -9,11 +9,13 @@ namespace Api.Manager
     {
         private FirestoreDb _firestoreDb;
         private IHelperManager _helperManager;
+        private IHelperNotificationManager _helperNotificationManager;
 
-        public EventManager(FirestoreDb firestoreDb, IHelperManager helperManager)
+        public EventManager(FirestoreDb firestoreDb, IHelperManager helperManager, IHelperNotificationManager helperNotificationManager)
         {
             _firestoreDb = firestoreDb;
             _helperManager = helperManager;
+            _helperNotificationManager = helperNotificationManager;
         }
 
         public async Task UpdateOrCreate(UpdateEventDTO updateEventDTO)
@@ -71,7 +73,6 @@ namespace Api.Manager
             if(!string.IsNullOrEmpty(eventId))
                 currentHelpers = await _helperManager.GetAll(departmentId, eventId);
 
-            var optimizerDatetimes = new HashSet<DateTime>();
             if (updateHelpers != null)
             {
                 foreach (var updateHelper in updateHelpers)
@@ -120,13 +121,20 @@ namespace Api.Manager
                         var updateTask = helperRef.UpdateAsync(updateDict);
                         dataChangesTasks.Add(updateTask);
                     }
-                    optimizerDatetimes.Add(lockingTime);
                 }
 
                 foreach (var helper in currentHelpers)
                 {
                     var deleteTask = helpersRef.Document(helper.Id).DeleteAsync();
+                    var notificationTask = deleteTask.ContinueWith((task) =>
+                    {
+                        var availableTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, helper.RoleId, helper.AvailableMembers, FirestoreModels.HelperStatus.Available, FirestoreModels.HelperStatus.RequirementDeleted);
+                        var preselectedTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, helper.RoleId, helper.PreselectedMembers, FirestoreModels.HelperStatus.Preselected, FirestoreModels.HelperStatus.RequirementDeleted);
+                        var lockedTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, helper.RoleId, helper.LockedMembers, FirestoreModels.HelperStatus.Locked, FirestoreModels.HelperStatus.RequirementDeleted);
+                        return Task.WhenAll(availableTask, preselectedTask, lockedTask);
+                    }, TaskContinuationOptions.NotOnFaulted);                    
                     dataChangesTasks.Add(deleteTask);
+                    dataChangesTasks.Add(notificationTask);
                 }
             }
             
@@ -138,9 +146,23 @@ namespace Api.Manager
             var eventRef = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
                 .Collection(Paths.EVENT).Document(eventId);
-          
-            var helpers = eventRef.Collection(Paths.HELPER).ListDocumentsAsync();
-            await helpers.ForEachAwaitAsync(helper => helper.DeleteAsync());
+            var requirementsRef = eventRef.Collection(Paths.HELPER);
+            var requirements = await _helperManager.GetAll(departmentId, eventId);
+
+            var tasks = new List<Task>();
+            foreach(var requirement in requirements)
+            {
+                var requirementRef = requirementsRef.Document(requirement.Id);
+                var requirementTask = requirementRef.DeleteAsync().ContinueWith(task =>
+                {
+                    var availableTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.AvailableMembers, FirestoreModels.HelperStatus.Available, FirestoreModels.HelperStatus.EventDeleted);
+                    var preselectedTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.PreselectedMembers, FirestoreModels.HelperStatus.Preselected, FirestoreModels.HelperStatus.EventDeleted);
+                    var lockedTask = _helperNotificationManager.UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.LockedMembers, FirestoreModels.HelperStatus.Locked, FirestoreModels.HelperStatus.EventDeleted);
+                    return Task.WhenAll(availableTask, preselectedTask, lockedTask);
+                });
+                tasks.Add(requirementTask);
+            }
+            await Task.WhenAll(tasks);
             await eventRef.DeleteAsync();
         }
 
