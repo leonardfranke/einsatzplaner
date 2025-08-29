@@ -14,11 +14,11 @@ namespace Web.Extensions
         {
             var str = "";
             if (helper.LockedMembers.Any())
-                str += $"Fest: {string.Join(", ", helper.LockedMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}{Environment.NewLine}";
+                str += $"Fest: {string.Join(", ", helper.LockedMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}<br/>";
             if (helper.PreselectedMembers.Any())
-                str += $"Ausgewählt: {string.Join(", ", helper.PreselectedMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}{Environment.NewLine}";
+                str += $"Ausgewählt: {string.Join(", ", helper.PreselectedMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}<br/>";
             if (helper.AvailableMembers.Any())
-                str += $"Verfügbar: {string.Join(", ", helper.AvailableMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}{Environment.NewLine}";
+                str += $"Verfügbar: {string.Join(", ", helper.AvailableMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}<br/>";
             return str;
         }
 

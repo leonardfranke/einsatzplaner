@@ -154,7 +154,7 @@
                                     <div class="d-flex align-items-baseline gap-3">
                                         <Web.Views.Checkbox.HelperCheckbox Event="eventObj" Helper="helper" Member="Member" Role="role" Groups="Groups"/>
                                         <AuthorizeView Roles="IsAdmin">                                            
-                                            <Tooltip Title="@(helper.GetRegisteredMembers(Members))"><p>@(helper.GetRegistrationCount())</p></Tooltip>
+                                            <Tooltip IsHtml="true" Title="@(helper.GetRegisteredMembers(Members))"><p>@(helper.GetRegistrationCount())</p></Tooltip>
                                         </AuthorizeView>
                                     </div>
                                 }
