@@ -1,14 +1,3 @@
 ﻿@inherits HelperCheckboxBase
 
-@if(IsPlayerLocked)
-{
-    <input style=@($"accent-color: {BackgroundColor};") type="checkbox" disabled checked />
-}
-else if (IsMemberPermitted || IsPreselectedOrAvailable)
-{
-    <InputCheckbox style=@($"accent-color: {BackgroundColor};") @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsPreselectedOrAvailable" />
-}
-else if(!IsMemberPermitted)
-{
-    <input style=@($"accent-color: black;") type="checkbox" disabled />
-}
+<BlazorBootstrap.CheckboxInput Disabled="@(IsPlayerLocked || (!IsPreselectedOrAvailable && (!IsMemberPermitted || !IsEventInFuture)))" @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsEntered" Style=@($"accent-color: {BackgroundColor};") />

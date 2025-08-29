@@ -30,7 +30,11 @@ namespace Web.Views
         [Parameter]
         public IEnumerable<Models.Group> Groups { private get; set; }
 
-        public bool IsPreselectedOrAvailable { get => IsPreselected || IsAvailable;  set { } }
+        public bool IsPreselectedOrAvailable => IsPreselected || IsAvailable;
+
+        public bool IsEntered { get => IsPlayerLocked || IsPreselectedOrAvailable; set { } }
+
+        public bool IsEventInFuture => Event.EventDate.ToUniversalTime() >= DateTime.UtcNow;
 
         public bool IsMemberPermitted => Role != null && _requiredGroups != null 
             && (_requiredGroups.Count() == 0 || _requiredGroups.SelectMany(group => group.MemberIds).Contains(Member.Id)) 
