@@ -10,6 +10,8 @@ jobs:
     env:
       FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
       FIRESTORE_EMULATOR_HOST: '127.0.0.1:9199'
+      MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
+      MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -42,7 +44,7 @@ jobs:
           dotnet run --no-build --no-restore --project Api &
           dotnet run --no-build --no-restore --project Web &
           cd TestWebsite
-          firebase emulators:exec "dotnet test --no-build --no-restore --environment MAILJET_API_KEY=${{ secrets.MAILJET_API_KEY }} --environment MAILJET_SECRET_KEY=${{ secrets.MAILJET_SECRET_KEY }}" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/EmptyDepartment/"
+          firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/EmptyDepartment/"
 
   tests_optimizer:
     runs-on: ubuntu-latest
