@@ -10,8 +10,6 @@ jobs:
     env:
       FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
       FIRESTORE_EMULATOR_HOST: '127.0.0.1:9199'
-      MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
-      MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -40,6 +38,9 @@ jobs:
         working-directory: TestWebsite
 
       - name: Run api, website and tests
+        env:
+          MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
+          MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
         run: |
           dotnet run --no-build --no-restore --project Api &
           dotnet run --no-build --no-restore --project Web &
