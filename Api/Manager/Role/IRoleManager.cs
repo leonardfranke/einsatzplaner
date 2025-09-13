@@ -1,10 +1,12 @@
-﻿using DTO;
+﻿using Api.Models;
+using DTO;
 
 namespace Api.Manager
 {
     public interface IRoleManager
     {
         public Task<List<RoleDTO>> GetAll(string departmentId);
+        public Task<Role> GetRole(string departmentId, string roleId);
 
         public Task Delete(string departmentId, string roleId);
 

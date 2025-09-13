@@ -58,6 +58,8 @@ namespace Api.Manager
 
         public async Task<EventCategoryDTO> GetById(string departmentId, string eventCategoryId)
         {
+            if (string.IsNullOrEmpty(eventCategoryId))
+                return null;
             var eventCategoryReference = GetCollectionReference(departmentId)
                 .Document(eventCategoryId);
             var snapshot = await eventCategoryReference.GetSnapshotAsync();

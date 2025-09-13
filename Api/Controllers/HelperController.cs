@@ -1,7 +1,6 @@
 ﻿using Api.Manager;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
-using NuGet.Packaging.Signing;
 
 namespace Api.Controllers
 {
@@ -9,20 +8,20 @@ namespace Api.Controllers
     [ApiController]
     public class HelperController : ControllerBase
     {
-        private IHelperManager _helperManager;
+        private IEventManager _eventManager;
 
-        public HelperController(IHelperManager helperManager)
+        public HelperController(IEventManager eventManager)
         {
-            _helperManager = helperManager;
+            _eventManager = eventManager;
         }
 
         [HttpGet]
         public Task<List<HelperDTO>> GetAll(string departmentId, string? eventId)
         {
             if(!string.IsNullOrEmpty(eventId))
-                return _helperManager.GetAll(departmentId, eventId);
+                return _eventManager.GetRequirementsOfEvent(departmentId, eventId);
 
-            return _helperManager.GetAll(departmentId);
+            return _eventManager.GetAllRequirements(departmentId);
         }
 
         [HttpPost("SetIsHelping/{departmentId}/{eventId}/{helperId}/{memberId}")]
@@ -31,13 +30,13 @@ namespace Api.Controllers
             var parsed = bool.TryParse(isAvailableString, out bool isAvailable);
             if (!parsed)
                 return;
-            await _helperManager.SetIsAvailable(departmentId, eventId, helperId, memberId, isAvailable);
+            await _eventManager.SetIsAvailable(departmentId, eventId, helperId, memberId, isAvailable);
         }
 
         [HttpPost("UpdateLockedMembers/{departmentId}/{eventId}/{helperId}")]
         public Task UpdateLockedMembers([FromRoute] string departmentId, [FromRoute] string eventId, [FromRoute] string helperId, [FromBody] UpdateMembersListDTO updateMembersList)
         {
-            return _helperManager.UpdateLockedMembers(departmentId, eventId, helperId, updateMembersList);
+            return _eventManager.UpdateLockedMembers(departmentId, eventId, helperId, updateMembersList);
         }
 
 

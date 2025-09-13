@@ -1,7 +1,9 @@
+using Api.Mailjet;
 using Api.Manager;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
+using Mailjet.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -50,6 +52,20 @@ var firebaseAuthApiBasePath =
     "http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/";
 builder.Services.AddHttpClient("FIREBASE_AUTH", client => client.BaseAddress = new Uri(firebaseAuthApiBasePath));
 
+var mailJetApiKey = Environment.GetEnvironmentVariable("MAILJET_API_KEY");
+var mailJetSecretKey = Environment.GetEnvironmentVariable("MAILJET_SECRET_KEY");
+builder.Services.AddHttpClient("MAILJET", client =>
+{
+    client.SetDefaultSettings();
+    client.UseBasicAuthentication(mailJetApiKey, mailJetSecretKey);
+});
+
+builder.Services.AddSingleton<IMailjetClient, MyMailjetClient>(serviceProvicer =>
+{
+    var clientFactory = serviceProvicer.GetService<IHttpClientFactory>();
+    return new MyMailjetClient(clientFactory.CreateClient("MAILJET"), builder.Environment.IsDevelopment());
+});
+
 builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
@@ -59,9 +75,7 @@ builder.Services.AddSingleton<IRoleManager, RoleManager>();
 builder.Services.AddSingleton<IQualificationManager, QualificationManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
-builder.Services.AddSingleton<IHelperManager, HelperManager>();
 builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
-builder.Services.AddSingleton<IHelperNotificationManager, HelperNotificationManager>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

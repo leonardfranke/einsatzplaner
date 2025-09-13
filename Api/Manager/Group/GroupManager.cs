@@ -69,5 +69,14 @@ namespace Api.Manager
             await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
             await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
         }
+
+        public async Task<Group> GetById(string departmentId, string groupId)
+        {
+            if (string.IsNullOrEmpty(groupId))
+                return null;
+            var groupReference = GetGroupCollectionReference(departmentId).Document(groupId);
+            var snapshot = await groupReference.GetSnapshotAsync();
+            return snapshot.ConvertTo<Group>();
+        }
     }
 }

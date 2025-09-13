@@ -87,5 +87,14 @@ namespace Api.Manager
             if (updateMembersList.FormerMembers.Any())
                 await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, updateMembersList.FormerMembers);
         }
+
+        public async Task<Role> GetRole(string departmentId, string roleId)
+        {
+
+            var rolesReference = GetRoleCollectionReference(departmentId);
+            var roleReference = rolesReference.Document(roleId);
+            var snapshot = await roleReference.GetSnapshotAsync();
+            return snapshot.ConvertTo<Role>();
+        }
     }
 }

@@ -18,7 +18,7 @@ namespace Api.Controllers
         [HttpGet]
         public Task<List<EventDTO>> GetAll(string departmentId)
         {
-            return _eventManager.GetAll(departmentId);
+            return _eventManager.GetAllEvents(departmentId);
         }
 
         [HttpGet("{departmentId}/{eventId}")]
@@ -30,7 +30,7 @@ namespace Api.Controllers
         [HttpPost()]
         public Task UpdateOrCreate([FromBody] UpdateEventDTO updateEvent)
         {
-            return _eventManager.UpdateOrCreate(updateEvent);
+            return _eventManager.UpdateOrCreateEvent(updateEvent);
         }
 
         [HttpDelete("{departmentId}/{eventId}")]

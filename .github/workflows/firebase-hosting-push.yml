@@ -94,7 +94,10 @@ jobs:
           source: deploy
           env_vars: |-
             FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
-          secrets: FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
+          secrets: |-
+            FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
+            MAILJET_API_KEY=MAILJET_API_KEY:latest
+            MAILJET_SECRET_KEY=MAILJET_SECRET_KEY:latest
           flags: '--allow-unauthenticated --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --gpu=0 --memory=256Mi --port=8080'
 
       - run: gcloud artifacts docker images delete europe-west1-docker.pkg.dev/einsatzplaner/cloud-run-source-deploy/einsatzplaner --quiet
