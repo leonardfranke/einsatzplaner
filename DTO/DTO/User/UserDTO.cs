@@ -5,6 +5,7 @@
         public string Name { get; set; }
         public string Uid { get; set; }
         public bool IsDisabled { get; set; }
+        public string Email { get; set; }
         public bool IsEmailVerified { get; set; }
     }
 }

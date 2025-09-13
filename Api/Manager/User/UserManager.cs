@@ -1,5 +1,4 @@
 ﻿using DTO;
-using FirebaseAdmin;
 using FirebaseAdmin.Auth;
 using static Api.Manager.IUserManager;
 
@@ -26,6 +25,7 @@ namespace Api.Manager
                     Name = userRecord.DisplayName,
                     Uid = userRecord.Uid,
                     IsDisabled = userRecord.Disabled,
+                    Email = userRecord.Email,
                     IsEmailVerified = userRecord.EmailVerified
                 };
             }

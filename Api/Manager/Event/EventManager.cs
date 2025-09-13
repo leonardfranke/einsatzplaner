@@ -18,9 +18,9 @@ namespace Api.Manager
         private IDepartmentManager _departmentManager;
         private IMemberManager _memberManager;
         private IEventCategoryManager _eventCategoryManager;
+        private IUserManager _userManager;
 
-        public EventManager(FirestoreDb firestoreDb, IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager
-            )
+        public EventManager(FirestoreDb firestoreDb, IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager, IUserManager userManager)
         {
             _firestoreDb = firestoreDb;
             _groupManager = groupManager;
@@ -29,6 +29,7 @@ namespace Api.Manager
             _departmentManager = departmentManager;
             _memberManager = memberManager;
             _eventCategoryManager = eventCategoryManager;
+            _userManager = userManager;
         }
 
         public async Task UpdateOrCreateEvent(UpdateEventDTO updateEventDTO)
@@ -433,15 +434,18 @@ namespace Api.Manager
                 foreach(var memberId in requirementNotificationDict.Keys.Union(eventNotificationDict.Keys).Union(deletionNotificationDict.Keys).Distinct())
                 {
                     var member = await _memberManager.GetMember(department.Id, memberId);
+                    if (member.EmailNotificationActive == false)
+                        continue;
+                    var user = await _userManager.GetUserData(memberId);
                     if (!TimeZoneInfo.TryFindSystemTimeZoneById("Europe/Berlin", out var timeZoneOfMember))
                     {
                         timeZoneOfMember = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
                     }
                     var emailBuilder = new TransactionalEmailBuilder()
                         .WithFrom(new SendContact("noreply@einsatzplaner.net", "Einsatzplaner"))
-                        .WithTo(new SendContact("leonard.franke@t-online.de", "Leonard Franke"))
+                        .WithTo(new SendContact(user.Email, user.Name))
                         .WithSubject("Änderungen Einsatzplaner");
-                    var text = new StringBuilder($"Hallo {member.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
+                    var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
                     
                     if(requirementNotificationDict.ContainsKey(memberId))
                     {
