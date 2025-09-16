@@ -297,7 +297,7 @@ namespace Web.Pages
             return Helpers.Where(helper => helper.EventId == @event.Id).ToList();
         }
 
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
+        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime? gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
         {
             var sendChangesFunc = async (bool removeMembers) =>
             {

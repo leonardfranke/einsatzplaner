@@ -51,7 +51,7 @@ namespace Web.Views
         public bool IsEventLoading { get; set; }
 
         [Parameter]
-        public Func<string?, string?, string?, DateTime, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
+        public Func<string?, string?, string?, DateTime?, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
 
         public ElementReference GroupSelect;
 
@@ -104,9 +104,17 @@ namespace Web.Views
                 categoryData.Add(helper.RoleId, new((int)helper.RequiredAmount, lockingTime, helper.RequiredGroups, helper.RequiredQualifications.ToDictionary(pair => pair.Key, pair => (int)pair.Value)));
             }
 
-            var dateHasChanged = IsUpdate && EventData.Date != Event?.EventDate;
-            await SaveEventFunc(Event?.Id, EventData.GroupId, EventData.EventCategoryId, EventData.Date, null, categoryData, dateHasChanged);
-            if(!dateHasChanged)
+            var dateHasChanged = EventData.Date != Event?.EventDate;
+            var showRemoveMembersModal = IsUpdate && dateHasChanged;
+            await SaveEventFunc(
+                Event?.Id, 
+                EventData.GroupId, 
+                EventData.EventCategoryId, 
+                dateHasChanged ? EventData.Date : null, 
+                null, 
+                categoryData,
+                showRemoveMembersModal);
+            if(!showRemoveMembersModal)
                 await CloseModal();
             IsEventSaving = false;
         }
