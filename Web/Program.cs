@@ -4,6 +4,7 @@ using Firebase.Auth.Repository;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using MudBlazor.Services;
 using Web;
 using Web.Checks;
 using Web.Manager;
@@ -48,6 +49,7 @@ builder.Services.AddCascadingAuthenticationState();
 
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddBlazoredSessionStorage();
-builder.Services.AddBlazorBootstrap();
+builder.Services.AddBlazorBootstrap(); 
+builder.Services.AddMudServices();
 
 await builder.Build().RunAsync();

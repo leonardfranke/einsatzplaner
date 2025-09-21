@@ -222,6 +222,9 @@ namespace Api.Manager
 
         public async Task<List<HelperDTO>> GetRequirementsOfEvent(string departmentId, string eventId)
         {
+            if (string.IsNullOrEmpty(eventId))
+                return new();
+
             var helpersSnapshot = await GetRequirementsReference(departmentId, eventId).GetSnapshotAsync();
 
             var helpers = new List<Requirement>();

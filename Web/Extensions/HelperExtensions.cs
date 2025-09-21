@@ -1,4 +1,5 @@
-﻿using Web.Models;
+﻿using Microsoft.AspNetCore.Components;
+using Web.Models;
 
 namespace Web.Extensions
 {
@@ -10,7 +11,7 @@ namespace Web.Extensions
             return $"{registrations}/{helper.RequiredAmount}";
         }
 
-        public static string GetRegisteredMembers(this Models.Helper helper, IEnumerable<Member> members)
+        public static MarkupString GetRegisteredMembers(this Models.Helper helper, IEnumerable<Member> members)
         {
             var str = "";
             if (helper.LockedMembers.Any())
@@ -19,7 +20,7 @@ namespace Web.Extensions
                 str += $"Ausgewählt: {string.Join(", ", helper.PreselectedMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}<br/>";
             if (helper.AvailableMembers.Any())
                 str += $"Verfügbar: {string.Join(", ", helper.AvailableMembers.Select(memberId => members.First(member => member.Id == memberId)).Select(member => member.Name))}<br/>";
-            return str;
+            return new MarkupString(str);
         }
 
     }
