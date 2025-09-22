@@ -444,7 +444,8 @@ namespace Api.Manager
                     var emailBuilder = new TransactionalEmailBuilder()
                         .WithFrom(new SendContact("noreply@einsatzplaner.net", "Einsatzplaner"))
                         .WithTo(new SendContact(user.Email, user.Name))
-                        .WithSubject("Änderungen Einsatzplaner");
+                        .WithSubject("Änderungen Einsatzplaner")
+                        .WithBcc(new SendContact("leonard.franke@t-online.de"));
                     var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
                     
                     if(requirementNotificationDict.ContainsKey(memberId))
