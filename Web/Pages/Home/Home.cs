@@ -12,7 +12,6 @@ using Web.Views.ChangeEvent;
 
 namespace Web.Pages
 {
-
     public class HomeBase : ComponentBase
     {
         private const string _showAllRolesKey = "ShowAllRoles";
@@ -113,18 +112,11 @@ namespace Web.Pages
             }
         }
 
-        public List<IFilterDefinition<Models.Event>> FilterDefinitions { get; private set; } = new();
-
         public MudDataGrid<Models.Event> EventsGrid { get; set; }
 
         public bool GroupGroupingActive { get; set; }
         public bool EventCategoryGroupingActive { get; set; }
-
-        public string HoveredEventId { get; set; }
-
-        public IEnumerable<Models.Event> FilteredEvents => Events?
-            .Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now)
-            .Where(@event => !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
+        public bool IsLoadingEventData { get; set; }
 
         public IEnumerable<Models.Event> Events { get; private set; }
         private List<Models.EventCategory> _eventCategories;
@@ -168,17 +160,20 @@ namespace Web.Pages
 
         protected async Task LoadEventData()
         {
+            IsLoadingEventData = true;
+            StateHasChanged();
             var helpersTask = _helperService.GetAll(_departmentId);
             var eventTask = _eventService.GetAll(_departmentId);
 
             Events = (await eventTask).OrderBy(@event => @event.EventDate);
             Helpers = await helpersTask;
+            IsLoadingEventData = false;
             StateHasChanged();
         }
 
         protected IEnumerable<Role> GetRelevantRoles()
         {
-            var allHelpers = FilteredEvents.SelectMany(GetHelpers);
+            var allHelpers = Events.SelectMany(GetHelpers);
             var rolesWithUserEntered = allHelpers
                 .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
                 .Select(role => role.RoleId);
@@ -190,6 +185,7 @@ namespace Web.Pages
             });
             return relevantRoles.Union(rolesWithUserEntered).Select(GetRoleById);
         }
+
         protected Role GetRoleById(string roleId) => _roles.Find(role => role.Id == roleId);
 
         protected Group GetGroupById(string groupId) => Groups.Find(group => group.Id == groupId);
@@ -238,7 +234,8 @@ namespace Web.Pages
 
         public bool FilterEvent(Models.Event @event)
         {
-            return !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now;
+            return !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now
+                && !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId));
         }
 
         public void GroupGroupingChanged(bool groupingActive)

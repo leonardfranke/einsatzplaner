@@ -12,13 +12,10 @@
     return;
 }
 
-@if (FilteredEvents == null)
-    return;
-
 <MudStack Row>
     <MudTooltip Arrow Text="Du bist fest als Helfer eingeplant. Du kannst dich nicht mehr austragen.">
         <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none;" Disabled Value="true" Label="Fest eingeplant" />
+            <MudCheckBox Style="pointer-events:none;" Color="Color.Error" Disabled Value="true" Label="Fest eingeplant" />
         </div>
     </MudTooltip>
     <MudTooltip Arrow Text="Du hast dich als verfügbar eingetragen und wurdest als Helfer vorgemerkt. Du kannst dich weiterhin austragen.">
@@ -33,12 +30,12 @@
     </MudTooltip>
     <MudTooltip Arrow Text="Du hast dich nicht als verfügbar eingetragen.">
         <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none" Color="Color.Error" Value="false" Label="Nicht eingetragen" />
+            <MudCheckBox Style="pointer-events:none" Value="false" Label="Nicht eingetragen" />
         </div>
     </MudTooltip>
     <MudTooltip Arrow Text="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">
         <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none" Color="Color.Error" Value="false" Disabled Label="Nicht zulässig" />
+            <MudCheckBox Style="pointer-events:none" Value="false" Disabled Label="Nicht zulässig" />
         </div>
     </MudTooltip>
     
@@ -65,7 +62,7 @@
     var relevantRoles = GetRelevantRoles();
 }
 
-<MudDataGrid @ref="EventsGrid" SortMode="SortMode.None" Items="Events" Groupable="true" Hover Filterable FilterMode="DataGridFilterMode.ColumnFilterMenu" QuickFilter="FilterEvent" @key="relevantRoles.Count()">
+<MudDataGrid Loading="@IsLoadingEventData" @ref="EventsGrid" SortMode="SortMode.None" Items="Events" Groupable="true" Hover Filterable FilterMode="DataGridFilterMode.ColumnFilterMenu" QuickFilter="FilterEvent" @key="relevantRoles.Count()">
     <Columns>
         <PropertyColumn Title="Gruppe" Groupable="true" Property="e => e.GroupId" GroupingChanged="GroupGroupingChanged" Filterable="false">
             <GroupTemplate>
@@ -99,7 +96,7 @@
                 <MudText>@name</MudText>
             </CellTemplate>
         </PropertyColumn>
-        <PropertyColumn Title="Datum" Property="e => e.EventDate" Groupable="false" Filterable="true" Chang>
+        <PropertyColumn Title="Datum" Property="e => e.EventDate" Groupable="false" Filterable="true">
             <FilterTemplate>
                 <MudCheckBox Label="Vergangene Events ausblenden" @bind-Value="HidePastEvents" />
             </FilterTemplate>
