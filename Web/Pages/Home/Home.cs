@@ -2,6 +2,7 @@
 using Blazored.LocalStorage;
 using DTO;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Web.Checks;
 using Web.Manager;
 using Web.Models;
@@ -11,23 +12,18 @@ using Web.Views.ChangeEvent;
 
 namespace Web.Pages
 {
-
     public class HomeBase : ComponentBase
     {
         private const string _showAllRolesKey = "ShowAllRoles";
         private const string _groupByGroupKey = $"GroupByGroup{nameof(Home)}";
         private const string _groupByEventCategoryKey = $"GroupByEventCategory{nameof(Home)}";
-        private const string _hidePastEventsKey = "HidePastEvents";
+        private const string _hidePastEventsKey = "HidePastEvents"; 
         private const string _hideEventsWithoutEnteringKey = "HideEventsWithoutEntering"; 
         private string _currentUserId;
         public List<Role> _roles;
 
         [CascadingParameter]
         public Modal Modal { get; set; }
-
-        public List<IGrouping<object, Models.Event>> BothEventGrouping { get => _bothEventGrouping.Value; }
-        public List<IGrouping<object, Models.Event>> GroupEventGrouping { get => _groupEventGrouping.Value; }
-        public List<IGrouping<object, Models.Event>> CategoryEventGrouping { get => _categoryEventGrouping.Value; }
 
         [Parameter]
         public string DepartmentUrl { get; set; }
@@ -84,23 +80,6 @@ namespace Web.Pages
 
         public bool IsPageLoading { get; set; }
 
-        public bool GroupByGroup {
-            get => _groupByGroup;
-            set
-            {
-                _groupByGroup = value;
-                _localStorage.SetItemAsync(_groupByGroupKey, value);
-            }
-        }
-        public bool GroupByEventCategory
-        {
-            get => _groupByEventCategory;
-            set
-            {
-                _groupByEventCategory = value;
-                _localStorage.SetItemAsync(_groupByEventCategoryKey, value);
-            }
-        }
         public bool ShowAllRoles
         {
             get => _showAllRoles;
@@ -108,17 +87,21 @@ namespace Web.Pages
             {
                 _showAllRoles = value;
                 _localStorage.SetItemAsync(_showAllRolesKey, value);
+                StateHasChanged();
             }
         }
-        public bool HidePastEvents { 
+
+        public bool HidePastEvents
+        {
             get => _hidePastEvents;
-            set 
+            set
             {
                 _hidePastEvents = value;
                 _localStorage.SetItemAsync(_hidePastEventsKey, value);
-                RecalculateGrouping();
+                StateHasChanged();
             }
         }
+
         public bool HideEventsWithoutEntering
         {
             get => _hideEventsWithoutEntering;
@@ -126,27 +109,21 @@ namespace Web.Pages
             {
                 _hideEventsWithoutEntering = value;
                 _localStorage.SetItemAsync(_hideEventsWithoutEnteringKey, value);
-                RecalculateGrouping();
             }
         }
 
-        public string HoveredEventId { get; set; }
+        public MudDataGrid<Models.Event> EventsGrid { get; set; }
 
-        public IEnumerable<Models.Event> FilteredEvents => events?
-            .Where(@event => !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now)
-            .Where(@event => !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
+        public bool GroupGroupingActive { get; set; }
+        public bool EventCategoryGroupingActive { get; set; }
+        public bool IsLoadingEventData { get; set; }
 
-        private List<Models.Event> events;
+        public IEnumerable<Models.Event> Events { get; private set; }
         private List<Models.EventCategory> _eventCategories;
         private List<Qualification> _qualifications;
         private string _departmentId;
-        private Lazy<List<IGrouping<object, Models.Event>>> _bothEventGrouping;
-        private Lazy<List<IGrouping<object, Models.Event>>> _groupEventGrouping;
-        private Lazy<List<IGrouping<object, Models.Event>>> _categoryEventGrouping;
         private bool _hidePastEvents;
         private bool _hideEventsWithoutEntering;
-        private bool _groupByGroup;
-        private bool _groupByEventCategory;
         private bool _showAllRoles;
 
         protected override async Task OnInitializedAsync()
@@ -172,8 +149,8 @@ namespace Web.Pages
             _eventCategories = await eventCategoriesTask;
             Groups = await groupsTask;
             _qualifications = await qualificationsTask;
-            GroupByGroup = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
-            GroupByEventCategory = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
+            GroupGroupingActive = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
+            EventCategoryGroupingActive = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
             HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
             HideEventsWithoutEntering = await _localStorage.GetItemAsync<bool>(_hideEventsWithoutEnteringKey);
             ShowAllRoles = await _localStorage.GetItemAsync<bool>(_showAllRolesKey);
@@ -183,44 +160,20 @@ namespace Web.Pages
 
         protected async Task LoadEventData()
         {
+            IsLoadingEventData = true;
+            StateHasChanged();
             var helpersTask = _helperService.GetAll(_departmentId);
             var eventTask = _eventService.GetAll(_departmentId);
 
-            events = await eventTask;
+            Events = (await eventTask).OrderBy(@event => @event.EventDate);
             Helpers = await helpersTask;
-            RecalculateGrouping();
+            IsLoadingEventData = false;
             StateHasChanged();
-        }
-
-        public string GetGroupHeading(IGrouping<object, Models.Event> group)
-        {
-            var unknown = "Sonstiges";
-            var groupName = string.Empty;
-            var eventCategoryName = string.Empty;
-            switch (GroupByGroup, GroupByEventCategory)
-            {
-                case (true, true):
-                    var key1 = ((Group, Models.EventCategory))group.Key;
-                    groupName = key1.Item1?.Name;
-                    eventCategoryName = key1.Item2?.Name;
-                    if(string.IsNullOrEmpty(groupName) && string.IsNullOrEmpty(eventCategoryName))
-                        return unknown;
-                    else 
-                        return $"{groupName ?? unknown} - {eventCategoryName ?? unknown}";
-                case (false, true):
-                    var key2 = (Models.EventCategory)group.Key;
-                    return key2?.Name ?? unknown;
-                case (true, false):
-                    var key3 = (Group)group.Key;
-                    return key3?.Name ?? unknown;
-                default:
-                    return string.Empty;
-            }            
         }
 
         protected IEnumerable<Role> GetRelevantRoles()
         {
-            var allHelpers = FilteredEvents.SelectMany(GetHelpers);
+            var allHelpers = Events.SelectMany(GetHelpers);
             var rolesWithUserEntered = allHelpers
                 .Where(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId))
                 .Select(role => role.RoleId);
@@ -231,57 +184,6 @@ namespace Web.Pages
                 return role.IsFree || role.MemberIds.Contains(_currentUserId);                
             });
             return relevantRoles.Union(rolesWithUserEntered).Select(GetRoleById);
-        }
-
-        private void RecalculateGrouping()
-        {
-            _bothEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Models.Event, object>(game =>
-                {
-                    var group = Groups.FirstOrDefault(group => group.Id.Equals(game.GroupId));
-                    var eventCategory = _eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId));
-                    return (group, eventCategory);
-                })
-                .OrderBy(eventGroup =>
-                {
-                    var key = ((Models.Group, Models.EventCategory))eventGroup.Key;
-
-                    int groupIndex;
-                    if (key.Item1 is Models.Group group)
-                        groupIndex = Groups.IndexOf(group);
-                    else
-                        groupIndex = Groups.Count;
-
-                    int eventCategoryIndex;
-                    if (key.Item2 is Models.EventCategory eventCategory)
-                        eventCategoryIndex = _eventCategories.IndexOf(eventCategory);
-                    else
-                        eventCategoryIndex = _eventCategories.Count;
-
-                    return groupIndex * Groups.Count + eventCategoryIndex;
-
-                }).ToList()
-            );
-            _groupEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Models.Event, object>(game =>
-                    Groups.FirstOrDefault(group => group.Id.Equals(game.GroupId)))
-                .OrderBy(eventGroup =>
-                {
-                    if (eventGroup.Key is Models.Group group)
-                        return Groups.IndexOf(group);
-                    else
-                        return Groups.Count;
-                }).ToList());
-            _categoryEventGrouping = new(() =>
-                FilteredEvents.GroupBy<Models.Event, object>(game =>
-                    _eventCategories.FirstOrDefault(category => category.Id.Equals(game.EventCategoryId)))
-                .OrderBy(eventGroup =>
-                {
-                    if (eventGroup.Key is Models.EventCategory eventCategory)
-                        return _eventCategories.IndexOf(eventCategory);
-                    else
-                        return _eventCategories.Count;
-                }).ToList());
         }
 
         protected Role GetRoleById(string roleId) => _roles.Find(role => role.Id == roleId);
@@ -328,6 +230,24 @@ namespace Web.Pages
             {
                 await sendChangesFunc(false);
             }            
+        }
+
+        public bool FilterEvent(Models.Event @event)
+        {
+            return !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now
+                && !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId));
+        }
+
+        public void GroupGroupingChanged(bool groupingActive)
+        {
+            GroupGroupingActive = groupingActive;
+            _localStorage.SetItemAsync(_groupByGroupKey, GroupGroupingActive);
+        }
+
+        public void EventCategoryGroupingChanged(bool groupingActive)
+        {
+            EventCategoryGroupingActive = groupingActive;
+            _localStorage.SetItemAsync(_groupByEventCategoryKey, EventCategoryGroupingActive);
         }
 
         protected void OpenGame(Models.Event @event)

@@ -14,22 +14,16 @@ namespace Web.Manager
         private ILocalStorageService _localStorage;
         private ISessionStorageService _sessionStorage;
         private IMemberService _memberService;
-        private IGroupService _groupService;
-        private IDepartmentService _departmentService;
         private string loggedInUserKey = "LoggedInUser";
         private string departmentKey = "Department";
 
         public AuthManager(IAuthService authService, 
             ILocalStorageService localStorage,
             ISessionStorageService sessionStorage,
-            IGroupService groupService, 
-            IDepartmentService departmentService,
             IMemberService memberService)
         {
             _authService = authService;
             _localStorage = localStorage;
-            _groupService = groupService;
-            _departmentService = departmentService;
             _memberService = memberService;
             _sessionStorage = sessionStorage;
         }

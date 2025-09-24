@@ -1,5 +1,6 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Web.Manager;
 using Web.Services;
 
@@ -42,17 +43,17 @@ namespace Web.Views
 
         public bool IsPlayerLocked => Helper.LockedMembers.Contains(currentUserId);
 
-        public string BackgroundColor {
+        public Color BackgroundColor {
             get 
             {
                 if (IsPlayerLocked)
-                    return "red";
+                    return Color.Error;
                 else if (IsPreselected)
-                    return "orange";
+                    return Color.Warning;
                 else if (IsAvailable)
-                    return "green";
+                    return Color.Success;
                 else
-                    return "";
+                    return Color.Default;
             }}
 
         [Inject]

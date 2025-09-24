@@ -1,3 +1,7 @@
 ﻿@inherits HelperCheckboxBase
 
-<BlazorBootstrap.CheckboxInput Disabled="@(IsPlayerLocked || (!IsPreselectedOrAvailable && (!IsMemberPermitted || !IsEventInFuture)))" @onmousedown="ChangeHelpingEvent" @onclick:preventDefault @bind-Value="IsEntered" Style=@($"accent-color: {BackgroundColor};") />
+<MudCheckBox Color="@BackgroundColor"
+             Disabled="@(IsPlayerLocked || (!IsPreselectedOrAvailable && (!IsMemberPermitted || !IsEventInFuture)))"
+             @onmousedown="ChangeHelpingEvent"
+             @onclick:preventDefault
+             @bind-Value="IsEntered"/>

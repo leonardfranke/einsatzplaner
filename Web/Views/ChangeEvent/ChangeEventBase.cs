@@ -1,10 +1,7 @@
-﻿using Blazored.LocalStorage;
-using DTO;
+﻿using DTO;
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.JSInterop;
-using Web.Manager;
 using Web.Models;
 using Web.Services;
 
@@ -53,10 +50,6 @@ namespace Web.Views
         [Parameter]
         public Func<string?, string?, string?, DateTime?, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
 
-        public ElementReference GroupSelect;
-
-        public ElementReference EventCategorySelect;
-
         [SupplyParameterFromForm]
         public FormModel EventData { get; set; }
         public EditContext EditContext { get; set; }
@@ -76,7 +69,8 @@ namespace Web.Views
             {
                 EventData.GroupId = Event.GroupId;
                 EventData.EventCategoryId = Event.EventCategoryId;
-                EventData.Date = Event.EventDate;
+                EventData.Date = Event.EventDate.Date;
+                EventData.Begin = Event.EventDate.TimeOfDay;
                 var helpers = await _helperService.GetAll(Event.DepartmentId, Event.Id);
                     
                 foreach (var helper in helpers)
@@ -98,19 +92,21 @@ namespace Web.Views
         {
             IsEventSaving = true;
             var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>();
+            var beginDatetimeToSave = EventData.Date.Value.Date + EventData.Begin.Value;
             foreach (var helper in EventData.Helpers)
             {
-                var lockingTime = EventData.Date.AddDays(-helper.LockingPeriod);
-                categoryData.Add(helper.RoleId, new((int)helper.RequiredAmount, lockingTime, helper.RequiredGroups, helper.RequiredQualifications.ToDictionary(pair => pair.Key, pair => (int)pair.Value)));
+                var lockingTime = beginDatetimeToSave.AddDays(-helper.LockingPeriod);
+                var requiredGroups = helper.RestrictGroups ? helper.RequiredGroups : new();
+                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, requiredGroups, helper.RequiredQualifications));
             }
 
-            var dateHasChanged = EventData.Date != Event?.EventDate;
+            var dateHasChanged = beginDatetimeToSave != Event?.EventDate;
             var showRemoveMembersModal = IsUpdate && dateHasChanged;
             await SaveEventFunc(
                 Event?.Id, 
                 EventData.GroupId, 
                 EventData.EventCategoryId, 
-                dateHasChanged ? EventData.Date : null, 
+                dateHasChanged ? beginDatetimeToSave : null, 
                 null, 
                 categoryData,
                 showRemoveMembersModal);
@@ -152,14 +148,16 @@ namespace Web.Views
         {
             var category = GetRoleById(categoryId);
             var defaultLockingPeriod = category?.LockingPeriod ?? 0;
-            EventData.Helpers.Add(new HelperFormModel
+            var newRequirement = new HelperFormModel
             {
                 RoleId = categoryId,
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
                 RequiredGroups = requiredGroups ?? new(),
                 RequiredQualifications = requiredQualifications?.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
-            });
+            };
+            newRequirement.RestrictGroups = newRequirement.RequiredGroups.Any();
+            EventData.Helpers.Add(newRequirement);
         }
 
         public void AddQualificationToRole(HelperFormModel helperForm, string qualificationId)
@@ -182,17 +180,13 @@ namespace Web.Views
             return Qualifications.Where(qualification => qualification.RoleId == roleId);
         }
 
-        public void SetLockingPeriod(HelperFormModel helperForm, string value)
+        public void SetLockingPeriod(HelperFormModel helperForm, int period)
         {
-            if (!int.TryParse(value, out int period))
-                period = 1;
             helperForm.LockingPeriod = period;
         }
 
-        public void SetRequiredAmount(HelperFormModel helperForm, string value)
+        public void SetRequiredAmount(HelperFormModel helperForm, int amount)
         {
-            if (!int.TryParse(value, out int amount))
-                amount = 1;
             helperForm.RequiredAmount = amount;
         }
 
@@ -214,15 +208,18 @@ namespace Web.Views
             private DateTime _date = DateTime.Now.Date;
             public string GroupId { get; set; } = "";
             public string EventCategoryId { get; set; } = "";
-            public DateTime Date { 
+            public DateTime? Date { 
                 get => _date.ToLocalTime(); 
                 set 
                 {
                     var date = value;
-                    if(date.Kind == DateTimeKind.Unspecified)
-                        date = new DateTime(date.Ticks, DateTimeKind.Local);
-                    _date = date;
+                    if(date.Value.Kind == DateTimeKind.Unspecified)
+                        date = new DateTime(date.Value.Ticks, DateTimeKind.Local);
+                    _date = date.Value;
                 } }
+
+            public TimeSpan? Begin { get; set; }
+            public TimeSpan? End { get; set; }
             public List<HelperFormModel> Helpers { get; set; } = new();
         }
 
@@ -231,6 +228,7 @@ namespace Web.Views
             public string RoleId { get; set; }
             public int LockingPeriod { get; set; }
             public int RequiredAmount { get; set; }
+            public bool RestrictGroups { get; set; }
             public List<string> RequiredGroups { get; set; } = new();
             public Dictionary<string, int> RequiredQualifications { get; set; } = new();
         }

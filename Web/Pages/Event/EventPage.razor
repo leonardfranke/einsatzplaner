@@ -21,59 +21,54 @@
     @GetPageTitle()
 </p>
 
-@if(Helpers.Any())
-{    
-    <p class="fs-3">Helfer:</p>
-    <div class="table-responsive">
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th scope="col">Eintragung</th>
-                    <th scope="col">Kategorie</th>
-                    <th scope="col">Bedarf</th>
-                    <th scope="col">Feste Helfer</th>
-                    <AuthorizeView Roles="IsAdmin">
-                        <th scope="col">Vorausgewählte Helfer</th>
-                        <th scope="col">Verfügbare Helfer</th>
-                    </AuthorizeView>
-                    <th scope="col">Zugelassene Gruppen</th>
-                    <th scope="col">Sperrzeitpunkt</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var help in Helpers)
+<MudDataGrid Items="Helpers">
+    <NoRecordsContent>
+        Keine Bedarfe angegeben
+    </NoRecordsContent>
+    <Columns>
+        <TemplateColumn Title="Eintragung">
+            <CellTemplate>
+                <HelperCheckbox Event="Event" Helper="@context.Item" Role="@GetRoleById(context.Item.RoleId)" Member="Member" Groups="Groups" ValueChangedCallback="StateHasChanged" />
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="Kategorie">
+            <CellTemplate>
+                <MudText>@(GetRoleById(@context.Item.RoleId).Name)</MudText>                
+            </CellTemplate>
+        </TemplateColumn>
+        <PropertyColumn Property="req => req.RequiredAmount" Title="Bedarf" Sortable="false" />
+        <TemplateColumn Title="Feste Helfer">
+            <CellTemplate>
+                @(GetDisplayMemberNames(context.Item.LockedMembers))
+                <AuthorizeView Roles="IsAdmin" Context="authContext">
+                    <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="() => OpenLockedMembersSelected(context.Item)" />                   
+                </AuthorizeView>
+            </CellTemplate>
+        </TemplateColumn>
+        @if(AuthState.User.IsInRole("IsAdmin"))
+        {
+            <PropertyColumn Title="Vorausgewählte Helfer" Property="req => GetDisplayMemberNames(req.PreselectedMembers)" Sortable="false" />
+            <PropertyColumn Title="Verfügbare Helfer" Property="req => GetDisplayMemberNames(req.AvailableMembers)" Sortable="false" />
+        }
+        <TemplateColumn Title="Zugelassene Gruppen">
+            <CellTemplate>
+                @{
+                    var ret = GetDisplayGroupNames(context.Item.RequiredGroups);
+                }
+                @if (ret.Item2)
                 {
-                    var role = GetRoleById(help.RoleId);
-                    <tr>
-                        <th><HelperCheckbox Event="Event" Helper="help" Role="role" Member="Member" Groups="Groups" ValueChangedCallback="StateHasChanged" /></th>
-                        <th>@role.Name</th>
-                        <th>@help.RequiredAmount</th>
-                        <th class="position-relative">
-                            @(GetDisplayMemberNames(help.LockedMembers))
-                            <AuthorizeView Roles="IsAdmin">
-                                <i class="bi bi-plus-lg position-absolute top-0 end-0 mt-2 me-1 cursor-pointer d-inline-block"
-                                @onclick="() => OpenLockedMembersSelected(help)"></i>
-                            </AuthorizeView>
-                        </th>
-                        <AuthorizeView Roles="IsAdmin">
-                            <th>@GetDisplayMemberNames(help.PreselectedMembers)</th>
-                            <th>@GetDisplayMemberNames(help.AvailableMembers)</th>
-                        </AuthorizeView>
-                        <th>@{
-                                var ret = GetDisplayGroupNames(help.RequiredGroups);
-                                @if(ret.Item2)
-                                {
-                                    <i>@ret.Item1</i>
-                                }
-                                else
-                                {
-                                    @ret.Item1
-                                }
-                            }</th>
-                        <th>@help.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")</th>
-                    </tr>            
-                }        
-            </tbody>
-        </table>
-    </div>
-}
+                    <i>@ret.Item1</i>
+                }
+                else
+                {
+                    @ret.Item1
+                }
+            </CellTemplate>
+        </TemplateColumn>
+        <TemplateColumn Title="Sperrzeitpunkt">
+            <CellTemplate>
+                @context.Item.LockingTime.ToLocalTime().ToString("dd.MM.yyyy")
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+</MudDataGrid>

@@ -1,6 +1,7 @@
 ﻿using BlazorBootstrap;
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Web.Checks;
 using Web.Manager;
 using Web.Models;
@@ -51,11 +52,15 @@ namespace Web.Pages
         private IMemberService _memberService { get; set; }
 
         [Inject]
+        private AuthenticationStateProvider _authStateProvider { get; set; }
+
+        [Inject]
         private IGroupService _groupService { get; set; }
         [Inject]
         private IDepartmentUrlCheck _departmentUrlCheck { get; set; }
         public Models.Member Member { get; private set; }
         public List<Group> Groups { get; private set; }
+        public AuthenticationState AuthState { get; set; }
 
         public bool IsPageLoading { get; set; }
 
@@ -95,6 +100,9 @@ namespace Web.Pages
             var groupsTask = _groupService.GetAll(department.Id);
             var rolesTask = _roleService.GetAll(department.Id);
             var membersTask = _memberService.GetAll(department.Id);
+
+            AuthState = await _authStateProvider.GetAuthenticationStateAsync();
+
             Groups = await groupsTask;
             _group = Groups?.Find(group => group.Id == Event.GroupId);
             if (!string.IsNullOrEmpty(Event.EventCategoryId))
