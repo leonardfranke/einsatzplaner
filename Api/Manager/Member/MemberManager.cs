@@ -50,6 +50,7 @@ namespace Api.Manager
             {
                 Name = user.DisplayName,
                 IsAdmin = isAdmin,
+                EmailNotificationActive = true
             };
 
             await _firestoreDb
