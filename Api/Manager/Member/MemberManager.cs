@@ -49,7 +49,7 @@ namespace Api.Manager
             var newMember = new Member
             {
                 Name = user.DisplayName,
-                IsAdmin = isAdmin
+                IsAdmin = isAdmin,
             };
 
             await _firestoreDb
