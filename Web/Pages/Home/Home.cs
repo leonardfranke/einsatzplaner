@@ -199,11 +199,47 @@ namespace Web.Pages
             return Helpers.Where(helper => helper.EventId == @event.Id).ToList();
         }
 
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime? gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
+        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime? gameDate, string? locationId, double? latitude, double? longitude, string? locationText, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
         {
             var sendChangesFunc = async (bool removeMembers) =>
             {
-                await _eventService.UpdateOrCreate(_departmentId, eventId, groupId, eventCategoryId, gameDate, place, helpers, removeMembers);
+                var updateEventDTO = new UpdateEventDTO
+                {
+                    DepartmentId = _departmentId,
+                    EventId = eventId,
+                    GroupId = groupId,
+                    EventCategoryId = eventCategoryId,
+                    Date = gameDate,
+                    RemoveMembers = removeMembers,
+                    LocationId = locationId,
+                    LocationText = locationText,
+                    Latitude = latitude,
+                    Longitude = longitude
+                };
+
+                if (helpers != null)
+                {
+                    var updateHelpers = helpers.Select(helper =>
+                    {
+                        var roleId = helper.Key;
+                        var value = helper.Value;
+                        var requiredAmount = value.Item1;
+                        var lockingTime = value.Item2;
+                        var requiredGroups = value.Item3;
+                        var requiredQualifications = value.Item4;
+                        return new UpdateHelperDTO
+                        {
+                            RoleId = roleId,
+                            RequiredAmount = requiredAmount,
+                            LockingTime = lockingTime,
+                            RequiredGroups = requiredGroups,
+                            RequiredQualifications = requiredQualifications
+                        };
+                    });
+                    updateEventDTO.Helpers = updateHelpers.ToList();
+                }
+
+                await _eventService.UpdateOrCreate(updateEventDTO);
                 await LoadEventData();
                 if(string.IsNullOrEmpty(eventId))
                     _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));

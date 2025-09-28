@@ -12,6 +12,10 @@ namespace Api.Models
         [FirestoreProperty]
         public DateTime Date { get; set; }
         [FirestoreProperty]
-        public GeoPoint? Place { get; set; }
+        public string? LocationId { get; set; }
+        [FirestoreProperty]
+        public GeoPoint? Location { get; set; }
+        [FirestoreProperty]
+        public string? LocationText { get; set; }
     }
 }

@@ -15,43 +15,10 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<bool> UpdateOrCreate(string departmentId, string? eventId, string groupId, string? eventCategoryId, DateTime? gameDate, Geolocation? place, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool removeMembers)
+        public async Task<bool> UpdateOrCreate(UpdateEventDTO updateEventDTO)
         {            
             try
-            {                
-                var updateEventDTO = new UpdateEventDTO
-                {
-                    DepartmentId = departmentId,
-                    EventId = eventId,
-                    GroupId = groupId,
-                    EventCategoryId = eventCategoryId,
-                    Date = gameDate,
-                    RemoveMembers = removeMembers,
-                    Place = place
-                };
-
-                if (helpers != null)
-                {
-                    var updateHelpers = helpers.Select(helper =>
-                    {
-                        var roleId = helper.Key;
-                        var value = helper.Value;
-                        var requiredAmount = value.Item1;
-                        var lockingTime = value.Item2;
-                        var requiredGroups = value.Item3;
-                        var requiredQualifications = value.Item4;
-                        return new UpdateHelperDTO
-                        {
-                            RoleId = roleId,
-                            RequiredAmount = requiredAmount,
-                            LockingTime = lockingTime,
-                            RequiredGroups = requiredGroups,
-                            RequiredQualifications = requiredQualifications
-                        };                        
-                    });
-                    updateEventDTO.Helpers = updateHelpers.ToList();
-                }
-
+            {
                 var content = JsonContent.Create(updateEventDTO);
                 var response = await _httpClient.PostAsync(new Uri($"/api/Event", UriKind.Relative), content);
                 var ret = await response.Content.ReadAsStringAsync();

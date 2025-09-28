@@ -1,6 +1,5 @@
 ﻿using DTO;
 using Api.Models;
-using Microsoft.CodeAnalysis.Elfie.Model;
 
 namespace Api.Converter
 {
@@ -19,17 +18,13 @@ namespace Api.Converter
                 DepartmentId = departmentId,
                 GroupId = @event.GroupId,
                 EventCategoryId = @event.EventCategoryId,
-                Id = @event.Id
+                Id = @event.Id,
+                Latitude = @event.Location?.Latitude,
+                Longitude = @event.Location?.Longitude,
+                LocationId = @event.LocationId,
+                LocationText = @event.LocationText
             };
 
-            if (@event.Place.HasValue)
-            {
-                eventDTO.Place = new Geolocation()
-                {
-                    Latitude = @event.Place.Value.Latitude,
-                    Longitude = @event.Place.Value.Longitude
-                };
-            }
             return eventDTO;
         }
     }

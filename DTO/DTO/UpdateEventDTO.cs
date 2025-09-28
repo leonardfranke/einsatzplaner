@@ -9,6 +9,9 @@
         public DateTime? Date { get; set; }
         public List<UpdateHelperDTO>? Helpers { get; set; }
         public bool RemoveMembers { get; set; }
-        public Geolocation? Place { get; set; }
+        public string? LocationId { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationText { get; set; }
     }
 }

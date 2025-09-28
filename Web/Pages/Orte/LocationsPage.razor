@@ -1,0 +1,26 @@
+﻿@page "/{departmentUrl}/locations"
+@inherits LocationsPageBase
+
+<MudDataGrid Items="Locations">
+    <ToolBarContent>
+        <MudIconButton Icon="@Icons.Material.Filled.Add" OnClick="() => OpenEditLocation(null)"/>
+    </ToolBarContent>
+    <NoRecordsContent>
+        Keine Orte gespeichert
+    </NoRecordsContent>
+    <Columns>
+        <HierarchyColumn></HierarchyColumn>
+        <PropertyColumn Property="loc => loc.Name" Title="Bezeichnung" />
+        <PropertyColumn Property="loc => loc.OriginalName" Title="Adresse" />
+        <TemplateColumn Editable>
+            <CellTemplate>
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="() => OpenEditLocation(context.Item)"/>
+            </CellTemplate>
+        </TemplateColumn>
+    </Columns>
+    <ChildRowContent>
+        <LeafletForBlazor.RealTimeMap Parameters="@GetMapParameter(context.Item)" width="100%" height="400px">
+
+        </LeafletForBlazor.RealTimeMap>
+    </ChildRowContent>
+</MudDataGrid>

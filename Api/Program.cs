@@ -4,6 +4,7 @@ using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Mailjet.Client;
+using Supabase;
 
 var builder = WebApplication.CreateBuilder(args);
 var configFile = $"appsettings.{builder.Environment.EnvironmentName}.json";
@@ -66,6 +67,12 @@ builder.Services.AddSingleton<IMailjetClient, MyMailjetClient>(serviceProvicer =
     return new MyMailjetClient(clientFactory.CreateClient("MAILJET"), builder.Environment.IsDevelopment());
 });
 
+var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
+var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_KEY");
+var client = new Client(supabaseUrl, supabaseKey);
+await client.InitializeAsync();
+builder.Services.AddSingleton(serviceProvicer => client);
+
 builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
 builder.Services.AddSingleton<IEventCategoryManager, EventCategoryManager>();
@@ -76,6 +83,7 @@ builder.Services.AddSingleton<IQualificationManager, QualificationManager>();
 builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
+builder.Services.AddSingleton<ILocationManager, LocationManager>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

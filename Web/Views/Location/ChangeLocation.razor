@@ -1,0 +1,17 @@
+﻿@inherits ChangeLocationBase
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="NewName" Label="Bezeichnung"/>
+        <LocationAutocomplete LocationChangedFunc="PositionChanged" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="SaveLocation">
+            @if (IsSaving)
+            {
+                <MudProgressCircular Indeterminate/>
+            }
+            Speichern
+        </MudButton>
+    </DialogActions>
+</MudDialog>

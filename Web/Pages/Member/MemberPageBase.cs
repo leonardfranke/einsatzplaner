@@ -33,9 +33,6 @@ namespace Web.Pages
         [Inject]
         private ILoginCheck _loginCheck { get; set; }
 
-        [Inject]
-        private IAuthManager _authManager { get; set; }
-
         public List<MembershipRequest> MembershipRequests { get; set; } = new();
 
         public List<Models.Member> Members { get; set; } = new();

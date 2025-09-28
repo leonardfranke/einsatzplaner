@@ -48,7 +48,7 @@ namespace Web.Views
         public bool IsEventLoading { get; set; }
 
         [Parameter]
-        public Func<string?, string?, string?, DateTime?, Geolocation?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
+        public Func<string?, string?, string?, DateTime?, string?, double?, double?, string?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
 
         [SupplyParameterFromForm]
         public FormModel EventData { get; set; }
@@ -106,8 +106,11 @@ namespace Web.Views
                 Event?.Id, 
                 EventData.GroupId, 
                 EventData.EventCategoryId, 
-                dateHasChanged ? beginDatetimeToSave : null, 
-                null, 
+                dateHasChanged ? beginDatetimeToSave : null,
+                EventData.LocationId,
+                EventData.Latitude,
+                EventData.Longitude,
+                EventData.LocationText,
                 categoryData,
                 showRemoveMembersModal);
             if(!showRemoveMembersModal)
@@ -220,6 +223,10 @@ namespace Web.Views
 
             public TimeSpan? Begin { get; set; }
             public TimeSpan? End { get; set; }
+            public string? LocationId { get; set; }
+            public double? Latitude { get; set; }
+            public double? Longitude { get; set; }
+            public string? LocationText { get; set; }
             public List<HelperFormModel> Helpers { get; set; } = new();
         }
 

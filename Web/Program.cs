@@ -9,6 +9,7 @@ using Web;
 using Web.Checks;
 using Web.Manager;
 using Web.Services;
+using Web.Services.Locations;
 using Web.Services.Member;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
@@ -39,6 +40,7 @@ builder.Services.AddScoped<IQualificationService, QualificationService>();
 builder.Services.AddScoped<IRequirementGroupService, RequirementsGroupService>();
 builder.Services.AddScoped<ILoginCheck, LoginCheck>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<ILocationsService, LocationsService>();
 builder.Services.AddScoped<IUserRepository, FileUserRepository>(serviceProvider => new FileUserRepository("localUser"));
 
 builder.Services.AddHttpClient("BACKEND", client => client.BaseAddress = new Uri(builder.Configuration["BACKEND_ADDRESS"]));

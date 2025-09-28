@@ -31,9 +31,17 @@ namespace Api.FirestoreModels
         [FirestoreProperty]
         public string EventId { get; set; }
         [FirestoreProperty]
-        public DateTime PreviousDate { get; set; }
+        public DateTime? PreviousDate { get; set; }
         [FirestoreProperty]
-        public DateTime NewDate { get; set; }
+        public DateTime? NewDate { get; set; }
+        [FirestoreProperty]
+        public string? PreviousLocationText { get; set; }
+        [FirestoreProperty]
+        public string? NewLocationText { get; set; }
+        [FirestoreProperty]
+        public GeoPoint? PreviousLocation { get; set; }
+        [FirestoreProperty]
+        public GeoPoint? NewLocation { get; set; }
         [FirestoreProperty]
         public List<string> Members { get; set; }
     }

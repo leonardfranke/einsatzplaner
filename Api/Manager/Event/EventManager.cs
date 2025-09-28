@@ -41,7 +41,10 @@ namespace Api.Manager
             var eventCategoryId = updateEventDTO.EventCategoryId;
             var updateHelpers = updateEventDTO.Helpers;
             var removeMembers = updateEventDTO.RemoveMembers;
-            GeoPoint? place = updateEventDTO.Place.HasValue ? new GeoPoint(updateEventDTO.Place.Value.Latitude, updateEventDTO.Place.Value.Longitude) : null;
+            var locationId = updateEventDTO.LocationId;
+            var locationText = updateEventDTO.LocationText;
+            GeoPoint? location = updateEventDTO.Latitude != null && updateEventDTO.Longitude != null 
+                ? new GeoPoint(updateEventDTO.Latitude.Value, updateEventDTO.Longitude.Value) : null;
 
             var eventsRef = GetEventsReference(departmentId);
             DocumentReference eventRef;
@@ -57,9 +60,17 @@ namespace Api.Manager
                 {
                     GroupId = groupId,
                     EventCategoryId = eventCategoryId,
-                    Date = (DateTime)dateUTC,
-                    Place = place
+                    Date = (DateTime)dateUTC
                 };
+                if(string.IsNullOrEmpty(updateEventDTO.LocationId))
+                {
+                    newEvent.LocationText = locationText;
+                    newEvent.Location = location;
+                }
+                else
+                {
+                    newEvent.LocationId = updateEventDTO.LocationId;
+                }
                 eventRef = await eventsRef.AddAsync(newEvent);
             }
             else
@@ -67,7 +78,9 @@ namespace Api.Manager
                 eventRef = eventsRef.Document(eventId);
                 var valueToUpdate = new Dictionary<string, object>
                 {
-                    { nameof(Event.Place), place }
+                    { nameof(Event.LocationId), locationId },
+                    { nameof(Event.Location), location },
+                    { nameof(Event.LocationText), locationText }
                 };
                 if(groupId != null)
                     valueToUpdate.Add(nameof(Event.GroupId), groupId);
@@ -403,7 +416,7 @@ namespace Api.Manager
                         if (!eventNotificationDict.ContainsKey(memberId))
                             eventNotificationDict.Add(memberId, []);
                         if (notification.PreviousDate != notification.NewDate)
-                            eventNotificationDict[memberId].Add((notification.EventId, notification.PreviousDate, notification.NewDate));
+                            eventNotificationDict[memberId].Add((notification.EventId, notification.PreviousDate.Value, notification.NewDate.Value));
                     }
                 }
 

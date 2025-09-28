@@ -22,7 +22,10 @@ namespace Web.Converter
                 GroupId = @event.GroupId,
                 EventCategoryId = @event.EventCategoryId,
                 Id = @event.Id,
-                Place = @event.Place
+                LocationId = @event.LocationId,
+                Latitude = @event.Latitude,
+                Longitude = @event.Longitude,
+                LocationText = @event.LocationText
             };
         }
     }
