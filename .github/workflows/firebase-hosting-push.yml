@@ -5,6 +5,17 @@ name: Test and deploy everything
 on: workflow_dispatch
 
 jobs:
+  test_supabase_migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase start
+      - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT }}
+      - run: supabase dump --linked --file prod_dump.sql
+      - run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f prod_dump.sql
+      - run: supabase migration up --local
+
   tests_frontend:
     runs-on: ubuntu-latest
     env:
@@ -71,7 +82,7 @@ jobs:
             
   deploy_backend:   
     runs-on: ubuntu-latest
-    needs: [tests_frontend, tests_optimizer]
+    needs: [tests_frontend, tests_optimizer, test_supabase_migration]
     if: ${{ success() }}
     outputs: 
       backend-url: ${{ steps.backend-deployment.outputs.url }}
@@ -95,8 +106,6 @@ jobs:
           service: einsatzplaner
           region: europe-west1
           source: deploy
-          env_vars: |-
-            FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }}
           secrets: |-
             FIREBASE_CREDENTIALS=FIREBASE_CREDENTIALS:latest
             MAILJET_API_KEY=MAILJET_API_KEY:latest
