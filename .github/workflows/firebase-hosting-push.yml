@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
-      - run: supabase start -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,studio,edge-runtime,logflare,vector,supavisor
+      - run: supabase db start
       - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT }}
       - run: supabase dump --linked --file prod_dump.sql
       - run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f prod_dump.sql
