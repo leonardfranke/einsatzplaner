@@ -146,3 +146,13 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_EINSATZPLANER }}
           channelId: live
           projectId: einsatzplaner
+
+  deploy_supabase:
+    runs-on: ubuntu-latest
+    needs: [test_supabase_migration, deploy_frontend]
+    if: ${{ success() }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+      - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT }}
+      - run: supabase migration up --linked
