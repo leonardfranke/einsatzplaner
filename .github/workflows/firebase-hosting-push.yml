@@ -16,7 +16,7 @@ jobs:
           version: latest
       - run: supabase db start
       - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT }}
-      - run: supabase dump --linked --file prod_dump.sql
+      - run: supabase db dump --linked --file prod_dump.sql
       - run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f prod_dump.sql
       - run: supabase migration up --local
 
