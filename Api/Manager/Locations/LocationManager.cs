@@ -27,7 +27,7 @@ namespace Api.Manager
 
         public async Task<List<Location>> GetAll(string departmentId)
         {
-            var response = await _supabaseClient.From<Location>().Get();
+            var response = await _supabaseClient.From<Location>().Where(loc => loc.DepartmentId == departmentId).Get();
             return response.Models;
         }
 
