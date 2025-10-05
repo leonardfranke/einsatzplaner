@@ -171,5 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT }}
       - run: supabase migration up --linked
