@@ -69,7 +69,11 @@ builder.Services.AddSingleton<IMailjetClient, MyMailjetClient>(serviceProvicer =
 
 var supabaseUrl = Environment.GetEnvironmentVariable("SUPABASE_URL");
 var supabaseKey = Environment.GetEnvironmentVariable("SUPABASE_KEY");
-var client = new Client(supabaseUrl, supabaseKey);
+var supebaseOptions = new SupabaseOptions
+{
+    Schema = "api"
+};
+var client = new Client(supabaseUrl, supabaseKey, supebaseOptions);
 await client.InitializeAsync();
 builder.Services.AddSingleton(serviceProvicer => client);
 
