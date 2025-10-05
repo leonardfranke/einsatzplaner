@@ -450,7 +450,7 @@ namespace Api.Manager
                 foreach(var memberId in requirementNotificationDict.Keys.Union(eventNotificationDict.Keys).Union(deletionNotificationDict.Keys).Distinct())
                 {
                     var member = await _memberManager.GetMember(department.Id, memberId);
-                    if (member.EmailNotificationActive == false)
+                    if (member?.EmailNotificationActive != true)
                         continue;
                     var user = await _userManager.GetUserData(memberId);
                     if (!TimeZoneInfo.TryFindSystemTimeZoneById("Europe/Berlin", out var timeZoneOfMember))
