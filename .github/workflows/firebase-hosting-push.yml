@@ -124,6 +124,7 @@ jobs:
             MAILJET_SECRET_KEY=MAILJET_SECRET_KEY:latest
             SUPABASE_URL=SUPABASE_URL:latest
             SUPABASE_KEY=SUPABASE_API_KEY:latest
+            PLACES_API_KEY=PLACES_API_KEY:latest
           flags: '--allow-unauthenticated --no-cpu-boost --cpu-throttling --max-instances=1 --min=0 --min-instances=0 --cpu=0.08 --memory=256Mi --port=8080'
 
       - run: gcloud artifacts docker images delete europe-west1-docker.pkg.dev/einsatzplaner/cloud-run-source-deploy/einsatzplaner --quiet
