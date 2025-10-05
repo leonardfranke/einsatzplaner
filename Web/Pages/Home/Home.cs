@@ -7,6 +7,7 @@ using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
+using Web.Services.Locations;
 using Web.Views.BasicModals;
 using Web.Views.ChangeEvent;
 
@@ -58,6 +59,9 @@ namespace Web.Pages
         private IRoleService _roleService { get; set; }
 
         [Inject]
+        private ILocationsService _locationService { get; set; }
+
+        [Inject]
         private IEventService _eventService { get; set; }
 
         [Inject]
@@ -70,7 +74,6 @@ namespace Web.Pages
         private IHelperService _helperService { get; set; }
 
         public List<Group> Groups { get; private set; }
-
 
         public List<Models.Helper> Helpers { get; private set; }
 
@@ -125,6 +128,7 @@ namespace Web.Pages
         private bool _hidePastEvents;
         private bool _hideEventsWithoutEntering;
         private bool _showAllRoles;
+        private List<Location> _locations;
 
         protected override async Task OnInitializedAsync()
         {
@@ -141,7 +145,9 @@ namespace Web.Pages
             var groupsTask = _groupService.GetAll(_departmentId);
             var membersTask = _memberService.GetAll(_departmentId);
             var qualificationsTask = _qualificationService.GetAll(_departmentId);
+            var locationsTask = _locationService.GetAll(_departmentId);
 
+            _locations = await locationsTask;
             var eventCategoriesTask = _eventCategoryService.GetAll(_departmentId);
             Members = await membersTask;
             Member = Members.FirstOrDefault(member => member.Id == _currentUserId);
@@ -267,6 +273,34 @@ namespace Web.Pages
                 await sendChangesFunc(false);
             }            
         }
+        
+        public MarkupString GetLocationText(Models.Event @event)
+        {
+            var res = "";
+            if (string.IsNullOrEmpty(@event.LocationId))
+            {
+                if (!string.IsNullOrEmpty(@event.LocationText))
+                    res = @event.LocationText;
+            }
+            else
+            {
+                var location = _locations.FirstOrDefault(loc => loc.Id == @event.LocationId);
+                if (location == null)
+                    res = "<i>Unbekannte Adresse<i>";
+                else
+                    res = location.Name;
+            }
+            return new MarkupString(res);
+        }
+
+        public MarkupString GetLocationGroupText(string val)
+        {
+            var res = "";
+            var location = _locations.FirstOrDefault(loc => loc.Id == val);
+            if (location != null)
+                res = location.Name;
+            return new MarkupString(res);
+        }
 
         public bool FilterEvent(Models.Event @event)
         {
@@ -303,7 +337,8 @@ namespace Web.Pages
                 { nameof(ChangeEvent.Roles), _roles },
                 { nameof(ChangeEvent.EventCategories), _eventCategories },
                 { nameof(ChangeEvent.Groups), Groups },
-                { nameof(ChangeEvent.Qualifications), _qualifications }
+                { nameof(ChangeEvent.Qualifications), _qualifications },
+                { nameof(ChangeEvent.Locations), _locations }
             };
             await Modal.ShowAsync<ChangeEvent>(title: @event == null ? "Event erstellen" : "Event bearbeiten", parameters: parameters);
         }

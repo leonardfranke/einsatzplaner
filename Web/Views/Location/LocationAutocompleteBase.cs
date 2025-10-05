@@ -13,13 +13,18 @@ namespace Web.Views
         public Action<object> LocationChangedFunc { get; set; }
 
         [Parameter]
-        public List<LocationDTO> Locations { get; set; }
+        public List<Models.Location> Locations { get; set; }
 
         public async Task<IEnumerable<object>> Search(string searchText, CancellationToken cancellationToken) 
         {
             var filteredLocations = new List<object>();
             if(Locations != null)
-                filteredLocations.AddRange(Locations.Where(loc => loc.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)));
+            {
+                if (string.IsNullOrEmpty(searchText))
+                    filteredLocations.AddRange(Locations);
+                else
+                    filteredLocations.AddRange(Locations.Where(loc => loc.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase)));
+            }
             if (string.IsNullOrWhiteSpace(searchText) || searchText.Length < 6)
                 return filteredLocations;
             var searchResult = await _locationService.SearchLocation(searchText);
@@ -29,8 +34,8 @@ namespace Web.Views
 
         public string ItemToString(object item)
         {
-            if (item is LocationDTO locDTO)
-                return locDTO.Name;
+            if (item is Models.Location loc)
+                return loc.Name;
             else if (item is PlacesAutocompleteDTO place)
                 return place.Text;
             else

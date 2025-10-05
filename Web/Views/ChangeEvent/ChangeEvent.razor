@@ -3,6 +3,7 @@
 @using Web.Extensions
 @using BlazorBootstrap
 @using Web.Models
+@using Web.Views.Location
 
 @if(IsEventLoading)
 {
@@ -33,7 +34,7 @@ else
             <MudDatePicker Label="Datum" AutoClose="true" @bind-Date="EventData.Date" DisplayMonths="2"/>
         </MudItem>
         <MudItem xs="6">
-            <MudAutocomplete T="string" Label="Ort" Placeholder="Feature nicht verfügbar" Disabled=true></MudAutocomplete>
+            <LocationAutocomplete LocationChangedFunc="PositionChanged" Locations="Locations" />
         </MudItem>
         <MudItem xs="6">
             <MudTimePicker Label="Beginn" AutoClose="true" MinuteSelectionStep="5" @bind-Time="EventData.Begin" />

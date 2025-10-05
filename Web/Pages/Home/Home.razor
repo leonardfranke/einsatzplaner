@@ -107,6 +107,14 @@
                 <MudText>@dateString</MudText>
             </CellTemplate>
         </PropertyColumn>
+        <PropertyColumn Property="x => x.LocationId" Filterable="false" Title="Ort">
+            <CellTemplate>
+                @GetLocationText(context.Item)
+            </CellTemplate>
+            <GroupTemplate>
+                @GetLocationGroupText(context.Grouping.Key as string)
+            </GroupTemplate>
+        </PropertyColumn>
         @foreach (var role in relevantRoles)
         {
             <TemplateColumn Title="@role.Name" Context="columnContext" Groupable="false">

@@ -28,6 +28,9 @@ namespace Web.Views
         public Func<string, Task> DeleteGameFunc { get; set; }
 
         [Parameter]
+        public List<Models.Location> Locations { get; set; }
+
+        [Parameter]
         public List<Role> Roles { get;  set; }
 
         [Parameter]
@@ -71,6 +74,10 @@ namespace Web.Views
                 EventData.EventCategoryId = Event.EventCategoryId;
                 EventData.Date = Event.EventDate.Date;
                 EventData.Begin = Event.EventDate.TimeOfDay;
+                EventData.Latitude = Event.Latitude;
+                EventData.Longitude = Event.Longitude;
+                EventData.LocationId = Event.LocationId;
+                EventData.LocationText = Event.LocationText;
                 var helpers = await _helperService.GetAll(Event.DepartmentId, Event.Id);
                     
                 foreach (var helper in helpers)
@@ -86,6 +93,24 @@ namespace Web.Views
             }
             RequirementGroups = await requirementGroupsTask;
             IsEventLoading = false;
+        }
+
+        public void PositionChanged(object value)
+        {
+            if (value is LocationInfo locationInfo)
+            {
+                EventData.LocationText = locationInfo.Text;
+                EventData.Latitude = locationInfo.Latitude;
+                EventData.Longitude = locationInfo.Longitude;
+                EventData.LocationId = null;
+            } 
+            else if(value is Models.Location location)
+            {
+                EventData.LocationText = null;
+                EventData.Latitude = null;
+                EventData.Longitude = null;
+                EventData.LocationId = location.Id;
+            }
         }
 
         public async Task SaveGame()
