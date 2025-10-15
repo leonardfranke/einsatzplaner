@@ -11,7 +11,7 @@ namespace Web.Services.Locations
 
         public Task<PlacesPlaceDetailDTO> SearchPlace(string placeId);
 
-        //public Task<Location> GetById(string departmentId, string locationId);
+        public Task<Location> GetById(string departmentId, string locationId);
 
         public Task DeleteLocation(string departmentId, string locationId);
 

@@ -6,6 +6,7 @@ using Web.Checks;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
+using Web.Services.Locations;
 using Web.Views.MemberSelection;
 
 namespace Web.Pages
@@ -29,10 +30,16 @@ namespace Web.Pages
 
         public List<Models.Helper> Helpers { get; private set; }
 
+        public Location Location { get; private set; }
+
         public RealTimeMap.LoadParameters LoadParameters { get; private set; }
 
         [Inject]
         private ILoginCheck _loginCheck { get; set; }
+
+        [Inject]
+        private ILocationsService _locationService { get; set; }
+
         [Inject]
         private IEventService _gameService { get; set; }
 
@@ -69,19 +76,6 @@ namespace Web.Pages
         private Models.EventCategory _eventCategory;
         private Models.Group _group;
 
-        protected override void OnInitialized()
-        {
-            LoadParameters = new RealTimeMap.LoadParameters
-            {
-                location = new RealTimeMap.Location
-                {
-                    latitude = 51.164305,
-                    longitude = 10.4541205,
-                },
-                zoomLevel = 5.5
-            };
-        }
-
         protected override async Task OnParametersSetAsync()
         {
             IsPageLoading = true;
@@ -100,6 +94,10 @@ namespace Web.Pages
             var groupsTask = _groupService.GetAll(department.Id);
             var rolesTask = _roleService.GetAll(department.Id);
             var membersTask = _memberService.GetAll(department.Id);
+            if(!string.IsNullOrEmpty(Event.LocationId))
+            {
+                Location = await _locationService.GetById(_departmentId, Event.LocationId);
+            }
 
             AuthState = await _authStateProvider.GetAuthenticationStateAsync();
 
@@ -197,6 +195,32 @@ namespace Web.Pages
             var dateInfo = Event.EventDate.ToString("dd.MM.yyyy HH:mm") + " Uhr";
             string[] titleparts = [eventInfos, dateInfo];
             return string.Join(", ", titleparts.Where(part => !string.IsNullOrEmpty(part)));
+        }
+
+        public RealTimeMap.LoadParameters GetMapParameter(Location location)
+        {
+            return new RealTimeMap.LoadParameters
+            {
+                location = new RealTimeMap.Location
+                {
+                    latitude = location.Latitude,
+                    longitude = location.Longitude
+                },
+                zoomLevel = 17,
+                basemap = new RealTimeMap.Basemap
+                {
+                    basemapLayers = new List<RealTimeMap.BasemapLayer>
+                    {
+                        new RealTimeMap.BasemapLayer
+                        {
+                            url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                            attribution = "© OpenStreetMap",
+                            title = "OSM",
+                            detectRetina = true
+                        }
+                    }
+                }
+            };
         }
     }
 }
