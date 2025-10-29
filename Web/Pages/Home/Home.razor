@@ -13,41 +13,19 @@
 }
 
 <MudStack Row>
-    <MudTooltip Arrow Text="Du bist fest als Helfer eingeplant. Du kannst dich nicht mehr austragen.">
-        <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none;" Color="Color.Error" Disabled Value="true" Label="Fest eingeplant" />
-        </div>
-    </MudTooltip>
-    <MudTooltip Arrow Text="Du hast dich als verfügbar eingetragen und wurdest als Helfer vorgemerkt. Du kannst dich weiterhin austragen.">
-        <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none;" Color="Color.Warning" Value="true" Label="Verfügbar und vorgemerkt" />
-        </div>
-    </MudTooltip>
-    <MudTooltip Arrow Text="Du hast dich als verfügbar eingetragen, wurdest aber noch nicht als Helfer ausgewählt. Du kannst dich jederzeit austragen.">
-        <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none;" Color="Color.Success" Value="true" Label="Verfügbar" />
-        </div>
-    </MudTooltip>
-    <MudTooltip Arrow Text="Du hast dich nicht als verfügbar eingetragen.">
-        <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none" Value="false" Label="Nicht eingetragen" />
-        </div>
-    </MudTooltip>
-    <MudTooltip Arrow Text="Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.">
-        <div style="pointer-events:auto;">
-            <MudCheckBox Style="pointer-events:none" Value="false" Disabled Label="Nicht zulässig" />
-        </div>
-    </MudTooltip>
-    
-    <MudSpacer/>
+    <MudSpacer />
     <AuthorizeView Roles="IsAdmin">
         <Authorized>
             <MudButton OnClick="() => EditGame(null)" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
                 Event erstellen
             </MudButton>
         </Authorized>
-    </AuthorizeView>    
+    </AuthorizeView>
+    <MudButton Variant="Variant.Filled" OnClick="OpenInfoDialog">Hilfe</MudButton>
     <MudMenu Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Label="Filter">
+        <MudMenuItem>
+            <MudCheckBox Label="Vergangene Events ausblenden" @bind-Value="HidePastEvents" />
+        </MudMenuItem>
         <MudMenuItem>
             <MudCheckBox Label="Events ohne Eintragung ausblenden" @bind-Value="HideEventsWithoutEntering" />
         </MudMenuItem>

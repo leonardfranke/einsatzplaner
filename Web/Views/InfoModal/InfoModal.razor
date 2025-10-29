@@ -1,0 +1,49 @@
+﻿<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">Hilfe</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="6" md="4">
+                <div style="pointer-events:auto;">
+                    <MudCheckBox Style="pointer-events:none;" Color="Color.Error" Disabled Value="true" Label="Fest eingeplant" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" md="8">
+                Du bist fest als Helfer eingeplant. Du kannst dich nicht mehr austragen.
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <div style="pointer-events:auto;">
+                    <MudCheckBox Style="pointer-events:none;" Color="Color.Warning" Value="true" Label="Verfügbar und vorgemerkt" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" md="8">
+                Du hast dich als verfügbar eingetragen und wurdest als Helfer vorgemerkt. Du kannst dich weiterhin austragen.
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <div style="pointer-events:auto;">
+                    <MudCheckBox Style="pointer-events:none;" Color="Color.Success" Value="true" Label="Verfügbar" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" md="8">
+                Du hast dich als verfügbar eingetragen, wurdest aber noch nicht als Helfer ausgewählt. Du kannst dich jederzeit austragen.
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <div style="pointer-events:auto;">
+                    <MudCheckBox Style="pointer-events:none" Value="false" Label="Nicht eingetragen" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" md="8">
+                Du hast dich nicht als verfügbar eingetragen.
+            </MudItem>
+            <MudItem xs="6" md="4">
+                <div style="pointer-events:auto;">
+                    <MudCheckBox Style="pointer-events:none" Value="false" Disabled Label="Nicht zulässig" />
+                </div>
+            </MudItem>
+            <MudItem xs="6" md="8">
+                Du bist nicht zugelassen dich bei diesem Event in dieser Rolle einzutragen.
+            </MudItem>        
+        </MudGrid>
+    </DialogContent>
+</MudDialog>

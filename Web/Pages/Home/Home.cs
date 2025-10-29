@@ -10,6 +10,7 @@ using Web.Services;
 using Web.Services.Locations;
 using Web.Views.BasicModals;
 using Web.Views.ChangeEvent;
+using Web.Views.InfoModal;
 
 namespace Web.Pages
 {
@@ -72,6 +73,9 @@ namespace Web.Pages
 
         [Inject]
         private IHelperService _helperService { get; set; }
+
+        [Inject]
+        private IDialogService _dialogService { get; set; }
 
         public List<Group> Groups { get; private set; }
 
@@ -157,7 +161,10 @@ namespace Web.Pages
             _qualifications = await qualificationsTask;
             GroupGroupingActive = await _localStorage.GetItemAsync<bool>(_groupByGroupKey);
             EventCategoryGroupingActive = await _localStorage.GetItemAsync<bool>(_groupByEventCategoryKey);
-            HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
+            if (await _localStorage.ContainKeyAsync(_hidePastEventsKey))
+                HidePastEvents = await _localStorage.GetItemAsync<bool>(_hidePastEventsKey);
+            else
+                HidePastEvents = true;
             HideEventsWithoutEntering = await _localStorage.GetItemAsync<bool>(_hideEventsWithoutEnteringKey);
             ShowAllRoles = await _localStorage.GetItemAsync<bool>(_showAllRolesKey);
             await LoadEventData();
@@ -175,6 +182,11 @@ namespace Web.Pages
             Helpers = await helpersTask;
             IsLoadingEventData = false;
             StateHasChanged();
+        }
+
+        public Task OpenInfoDialog()
+        {
+            return _dialogService.ShowAsync<InfoModal>(null);
         }
 
         protected IEnumerable<Role> GetRelevantRoles()

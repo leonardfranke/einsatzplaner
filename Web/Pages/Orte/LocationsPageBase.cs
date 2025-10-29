@@ -52,12 +52,7 @@ namespace Web.Pages.Orte
                 { x => x.Location, location },
                 { x => x.DepartmentId, _departmentId }
             };
-            var options = new DialogOptions
-            {
-                CloseButton = true,
-                CloseOnEscapeKey = true,
-            };
-            var dialog = await _dialogService.ShowAsync<ChangeLocation>(null, parameter, options);
+            var dialog = await _dialogService.ShowAsync<ChangeLocation>(null, parameter);
             var result = await dialog.Result;
             await ReloadLocations();
         }
