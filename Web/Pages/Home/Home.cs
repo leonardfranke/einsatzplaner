@@ -316,8 +316,8 @@ namespace Web.Pages
 
         public bool FilterEvent(Models.Event @event)
         {
-            return !HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now
-                && !HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId));
+            return (!HidePastEvents || @event.EventDate.AddDays(2) >= DateTime.Now)
+                && (!HideEventsWithoutEntering || GetHelpers(@event).Any(helper => helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(_currentUserId)));
         }
 
         public void GroupGroupingChanged(bool groupingActive)
