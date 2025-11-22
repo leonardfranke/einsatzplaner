@@ -196,9 +196,12 @@ namespace Api.Manager
             await eventRef.DeleteAsync().ContinueWith(task => CreateEventDeletionNotification(@event, allInvolvedMembers), TaskContinuationOptions.NotOnFaulted).Unwrap();
         }
 
-        public async Task<List<EventDTO>> GetAllEvents(string departmentId)
+        public async Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate)
         {
-            var snapshot = await GetEventsReference(departmentId).GetSnapshotAsync();
+            var snapshot = await GetEventsReference(departmentId)
+                .WhereGreaterThanOrEqualTo(nameof(Event.Date), fromDate.ToUniversalTime())
+                .WhereLessThanOrEqualTo(nameof(Event.Date), toDate.ToUniversalTime())
+                .GetSnapshotAsync();
             var events = new List<Event>();
             foreach (var document in snapshot)
             {
@@ -563,6 +566,19 @@ namespace Api.Manager
                 await Task.WhenAll(eventNotificationSnapshots.Select(notification => notification.Reference.DeleteAsync()));
                 await Task.WhenAll(deletionNotificationSnapshots.Select(notification => notification.Reference.DeleteAsync()));
             }
+        }
+
+        public async Task<Dictionary<string, int>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
+        {
+            var eventsInRange = await GetAllEvents(departmentId, fromDate, toDate);
+            var requirementsInRange = await Task.WhenAll(eventsInRange.Select(@event => GetRequirementsOfEvent(departmentId, @event.Id)));
+            var requirementsOfRole = requirementsInRange.SelectMany(l => l).Where(requirement => requirement.RoleId == roleId);
+
+            var counts = requirementsOfRole.SelectMany(requirement =>
+            {
+                return requirement.LockedMembers.Concat(requirement.PreselectedMembers).Concat(requirement.AvailableMembers);
+            }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
+            return counts;
         }
 
         private DocumentReference GetDepartmentReference(string departmentId)

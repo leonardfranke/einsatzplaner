@@ -18,7 +18,7 @@ namespace Api.Controllers
         [HttpGet]
         public Task<List<EventDTO>> GetAll(string departmentId)
         {
-            return _eventManager.GetAllEvents(departmentId);
+            return _eventManager.GetAllEvents(departmentId, DateTime.MinValue, DateTime.MaxValue);
         }
 
         [HttpGet("{departmentId}/{eventId}")]

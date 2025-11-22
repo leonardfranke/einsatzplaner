@@ -1,0 +1,39 @@
+﻿@page "/{departmentUrl}/stats"
+@inherits StatsPageBase
+
+
+<MudGrid>
+    <MudItem xs="4" md="3">
+        <MudBlazor.MudSelect Label="Rolle" @bind-Value="SelectedRoleId">
+            @foreach (var role in Roles)
+            {
+                <MudBlazor.MudSelectItem Value="@role.Id">@role.Name</MudBlazor.MudSelectItem>
+            }
+        </MudBlazor.MudSelect>
+    </MudItem>
+    <MudItem xs="8" md="6">
+        <MudDateRangePicker Label="Zeitraum auswählen" @bind-DateRange="DateRange" OpenTo="OpenTo.Month" />
+    </MudItem>
+    <MudItem xs="12" md="3">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadStats" Disabled="IsLoading">
+            @if(IsLoading)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate />    
+            }
+            Statistiken laden
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+<MudDataGrid Items="Stats.GetValueOrDefault(SelectedRoleId, new())" Class="mt-4">
+    <Columns>
+        <PropertyColumn Property="pair => pair.Key" Title="Nutzer">
+            <CellTemplate>
+                @(GetMemberById(context.Item.Key)?.Name ?? "Unbekannter Nutzer")
+            </CellTemplate>
+        </PropertyColumn>
+        <PropertyColumn Property="pair => pair.Value" Title="Anzahl Eintragungen"/>
+    </Columns>
+</MudDataGrid>
+
+

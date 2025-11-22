@@ -14,6 +14,7 @@ namespace Web.Services.Locations
         {
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
+
         public Task DeleteLocation(string departmentId, string locationId)
         {
             return _httpClient.DeleteAsync(new Uri($"/api/Location/{departmentId}/{locationId}", UriKind.Relative));

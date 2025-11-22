@@ -1,6 +1,7 @@
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Firebase.Auth.Repository;
+using Flurl.Http.Configuration;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -11,6 +12,7 @@ using Web.Manager;
 using Web.Services;
 using Web.Services.Locations;
 using Web.Services.Member;
+using Web.Services.Stats;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -32,6 +34,7 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider => provider.Get
 builder.Services.AddScoped<IAuthManager>(provider => provider.GetRequiredService<AuthManager>());
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IStatsService, StatsService>();
 builder.Services.AddScoped<IHelperService, HelperService>();
 builder.Services.AddScoped<IEventCategoryService, EventCategoryService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
@@ -44,6 +47,7 @@ builder.Services.AddScoped<ILocationsService, LocationsService>();
 builder.Services.AddScoped<IUserRepository, FileUserRepository>(serviceProvider => new FileUserRepository("localUser"));
 
 builder.Services.AddHttpClient("BACKEND", client => client.BaseAddress = new Uri(builder.Configuration["BACKEND_ADDRESS"]));
+builder.Services.AddSingleton<IFlurlClientCache>(sp => new FlurlClientCache().Add("BACKEND", builder.Configuration["BACKEND_ADDRESS"]));
 
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();

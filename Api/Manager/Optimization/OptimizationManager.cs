@@ -18,7 +18,7 @@ namespace Api.Manager
 
         public async Task OptimizeDepartment(string departmentId)
         {
-            var eventsTask = _eventManager.GetAllEvents(departmentId);
+            var eventsTask = _eventManager.GetAllEvents(departmentId, DateTime.MinValue, DateTime.MaxValue);
             var requirementsTask = _eventManager.GetAllRequirements(departmentId);
             var qualificationsTask = _qualificationManager.GetAll(departmentId);
 
