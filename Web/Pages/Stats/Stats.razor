@@ -1,7 +1,6 @@
 ﻿@page "/{departmentUrl}/stats"
 @inherits StatsPageBase
 
-
 <MudGrid>
     <MudItem xs="4" md="3">
         <MudBlazor.MudSelect Label="Rolle" @bind-Value="SelectedRoleId">
@@ -25,14 +24,15 @@
     </MudItem>
 </MudGrid>
 
-<MudDataGrid Items="Stats.GetValueOrDefault(SelectedRoleId, new())" Class="mt-4">
+<MudDataGrid Items="Stats.GetValueOrDefault(SelectedRoleId, new())" Class="mt-4" Breakpoint="Breakpoint.None">
     <Columns>
         <PropertyColumn Property="pair => pair.Key" Title="Nutzer">
             <CellTemplate>
                 @(GetMemberById(context.Item.Key)?.Name ?? "Unbekannter Nutzer")
             </CellTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="pair => pair.Value" Title="Anzahl Eintragungen"/>
+        <PropertyColumn Property="pair => pair.Value.Item1" Title="Eintragungen" />
+        <PropertyColumn Property="pair => pair.Value.Item2" Title="Einsätze" />
     </Columns>
 </MudDataGrid>
 

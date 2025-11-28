@@ -2,6 +2,6 @@
 {
     public interface IStatsService
     {
-        public Task<Dictionary<string, int>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
+        public Task<Dictionary<string, Tuple<int, int>>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
     }
 }

@@ -15,6 +15,6 @@ namespace Api.Manager
         public Task UpdateLockedMembers(string departmentId, string eventId, string helperId, UpdateMembersListDTO updateMembersList);
         public Task UpdateChangedStatus(string departmentId, string eventId, string roleId, IEnumerable<string> memberIds, HelperStatus previousStatus, HelperStatus newStatus);
         public Task SendHelperNotifications();
-        public Task<Dictionary<string, int>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
+        public Task<Dictionary<string, Tuple<int, int>>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
     }
 }

@@ -568,16 +568,21 @@ namespace Api.Manager
             }
         }
 
-        public async Task<Dictionary<string, int>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
+        public async Task<Dictionary<string, Tuple<int, int>>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
         {
             var eventsInRange = await GetAllEvents(departmentId, fromDate, toDate);
             var requirementsInRange = await Task.WhenAll(eventsInRange.Select(@event => GetRequirementsOfEvent(departmentId, @event.Id)));
             var requirementsOfRole = requirementsInRange.SelectMany(l => l).Where(requirement => requirement.RoleId == roleId);
-
-            var counts = requirementsOfRole.SelectMany(requirement =>
+                        
+            var countsTotal = requirementsOfRole.SelectMany(requirement =>
             {
                 return requirement.LockedMembers.Concat(requirement.PreselectedMembers).Concat(requirement.AvailableMembers);
             }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
+            var countsFixed = requirementsOfRole.SelectMany(requirement =>
+            {
+                return requirement.LockedMembers.Concat(requirement.PreselectedMembers);
+            }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
+            var counts = countsTotal.ToDictionary(pair => pair.Key, pair => Tuple.Create(pair.Value, countsFixed.GetValueOrDefault(pair.Key, 0)));
             return counts;
         }
 

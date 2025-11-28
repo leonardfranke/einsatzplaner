@@ -13,13 +13,13 @@ namespace Web.Services.Stats
             _httpClient = clientCache.Get("BACKEND");
         }
 
-        public Task<Dictionary<string, int>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
+        public Task<Dictionary<string, Tuple<int, int>>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
         {            
             return _httpClient
                 .Request("/api/Stats/", departmentId, roleId)
                 .AppendQueryParam("fromDate", fromDate)
                 .AppendQueryParam("toDate", toDate)
-                .GetJsonAsync<Dictionary<string, int>>();
+                .GetJsonAsync<Dictionary<string, Tuple<int, int>>>();
         }
     }
 }
