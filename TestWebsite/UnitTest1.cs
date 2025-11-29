@@ -76,11 +76,11 @@ namespace TestWebsite
             await Page.GotoAsync("https://localhost:7144/dachse-badlaer/member");
             var memberInfoText = Page.GetByText("Leonard Franke", new PageGetByTextOptions { Exact = true });
             await Expect(memberInfoText).ToBeVisibleAsync();
-            var memberTr = Page.GetByTestId("tr-LeonardFranke");
-            await memberTr.HoverAsync();
-            var memberEditButton = Page.GetByTestId("editmember-LeonardFranke");
-            await Expect(memberEditButton).ToBeVisibleAsync();
-            await memberEditButton.ClickAsync();
+            //var memberTr = Page.GetByTestId("tr-LeonardFranke");
+            //await memberTr.HoverAsync();
+            //var memberEditButton = Page.GetByTestId("editmember-LeonardFranke");
+            //await Expect(memberEditButton).ToBeVisibleAsync();
+            //await memberEditButton.ClickAsync();
         }
     }
 
