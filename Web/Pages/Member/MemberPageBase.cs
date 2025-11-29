@@ -24,73 +24,52 @@ namespace Web.Pages
         private IMemberService _memberService { get; set; }
 
         [Inject]
-        private IGroupService _groupService { get; set; }
-
-        [Inject]
-        private IRoleService _roleService { get; set; }
-
-        [Inject]
         private ILoginCheck _loginCheck { get; set; }
 
         public List<MembershipRequest> MembershipRequests { get; set; } = new();
 
         public List<Models.Member> Members { get; set; } = new();
 
-        public List<Group> Groups { get; set; } = new();
-
-        public List<Role> Roles { get; set; } = new();
-
         public MudTable<Models.Member> Table { get; set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
 
-        public bool IsPageLoading { get; set; }
+        public bool IsMembersLoading { get; set; }
+
+        public bool IsRequestsLoading { get; set; }
+
         private Models.Member EditingMember { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
-            IsPageLoading = true;
             if (await _departmentUrlCheck.LogIntoDepartment(DepartmentUrl) is not Models.Department department)
                 return;
             _departmentId = department.Id;
             if (!await _loginCheck.CheckLogin(DepartmentUrl, department, true))
                 return;
 
-            var groupTask = _groupService.GetAll(_departmentId);
-            var rolesTask = _roleService.GetAll(_departmentId);
             var membersTask = LoadMembers();
             var requestsTask = LoadRequests();
 
-            Groups = await groupTask;
-            Roles = await rolesTask;
             await membersTask;
             await requestsTask;
-            IsPageLoading = false;
         }
 
         private async Task LoadRequests()
         {
+            IsRequestsLoading = true;
             MembershipRequests = await _departmentService.MembershipRequests(_departmentId);
             StateHasChanged();
+            IsRequestsLoading = false;
         }
 
         private async Task LoadMembers()
         {
+            IsMembersLoading = true;
             Members = await _memberService.GetAll(_departmentId);
             StateHasChanged();
-        }
-
-        public string GetGroupNamesByIds(string memberId)
-        {
-            var memberGroups = Groups.Where(group => group.MemberIds.Contains(memberId));
-            return string.Join(", ", memberGroups);
-        }
-
-        public string GetRoleNamesByIds(string memberId)
-        {
-            var memberRoles = Roles.Where(role => role.MemberIds.Contains(memberId));
-            return string.Join(", ", memberRoles);
+            IsMembersLoading = false;
         }
 
         public async Task AnswerRequest(string requestId, bool accept)

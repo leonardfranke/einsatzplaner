@@ -2,15 +2,7 @@
 @using BlazorBootstrap
 @inherits MemberPageBase
 
-@if (IsPageLoading)
-{
-    <div class="text-center">
-        <div class="spinner-border m-5"></div>
-    </div>
-    return;
-}
-
-<MudTable @ref="Table" Items="Members" Breakpoint="Breakpoint.None" EditTrigger="TableEditTrigger.EditButton" CanCancelEdit="true" 
+<MudTable Loading="IsMembersLoading" @ref="Table" Items="Members" Breakpoint="Breakpoint.None" EditTrigger="TableEditTrigger.EditButton" CanCancelEdit="true" 
         RowEditCancel="EditCancel" RowEditPreview="CreateEditPreview" RowEditCommit="UpdateMember">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Mitglieder</MudText>
