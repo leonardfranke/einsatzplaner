@@ -10,46 +10,42 @@
     return;
 }
 
-<h1>Mitglieder</h1>
-
-@if(Members?.Count > 0)
-{
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th scope="col">Name</th>
-                    <th scope="col" />
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var (member, index) in Members.Select((member, index) => (member, index)))
-                {
-                    <tr @onmouseenter="() => HoveredIndex = index" @onmouseleave="() => HoveredIndex = null" data-testid="tr-@(member.Name.Replace(" ", string.Empty))">
-                        <td>
-                            @if(string.IsNullOrEmpty(member.Name))
-                            {
-                                <i>ohne Name</i>
-                            }
-                            else
-                            {
-                                @member.Name
-                            }
-                        </td>
-                        <td>
-                            <button @onclick="() => EditMember(member)" data-testid="editmember-@(member.Name.Replace(" ", string.Empty))"
-                                    class="btn btn-outline-dark"
-                                    style="visibility: @(HoveredIndex == index ? "visible" : "hidden")">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-
+<MudTable @ref="Table" Items="Members" Breakpoint="Breakpoint.None" EditTrigger="TableEditTrigger.EditButton" CanCancelEdit="true" 
+        RowEditCancel="EditCancel" RowEditPreview="CreateEditPreview" RowEditCommit="UpdateMember">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Mitglieder</MudText>
+        <MudSpacer/>
+        <MudIconButton Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.Add" OnClick="AddDummyMember"/>
+    </ToolBarContent>
+    <ColGroup>
+        <col />
+        <col />
+        <col style="width:1%"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Administrator</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Name</MudTd>
+        <MudTd><MudCheckBox Disabled Value="context.IsAdmin"/></MudTd>
+        <MudTd></MudTd>
+    </RowTemplate>
+    <RowEditingTemplate>
+        @if(context.IsDummy)
+        {
+            <MudTd><MudTextField @bind-Value="context.Name"/></MudTd>
+            <MudTd><MudCheckBox Disabled Value="context.IsAdmin" /></MudTd>
+        }
+        else
+        {
+            <MudTd>@context.Name</MudTd>
+            <MudTd><MudCheckBox @bind-Value="context.IsAdmin" /></MudTd>
+        }
+        <MudTd><MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" OnClick="() => DeleteMember(context)" /></MudTd>
+    </RowEditingTemplate>
+</MudTable>
 
 
 <h2>Beitrittsanfragen:</h2>

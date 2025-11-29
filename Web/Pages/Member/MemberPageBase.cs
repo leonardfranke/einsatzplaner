@@ -1,10 +1,9 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using Web.Checks;
-using Web.Manager;
 using Web.Models;
 using Web.Services;
-using Web.Views.ChangeMember;
 
 namespace Web.Pages
 {
@@ -41,12 +40,13 @@ namespace Web.Pages
 
         public List<Role> Roles { get; set; } = new();
 
-        public int? HoveredIndex { get; set; }
+        public MudTable<Models.Member> Table { get; set; }
 
         [CascadingParameter]
         public Modal Modal { get; set; }
 
         public bool IsPageLoading { get; set; }
+        private Models.Member EditingMember { get; set; }
 
         protected override async Task OnInitializedAsync()
         {
@@ -101,34 +101,49 @@ namespace Web.Pages
                 await LoadMembers();
         }
 
-        public async Task EditMember(Models.Member member)
+        public async void UpdateMember(object obj)
         {
-            var closeModalFunc = Modal.HideAsync;
-            var deleteMemberFunc = DeleteMember;
-            var parameters = new Dictionary<string, object>
-            {
-                { nameof(ChangeMember.DepartmentId), _departmentId },
-                { nameof(ChangeMember.Member), member },
-                { nameof(ChangeMember.CloseModalFunc), closeModalFunc },
-                { nameof(ChangeMember.DeleteMemberFunc), deleteMemberFunc },
-                { nameof(ChangeMember.SaveMemberFunc), SaveMember }
+            var member = (Models.Member)obj;
+            await _memberService.UpdateMember(_departmentId, member.Id, member.Name, member.IsAdmin);
+        }
+
+        public void CreateEditPreview(object obj)
+        {
+            var member = (Models.Member)obj;
+            EditingMember = new Models.Member 
+            { 
+                Name = member.Name,
+                IsAdmin = member.IsAdmin
             };
-            await Modal.ShowAsync<ChangeMember>(title: "Mitglied bearbeiten", parameters: parameters);
         }
 
-        private async Task DeleteMember(string memberId)
+        public void EditCancel(object obj)
         {
-            await _departmentService.RemoveMember(_departmentId, memberId);
-            await LoadMembers();
+            var member = (Models.Member)obj;
+            member.Name = EditingMember.Name;
+            member.IsAdmin = EditingMember.IsAdmin;
         }
 
-        private async Task SaveMember(string memberId, bool? newIsAdmin)
+        public async Task AddDummyMember()
         {
-            if(newIsAdmin != null)
+            var dummyMemberId = await _memberService.CreateDummyMember(_departmentId);
+            var dummyMember = new Models.Member
             {
-                await _memberService.UpdateMember(_departmentId, memberId, (bool)newIsAdmin);
-                await LoadMembers();
-            }
+                Id = dummyMemberId,
+                Name = "",
+                IsDummy = true,
+                IsAdmin = false,
+            };
+            Members.Insert(0, dummyMember);
+            StateHasChanged();
+        }
+
+        public async Task DeleteMember(Models.Member member)
+        {
+            Table.SetEditingItem(null);
+            Members.Remove(member);
+            StateHasChanged();
+            await _departmentService.RemoveMember(_departmentId, member.Id);
         }
     }
 }

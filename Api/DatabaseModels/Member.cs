@@ -12,6 +12,9 @@ namespace Api.Models
         public bool IsAdmin { get; set; }
 
         [FirestoreProperty]
+        public bool IsDummy { get; set; }
+
+        [FirestoreProperty]
         public bool EmailNotificationActive { get; set; }
     }
 }

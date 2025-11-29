@@ -19,7 +19,8 @@ namespace Api.Converter
                 Id = member.Id,
                 Name = member.Name,
                 IsAdmin = member.IsAdmin,
-                EmailNotificationActive = member.EmailNotificationActive
+                EmailNotificationActive = member.EmailNotificationActive,
+                IsDummy = member.IsDummy
             };
         }
     }

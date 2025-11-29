@@ -6,8 +6,9 @@ namespace Api.Manager
     {
         public Task<List<MemberDTO>> GetAll(string departmentId);
         public Task<MemberDTO> GetMember(string departmentId, string memberId);
-        public Task UpdateMember(string departmentId, string userId, bool isAdmin);
-        public Task CreateMember(string departmentId, string userId, bool isAdmin = false);
+        public Task UpdateMember(string departmentId, UpdateMemberDTO updateMemberDTO);
+        public Task CreateMember(string departmentId, string? id, string name, bool isAdmin);
+        public Task<string> CreateDummyMember(string departmentId);
         public Task<long?> MemberCount(string departmentId);
     }
 }

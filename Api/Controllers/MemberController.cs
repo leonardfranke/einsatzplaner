@@ -27,10 +27,16 @@ namespace Api.Controllers
             return _memberManager.GetMember(departmentId, memberId);
         }
 
-        [HttpPatch("{departmentId}/{memberId}")]
-        public Task UpdateMember([FromRoute] string departmentId, [FromRoute] string memberId, [FromBody] UpdateMemberDTO updateMemberDTO) 
+        [HttpPost("{departmentId}")]
+        public Task<string> CreateDummyMember([FromRoute] string departmentId)
         {
-            return _memberManager.UpdateMember(departmentId, memberId, updateMemberDTO.IsAdmin);
+            return _memberManager.CreateDummyMember(departmentId);
+        }
+
+        [HttpPatch("{departmentId}")]
+        public Task UpdateMember([FromRoute] string departmentId, [FromBody] UpdateMemberDTO updateMemberDTO) 
+        {
+            return _memberManager.UpdateMember(departmentId, updateMemberDTO);
         }
     }
 }

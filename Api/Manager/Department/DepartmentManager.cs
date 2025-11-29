@@ -68,20 +68,20 @@ namespace Api.Manager
 
         public async Task<bool> AddRequest(string departmentId, string userId)
         {
+            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(userId);
+            if (user == null)
+                return false;
+
             var memberCount = await _memberManager.MemberCount(departmentId);
             if (memberCount == 0)
-            {
-                await _memberManager.CreateMember(departmentId, userId, true);
+            {  
+                await _memberManager.CreateMember(departmentId, userId, user.DisplayName, true);
                 return true;
             }
 
             var membershipAlreadyRequested = await MembershipRequested(departmentId, userId);
             if (membershipAlreadyRequested)
-                return false;
-
-            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(userId);
-            if (user == null)
-                return false;
+                return false;            
 
             var request = new MembershipRequest
             {
@@ -124,7 +124,14 @@ namespace Api.Manager
             await RemoveRequest(departmentId, requestId);
 
             if (accept)
-                await _memberManager.CreateMember(departmentId, request.UserId);
+            {
+                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(request.UserId);
+                if (user == null)
+                    return;
+                
+                await _memberManager.CreateMember(departmentId, request.UserId, user.DisplayName, false);
+
+            }
         }
 
         public Task RemoveMember(string departmentId, string memberId)

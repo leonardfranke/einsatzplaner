@@ -1,7 +1,6 @@
 ﻿using Api.Converter;
 using Api.Models;
 using DTO;
-using FirebaseAdmin.Auth;
 using Google.Cloud.Firestore;
 
 namespace Api.Manager
@@ -32,30 +31,52 @@ namespace Api.Manager
             return MemberConverter.Convert(members);
         }
 
-        public async Task UpdateMember(string departmentId, string memberId, bool isAdmin)
+        public async Task UpdateMember(string departmentId, UpdateMemberDTO updateMemberDTO)
         {
             var snapshot = _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(memberId);
-            await snapshot.UpdateAsync(nameof(Member.IsAdmin), isAdmin, Precondition.MustExist);
+                .Collection(Paths.MEMBER).Document(updateMemberDTO.Id);
+
+            var updateDict = new Dictionary<string, object>();
+            if (updateMemberDTO.Name != null)
+                updateDict.Add(nameof(Member.Name), updateMemberDTO.Name);
+            if (updateMemberDTO.IsAdmin != null)
+                updateDict.Add(nameof(Member.IsAdmin), updateMemberDTO.IsAdmin);
+                        
+            await snapshot.UpdateAsync(updateDict, Precondition.MustExist);
         }
 
-        public async Task CreateMember(string departmentId, string userId, bool isAdmin = false)
+        public async Task<string> CreateDummyMember(string departmentId)
         {
-            var user = await FirebaseAuth.DefaultInstance.GetUserAsync(userId);
-            if (user == null)
-                return;
-
             var newMember = new Member
             {
-                Name = user.DisplayName,
+                Name = "Dummy-Nutzer",
+                IsAdmin = false,
+                IsDummy = true,
+                EmailNotificationActive = false
+            };
+
+            var document = _firestoreDb
+                .Collection(Paths.DEPARTMENT).Document(departmentId)
+                .Collection(Paths.MEMBER).Document();
+                
+            await document.CreateAsync(newMember);
+            return document.Id;
+        }
+
+        public Task CreateMember(string departmentId, string id, string name, bool isAdmin)
+        {
+            var newMember = new Member
+            {
+                Name = name,
                 IsAdmin = isAdmin,
+                IsDummy = false,
                 EmailNotificationActive = true
             };
 
-            await _firestoreDb
+            return _firestoreDb
                 .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(userId).CreateAsync(newMember);
+                .Collection(Paths.MEMBER).Document(id).CreateAsync(newMember);
         }
 
         public async Task<MemberDTO> GetMember(string departmentId, string memberId)

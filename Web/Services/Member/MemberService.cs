@@ -34,14 +34,22 @@ namespace Web.Services.Member
             }
         }
 
-        public Task UpdateMember(string departmentId, string memberId, bool isAdmin)
+        public async Task<string> CreateDummyMember(string departmentId)
+        {
+            var res = await _httpClient.PostAsync(new Uri($"/api/Member/{departmentId}", UriKind.Relative), null);
+            return await res.Content.ReadAsStringAsync();
+        }
+
+        public Task UpdateMember(string departmentId, string memberId, string? name, bool? isAdmin)
         {
             var updateMembersDTO = new UpdateMemberDTO
             {
+                Id = memberId,
+                Name = name,
                 IsAdmin = isAdmin
             };
             var content = JsonContent.Create(updateMembersDTO);
-            return _httpClient.PatchAsync(new Uri($"/api/Member/{departmentId}/{memberId}", UriKind.Relative), content);
+            return _httpClient.PatchAsync(new Uri($"/api/Member/{departmentId}", UriKind.Relative), content);
         }
     }
 }
