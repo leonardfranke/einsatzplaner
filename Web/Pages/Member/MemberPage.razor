@@ -50,7 +50,7 @@
         <PropertyColumn Property="request => request.UserName" Title="Name"/>
         <TemplateColumn>
             <CellTemplate>
-                <MudButtonGroup>
+                <MudButtonGroup Variant="Variant.Outlined">
                     <MudIconButton Icon="@Icons.Material.Filled.Check" OnClick="() => AnswerRequest(context.Item.Id, true)"></MudIconButton>
                     <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => AnswerRequest(context.Item.Id, false)"></MudIconButton>
                 </MudButtonGroup>
