@@ -105,9 +105,9 @@
                             <MudStack Row>
                                 <HelperCheckbox Event="@columnContext.Item" Helper="helper" Member="Member" Role="role" Groups="Groups" />
                                 <AuthorizeView Roles="IsAdmin">
-                                    <MudTooltip Arrow>
+                                    <MudTooltip ShowOnFocus ShowOnHover="false">
                                         <ChildContent>
-                                                <MudText>@(helper.GetRegistrationCount())</MudText>
+                                                <span class="cursor-pointer" tabindex="0">@(helper.GetRegistrationCount())</span>
                                         </ChildContent>
                                         <TooltipContent>
                                             @(helper.GetRegisteredMembers(Members))
