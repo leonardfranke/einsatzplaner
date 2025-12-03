@@ -446,8 +446,8 @@ namespace Api.Manager
                     }
                 }
 
-                var relevantGroups = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value.GroupId)).Select(pair => _groupManager.GetById(department.Id, pair.Value.GroupId)));
-                var relevantEventCategories = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value.EventCategoryId)).Select(pair => _eventCategoryManager.GetById(department.Id, pair.Value.EventCategoryId)));
+                var relevantGroups = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value?.GroupId)).Select(pair => _groupManager.GetById(department.Id, pair.Value.GroupId)));
+                var relevantEventCategories = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value?.EventCategoryId)).Select(pair => _eventCategoryManager.GetById(department.Id, pair.Value.EventCategoryId)));
 
                 var emails = new List<TransactionalEmail>();
                 foreach(var memberId in requirementNotificationDict.Keys.Union(eventNotificationDict.Keys).Union(deletionNotificationDict.Keys).Distinct())
