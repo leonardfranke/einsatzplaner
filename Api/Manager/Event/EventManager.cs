@@ -392,6 +392,8 @@ namespace Api.Manager
                     var notification = snapshot.ConvertTo<HelperNotification>();
                     if (!releventEvents.ContainsKey(notification.EventId))
                         releventEvents[notification.EventId] = await GetEvent(department.Id, notification.EventId);
+                    if (releventEvents[notification.EventId] == null)
+                        continue;
                     if (!relevantRoles.ContainsKey(notification.RoleId))
                             relevantRoles[notification.RoleId] = await _roleManager.GetRole(department.Id, notification.RoleId);
 
@@ -413,6 +415,8 @@ namespace Api.Manager
                     var notification = snapshot.ConvertTo<EventNotification>();
                     if (!releventEvents.ContainsKey(notification.EventId))
                         releventEvents[notification.EventId] = await GetEvent(department.Id, notification.EventId);
+                    if (releventEvents[notification.EventId] == null)
+                        continue;
 
                     foreach (var memberId in notification.Members)
                     {
@@ -473,10 +477,10 @@ namespace Api.Manager
                         {
                             var role = relevantRoles.First(pair => pair.Value.Id == roleId).Value;
                             text.Append($"{role.Name}:<br /><ul>");
-                            var changesText = new SortedList<DateTime, string>();
+                            var changesText = new SortedList<DateTime, string>(Comparer<DateTime>.Create((a,b) => a == b ? 1 : a.CompareTo(b)));
                             foreach (var change in changes)
                             {
-                                var @event = releventEvents.FirstOrDefault(pair => pair.Value.Id == change.Item1).Value;
+                                var @event = releventEvents.Values.First(e => e?.Id == change.Item1);
                                 var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(@event.Date.ToUniversalTime(), timeZoneOfMember);
 
                                 var group = string.IsNullOrEmpty(@event.GroupId) ? null : relevantGroups.FirstOrDefault(group => group.Id == @event.GroupId);
@@ -504,10 +508,10 @@ namespace Api.Manager
                     if(eventNotificationDict.ContainsKey(memberId))
                     {
                         text.Append("Verschiebungen:<br /><ul>");
-                        var changesText = new SortedList<DateTime, string>();
+                        var changesText = new SortedList<DateTime, string>(Comparer<DateTime>.Create((a, b) => a == b ? 1 : a.CompareTo(b)));
                         foreach (var change in eventNotificationDict[memberId])
                         {
-                            var @event = releventEvents.FirstOrDefault(pair => pair.Value.Id == change.Item1).Value;
+                            var @event = releventEvents.Values.First(e => e?.Id == change.Item1);
                             var previousLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item2, timeZoneOfMember);
                             var newLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item3, timeZoneOfMember);
 
@@ -527,7 +531,7 @@ namespace Api.Manager
                     if(deletionNotificationDict.ContainsKey(memberId))
                     {
                         text.Append("Abgesagte Veranstaltungen:<br /><ul>");
-                        var changesText = new SortedList<DateTime, string>();
+                        var changesText = new SortedList<DateTime, string>(Comparer<DateTime>.Create((a, b) => a == b ? 1 : a.CompareTo(b)));
                         foreach (var change in deletionNotificationDict[memberId])
                         {
                             var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item3, timeZoneOfMember);
