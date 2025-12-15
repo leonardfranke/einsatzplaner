@@ -26,7 +26,7 @@ namespace Api.Manager
             var requirements = await requirementsTask;
             var qualifications = await qualificationsTask;
 
-            var optimizerDict = Optimizer.Optimizer.Optimize(events, requirements, qualifications);
+            var optimizerDict = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, qualifications);
 
             var batch = _firestoreDb.StartBatch();
             foreach (var (requirement, update) in optimizerDict)

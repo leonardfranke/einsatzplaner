@@ -49,7 +49,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };            
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].NewPreselectedMembers.Count, Is.EqualTo(1));
             Assert.That(result[secondRequirement].NewPreselectedMembers.Count, Is.EqualTo(1));
@@ -95,7 +95,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].NewPreselectedMembers.Union(result[secondRequirement].NewPreselectedMembers).Count(), Is.EqualTo(5));
         }
@@ -139,7 +139,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].NewPreselectedMembers.Count, Is.EqualTo(4));
             CollectionAssert.DoesNotContain(result[firstRequirement].NewPreselectedMembers, 3);
@@ -172,7 +172,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { requirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string>() { "M3", "M4", "M5" }, result[requirement].NewPreselectedMembers);
         }
@@ -204,7 +204,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { requirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result[requirement].NewPreselectedMembers.Count, Is.EqualTo(2));
         }
@@ -248,7 +248,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].NewPreselectedMembers.First(), Is.EqualTo("M1"));
             Assert.That(result[secondRequirement].NewPreselectedMembers.First(), Is.EqualTo("M2"));
@@ -315,7 +315,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement, thirdRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[firstRequirement].NewLockedMembers);
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[secondRequirement].NewLockedMembers);
@@ -366,7 +366,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             Assert.That(result.ContainsKey(firstRequirement), Is.False);
 
@@ -402,7 +402,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string> { "M1", "M2" }, result[firstRequirement].NewLockedMembers);
             CollectionAssert.IsEmpty(result[firstRequirement].NewPreselectedMembers);
@@ -445,7 +445,7 @@ namespace OptimizerTests
                 }
             };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, qualifications);
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, qualifications);
 
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[firstRequirement].NewPreselectedMembers);
         }
@@ -503,7 +503,7 @@ namespace OptimizerTests
                 }
             };
 
-            var result = Optimizer.Optimizer.Optimize(events, requirements, qualifications);
+            var result = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, qualifications);
 
             CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].NewPreselectedMembers);
         }

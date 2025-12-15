@@ -1,6 +1,4 @@
-﻿using Api.FirestoreModels;
-using Api.Models;
-using DTO;
+﻿using DTO;
 using Google.OrTools.Sat;
 
 namespace Optimizer
@@ -14,7 +12,7 @@ namespace Optimizer
             public List<string> NewAvailableMembers { get; set; }
         }
 
-        public static Dictionary<HelperDTO, Updates> Optimize(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications) 
+        public static Dictionary<HelperDTO, Updates> OptimizeAvailableMembers(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications) 
         {
             var lockedMemberAssignments = new Dictionary<(string, string), int>();
             foreach (var requirement in requirements) 
