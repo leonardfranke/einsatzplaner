@@ -26,13 +26,13 @@
 
 <MudDataGrid Items="Stats.GetValueOrDefault(SelectedRoleId, new())" Class="mt-4" Breakpoint="Breakpoint.None">
     <Columns>
-        <PropertyColumn Property="pair => pair.Key" Title="Nutzer">
+        <PropertyColumn Property="stat => stat.MemberId" Title="Nutzer">
             <CellTemplate>
-                @(GetMemberById(context.Item.Key)?.Name ?? "Unbekannter Nutzer")
+                @(GetMemberById(context.Item.MemberId)?.Name ?? "Unbekannter Nutzer")
             </CellTemplate>
         </PropertyColumn>
-        <PropertyColumn Property="pair => pair.Value.Item1" Title="Eintragungen" />
-        <PropertyColumn Property="pair => pair.Value.Item2" Title="Einsätze" />
+        <PropertyColumn Property="stat => stat.Availability" Title="Eintragungen" />
+        <PropertyColumn Property="stat => stat.Deployments" Title="Einsätze" />
     </Columns>
 </MudDataGrid>
 

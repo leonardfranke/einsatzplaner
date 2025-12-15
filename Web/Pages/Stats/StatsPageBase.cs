@@ -35,7 +35,7 @@ namespace Web.Pages
 
         public DateRange DateRange { get; set; }
 
-        public Dictionary<string, Dictionary<string, Tuple<int, int>>> Stats { get; set; } = new();
+        public Dictionary<string, List<StatDTO>> Stats { get; set; } = new();
 
         public bool IsLoading { get; set; }
 
