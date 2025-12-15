@@ -143,9 +143,7 @@ namespace Web.Pages
          
             var oldSelectedMembers = qualification.MemberIds;
             var roleOfQualification = Roles.First(role => role.Id == qualification.RoleId);
-            var permittedMembers = roleOfQualification.IsFree ?
-                _members : 
-                _members.Where(member => roleOfQualification.MemberIds.Union(oldSelectedMembers).Contains(member.Id));
+            var permittedMembers = _members.Where(member => roleOfQualification.MemberIds.Union(oldSelectedMembers).Contains(member.Id));
             var currentSelectedMembers = new List<string>(oldSelectedMembers);
             var confirmModalAction = async () =>
             {
@@ -167,8 +165,7 @@ namespace Web.Pages
 
         public string GetRoleHeader(Role role)
         {
-            var memberInfo = role.IsFree ? " - Offene Rolle" : (role.MemberIds.Any() ? "" : " - Ohne Mitglieder");
-            return role.Name + memberInfo;
+            return role.Name + (role.IsFree ? " - Offene Rolle" : string.Empty);
         }
 
         public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
