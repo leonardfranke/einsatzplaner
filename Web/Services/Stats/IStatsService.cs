@@ -1,7 +1,9 @@
-﻿namespace Web.Services.Stats
+﻿using DTO;
+
+namespace Web.Services.Stats
 {
     public interface IStatsService
     {
-        public Task<Dictionary<string, Tuple<int, int>>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
+        public Task<List<StatDTO>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
     }
 }

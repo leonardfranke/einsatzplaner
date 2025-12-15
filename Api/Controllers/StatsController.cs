@@ -1,4 +1,5 @@
 ﻿using Api.Manager;
+using DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -15,7 +16,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{departmentId}/{roleId}")]
-        public Task<Dictionary<string, Tuple<int, int>>> GetStats([FromRoute] string departmentId, [FromRoute] string roleId, [FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
+        public Task<IEnumerable<StatDTO>> GetStats([FromRoute] string departmentId, [FromRoute] string roleId, [FromQuery] DateTime fromDate, [FromQuery] DateTime toDate)
         {
             return _eventManager.GetStats(departmentId, roleId, fromDate, toDate);
         }
