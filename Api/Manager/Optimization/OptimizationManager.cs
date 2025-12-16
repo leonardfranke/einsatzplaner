@@ -26,7 +26,7 @@ namespace Api.Manager
             var requirements = await requirementsTask;
             var qualifications = await qualificationsTask;
 
-            var optimizerDict = Optimizer.Optimizer.OptimizeAvailableMembers(events, requirements, qualifications);
+            var optimizerDict = Optimizer.Optimizer.OptimizeAssignments(events, requirements, qualifications);
 
             var batch = _firestoreDb.StartBatch();
             foreach (var (requirement, update) in optimizerDict)
@@ -36,9 +36,9 @@ namespace Api.Manager
                     .Collection(Paths.EVENT).Document(requirement.EventId)
                     .Collection(Paths.HELPER).Document(requirement.Id);
 
-                var newLockedMembers = update.NewLockedMembers;
-                var newPreselectedMembers = update.NewPreselectedMembers;
-                var newAvailableMembers = update.NewAvailableMembers;
+                var newLockedMembers = update.LockedMembers;
+                var newPreselectedMembers = update.PreselectedMembers;
+                var newAvailableMembers = update.AvailableMembers;
 
                 var oldLockedMembers = requirement.LockedMembers;
                 var oldPreselectedMembers = requirement.PreselectedMembers;
@@ -82,9 +82,9 @@ namespace Api.Manager
                     .Collection(Paths.EVENT).Document(requirement.EventId)
                     .Collection(Paths.HELPER).Document(requirement.Id);
 
-                var newLockedMembers = update.NewLockedMembers;
-                var newPreselectedMembers = update.NewPreselectedMembers;
-                var newAvailableMembers = update.NewAvailableMembers;
+                var newLockedMembers = update.LockedMembers;
+                var newPreselectedMembers = update.PreselectedMembers;
+                var newAvailableMembers = update.AvailableMembers;
 
                 var oldLockedMembers = requirement.LockedMembers;
                 var oldPreselectedMembers = requirement.PreselectedMembers;

@@ -3,112 +3,84 @@ using Google.OrTools.Sat;
 
 namespace Optimizer
 {
-    public class Optimizer
+    public static class Optimizer
     {
-        public class Updates
+        public class OptimizedAssignments
         {
-            public List<string> NewLockedMembers { get; set; }
-            public List<string> NewPreselectedMembers { get; set; }
-            public List<string> NewAvailableMembers { get; set; }
+            public List<string> LockedMembers { get; set; }
+            public List<string> PreselectedMembers { get; set; }
+            public List<string> FillMembers { get; set; }
+            public List<string> AvailableMembers { get; set; }
         }
 
-        public static Dictionary<HelperDTO, Updates> OptimizeAvailableMembers(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications) 
+        public static Dictionary<HelperDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<HelperDTO> allRequirements, List<QualificationDTO> qualifications)
         {
-            var lockedMemberAssignments = new Dictionary<(string, string), int>();
-            foreach (var requirement in requirements) 
+            var eventsToOptimize = allEvents.Where(@event => @event.Date > DateTime.UtcNow);
+            var requirementsToOptimize = allRequirements.Where(requirement => eventsToOptimize.Any(@event => @event.Id == requirement.EventId));
+
+            var F_mr_dict = new Dictionary<(string, string), int>();
+            foreach (var requirement in allRequirements)
             {
                 foreach (var member in requirement.LockedMembers)
                 {
-                    lockedMemberAssignments[(member, requirement.RoleId)] = lockedMemberAssignments.GetValueOrDefault((member, requirement.RoleId)) + 1;
+                    F_mr_dict[(member, requirement.RoleId)] = F_mr_dict.GetValueOrDefault((member, requirement.RoleId)) + 1;
                 }
             }
 
-            var eventsToOptimize = events.Where(@event => @event.Date > DateTime.UtcNow);
-            var requirementsToOptimize = requirements.Where(requirement => eventsToOptimize.Any(@event => @event.Id == requirement.EventId));
-            return OptimizeOverfilled(eventsToOptimize.ToList(), requirementsToOptimize.ToList(), qualifications, lockedMemberAssignments);
-        }
-
-        private static Dictionary<HelperDTO, Updates> OptimizeOverfilled(List<EventDTO> events, List<HelperDTO> requirements, List<QualificationDTO> qualifications, Dictionary<(string, string), int> lockedMemberAssignments)
-        {
-            var F_mr_dict = lockedMemberAssignments;
             var B_erq_dict = new Dictionary<(string, string, string), int>();
-            var A_mer_dict = new Dictionary<(string, string, string), bool>();
-            var P_mer_dict = new Dictionary<(string, string, string), bool>();
-
-            foreach(var @event in events)
+            foreach (var @event in eventsToOptimize)
             {
-                var requirementsOfEvent = requirements.Where(requirement => requirement.EventId == @event.Id);
-                var lockedMembersOfEvent = requirementsOfEvent.SelectMany(requirement => requirement.LockedMembers);
-                var lockedMembersOfEventCount = lockedMembersOfEvent.Count();
-                foreach(var requirement in requirementsOfEvent)
+                var requirementsOfEvent = allRequirements.Where(requirement => requirement.EventId == @event.Id);
+                foreach (var requirement in requirementsOfEvent)
                 {
-                    foreach (var member in requirement.AvailableMembers.Except(lockedMembersOfEvent))
-                        A_mer_dict[(member, @event.Id, requirement.RoleId)] = true;
-                    foreach (var member in requirement.PreselectedMembers.Except(lockedMembersOfEvent))
-                    {
-                        A_mer_dict[(member, @event.Id, requirement.RoleId)] = true;
-                        P_mer_dict[(member, @event.Id, requirement.RoleId)] = true;
-                    }
-
                     var openRequiredAmountForRole = requirement.RequiredAmount - requirement.LockedMembers.Count;
-                    foreach(var (qualificationId, requiredAmount) in requirement.RequiredQualifications)
+                    foreach (var (qualificationId, requiredAmount) in requirement.RequiredQualifications)
                     {
                         B_erq_dict[(@event.Id, requirement.RoleId, qualificationId)] = requiredAmount;
                         openRequiredAmountForRole -= requiredAmount;
                     }
-                    if(openRequiredAmountForRole > 0)
+                    if (openRequiredAmountForRole > 0)
                         B_erq_dict[(@event.Id, requirement.RoleId, null)] = openRequiredAmountForRole;
                 }
             }
 
-            var S_mrq_dict = new Dictionary<(string, string, string), bool>();
-            foreach(var qualification in qualifications)
+            var P_mer_dict = new Dictionary<(string, string, string), bool>();
+            foreach (var @event in eventsToOptimize)
             {
-                foreach(var member in qualification.MemberIds)
+                var requirementsOfEvent = allRequirements.Where(requirement => requirement.EventId == @event.Id);
+                var lockedMembersOfEvent = requirementsOfEvent.SelectMany(requirement => requirement.LockedMembers);
+                foreach (var requirement in requirementsOfEvent)
                 {
-                    S_mrq_dict[(member, qualification.RoleId, qualification.Id)] = true;
+                    foreach (var member in requirement.PreselectedMembers.Except(lockedMembersOfEvent))
+                    {
+                        P_mer_dict[(member, @event.Id, requirement.RoleId)] = true;
+                    }
                 }
             }
 
-            var X_erq_m_dict = new Dictionary<(string, string, string), List<IntVar>>();
-            var X_rm_e_dict = new Dictionary<string, Dictionary<string, List<IntVar>>>();
-            var X_mer_dict = new Dictionary<(string, string, string), IntVar>();
-            var X_er_m_dict = new Dictionary<(string, string), List<(string, IntVar)>>();
+            var S_mrq_dict = GetQualificationAssignments(qualifications);
 
+            var X_merq_by_erq = new Dictionary<(string, string, string), List<IntVar>>();
+            var X_mer_by_rm_dict = new Dictionary<(string, string), List<(string, IntVar)>>();
+            var X_mer_by_er_dict = new Dictionary<(string, string), List<(string, IntVar)>>();
+            var X_mer_dict = new Dictionary<(string, string, string), IntVar>();
 
             var model = new CpModel();
-            foreach (var @event in events)
+            foreach (var @event in eventsToOptimize)
             {
-                var X_me_r_dict = new Dictionary<string, List<IntVar>>();
+                var X_mr_by_m = new Dictionary<string, List<IntVar>>();
 
-                var requirementsOfEvent = requirements.Where(requirement => requirement.EventId == @event.Id);
+                var requirementsOfEvent = allRequirements.Where(requirement => requirement.EventId == @event.Id);
                 var lockedMembersOfEvent = requirementsOfEvent.SelectMany(requirement => requirement.LockedMembers);
                 foreach(var requirement in requirementsOfEvent)
                 {
                     foreach(var member in requirement.AvailableMembers.Union(requirement.PreselectedMembers).Except(lockedMembersOfEvent))
                     {
                         var X_mer = model.NewBoolVar($"{requirement.EventId}, {requirement.RoleId}: {member}");
-                        model.Add(X_mer <= (A_mer_dict[(member, @event.Id, requirement.RoleId)] ? 1 : 0));
-                        if (X_me_r_dict.ContainsKey(member))
-                            X_me_r_dict[member].Add(X_mer);
-                        else
-                            X_me_r_dict[member] = new() {X_mer};
-                        if (X_rm_e_dict.ContainsKey(requirement.RoleId))
-                        {
-                            if (X_rm_e_dict[requirement.RoleId].ContainsKey(member))
-                                X_rm_e_dict[requirement.RoleId][member].Add(X_mer);
-                            else
-                                X_rm_e_dict[requirement.RoleId][member] = new (){ X_mer };
-                        }                            
-                        else
-                        {
-                            X_rm_e_dict[requirement.RoleId] = new (){ { member, new List<IntVar>() { X_mer } } };
-                        }
+                        X_mr_by_m.TryAppend(member, X_mer);
+                        X_mer_by_rm_dict.TryAppend((requirement.RoleId, member), (member, X_mer));
+                        X_mer_by_er_dict.TryAppend((@event.Id, requirement.RoleId), (member, X_mer));
                         X_mer_dict[(member, @event.Id, requirement.RoleId)] = X_mer;
-                        if (X_er_m_dict.ContainsKey((@event.Id, requirement.RoleId)))
-                            X_er_m_dict[(@event.Id, requirement.RoleId)].Add((member, X_mer));
-                        else
-                            X_er_m_dict[(@event.Id, requirement.RoleId)] = new() { (member, X_mer) };
                         var X_mer_q_list = new List<IntVar>();
                         IntVar X_merq;
                         foreach (var qualification in requirement.RequiredQualifications.Keys)
@@ -116,79 +88,60 @@ namespace Optimizer
                             X_merq = model.NewBoolVar($"{requirement.EventId}, {requirement.RoleId}, {qualification}: {member}");
                             X_mer_q_list.Add(X_merq);
                             model.Add(X_merq <= (S_mrq_dict.GetValueOrDefault((member, requirement.RoleId, qualification), false) ? 1 : 0));
-                            if (X_erq_m_dict.ContainsKey((@event.Id, requirement.RoleId, qualification)))
-                                X_erq_m_dict[(@event.Id, requirement.RoleId, qualification)].Add(X_merq);
-                            else
-                                X_erq_m_dict[(@event.Id, requirement.RoleId, qualification)] = new() { X_merq };                            
+                            X_merq_by_erq.TryAppend((@event.Id, requirement.RoleId, qualification), X_merq);                           
                         }
                         X_merq = model.NewBoolVar($"{requirement.EventId}, {requirement.RoleId}, null: {member}");
                         X_mer_q_list.Add(X_merq);
-                        if (X_erq_m_dict.ContainsKey((@event.Id, requirement.RoleId, null)))
-                            X_erq_m_dict[(@event.Id, requirement.RoleId, null)].Add(X_merq);
-                        else
-                            X_erq_m_dict[(@event.Id, requirement.RoleId, null)] = new() { X_merq };
+                        X_merq_by_erq.TryAppend((@event.Id, requirement.RoleId, null), X_merq);
                         model.Add(X_mer == LinearExpr.Sum(X_mer_q_list));
                     }
                 }
-                foreach(var X_me in X_me_r_dict.Values)
+                foreach(var X_mer in X_mr_by_m.Values)
                 {
-                    model.Add(LinearExpr.Sum(X_me) <= 1);
+                    model.Add(LinearExpr.Sum(X_mer) <= 1);
                 }
             }
 
             var V_erq_list = new List<LinearExpr>();
-            foreach(var ((eventId, roleId, qualificationId), X_erq_m) in X_erq_m_dict)
+            foreach(var ((eventId, roleId, qualificationId), X_merq) in X_merq_by_erq)
             {
-                var V_erq = B_erq_dict.GetValueOrDefault((eventId, roleId, qualificationId), 0) - LinearExpr.Sum(X_erq_m);
+                var V_erq = B_erq_dict.GetValueOrDefault((eventId, roleId, qualificationId), 0) - LinearExpr.Sum(X_merq);
                 model.Add(V_erq >= 0);
                 V_erq_list.Add(V_erq);
             }
 
-            var E_diffs = new List<IntVar>();
-            var max_E = 0;
-            foreach(var (roleId, X_m_e_dict) in X_rm_e_dict)
+            var D_mmr_list = CreateDmmr(model, F_mr_dict, X_mer_by_rm_dict);
+            var max_D = 0;
+            foreach (var ((roleId, memberId), X_mer) in X_mer_by_rm_dict)
             {
-                LinearExpr last_E_mr = null;
-                foreach(var (memberId, X_m_e) in X_m_e_dict)
-                {
-                    var F_mr = F_mr_dict.GetValueOrDefault((memberId, roleId));
-                    max_E = Math.Max(max_E, F_mr + X_m_e.Count);
-                    var E_mr = F_mr + LinearExpr.Sum(X_m_e);
-                    if(last_E_mr != null)
-                    {
-                        var diffVar = model.NewIntVar(0, 10000, "Diff");
-                        model.Add(diffVar >= last_E_mr - E_mr);
-                        model.Add(diffVar >= E_mr - last_E_mr);
-                        E_diffs.Add(diffVar);
-                    }
-                    last_E_mr = E_mr;
-                }
+                var F_mr = F_mr_dict.GetValueOrDefault((memberId, roleId));
+                max_D = Math.Max(max_D, F_mr + X_mer.Count);
             }
-            var maxDiffSum = max_E * E_diffs.Count + 1;
+            var maxDiffSum = max_D * D_mmr_list.Count + 1;
 
-            var D_mer_list = new List<IntVar>();
+            var D_mer_list = new List<LinearExpr>();
             foreach(var ((memberId, eventId, roleId), P_mer) in P_mer_dict)
             {
                 if(P_mer)
                 {
-                    var D_mer = model.NewBoolVar($"Deselected {eventId}, {roleId}: {memberId}");
-                    model.Add(D_mer >= (P_mer ? 1 : 0) - X_mer_dict[(memberId, eventId, roleId)]);
-                    D_mer_list.Add(D_mer);
+                    D_mer_list.Add(1 - X_mer_dict[(memberId, eventId, roleId)]);
                 }
             }
-            var max_D = D_mer_list.Count + 1;
+            var max_De = D_mer_list.Count + 1;
 
-            model.Minimize(max_D * (LinearExpr.Sum(E_diffs) + maxDiffSum * LinearExpr.Sum(V_erq_list)) + LinearExpr.Sum(D_mer_list));
+            model.Minimize(max_De * (maxDiffSum * LinearExpr.Sum(V_erq_list) + LinearExpr.Sum(D_mmr_list)) + LinearExpr.Sum(D_mer_list));
             var solver = new CpSolver();
             var status = solver.Solve(model);
 
-            var filledHelpers = new Dictionary<HelperDTO, Updates>();
-            foreach(var requirement in requirements)
+            
+
+            var filledHelpers = new Dictionary<HelperDTO, OptimizedAssignments>();
+            foreach(var requirement in requirementsToOptimize)
             {
                 var lockedMembers = new HashSet<string>(requirement.LockedMembers);
                 var preselectedMembers = new HashSet<string>(requirement.PreselectedMembers);
                 var availableMembers = new HashSet<string>(requirement.AvailableMembers);
-                foreach(var (member, X_erm) in X_er_m_dict.GetValueOrDefault((requirement.EventId, requirement.RoleId), new()))
+                foreach(var (member, X_erm) in X_mer_by_er_dict.GetValueOrDefault((requirement.EventId, requirement.RoleId), new()))
                 {
                     if(solver.Value(X_erm) == 1)
                     {
@@ -205,25 +158,63 @@ namespace Optimizer
                 {
                     filledHelpers.Add(
                         requirement,
-                        new Updates { 
-                            NewLockedMembers = [.. lockedMembers], 
-                            NewPreselectedMembers = [.. preselectedMembers], 
-                            NewAvailableMembers = [.. availableMembers] 
+                        new OptimizedAssignments { 
+                            LockedMembers = [.. lockedMembers], 
+                            PreselectedMembers = [.. preselectedMembers], 
+                            AvailableMembers = [.. availableMembers] 
                         });
                 }
                 else
                 {
                     filledHelpers.Add(
                         requirement,
-                        new Updates
+                        new OptimizedAssignments
                         {
-                            NewLockedMembers = [.. lockedMembers.Union(preselectedMembers)],
-                            NewPreselectedMembers = [],
-                            NewAvailableMembers = [.. availableMembers]
+                            LockedMembers = [.. lockedMembers.Union(preselectedMembers)],
+                            PreselectedMembers = [],
+                            AvailableMembers = [.. availableMembers]
                         });
                 }
             }
+
             return filledHelpers;
+        }
+
+        private static List<IntVar> CreateDmmr(CpModel model, Dictionary<(string, string), int>  F_mr_dict, Dictionary<(string, string), List<(string, IntVar)>>  X_mer_by_rm_dict)
+        {
+            var D_mmr_list = new List<IntVar>();
+            var X_mer_by_rm_list = X_mer_by_rm_dict.ToList();
+            for (var i = 0; i < X_mer_by_rm_list.Count; i++)
+            {
+                var ((roleId, memberId), X_mer) = X_mer_by_rm_list[i];
+                var F_mr = F_mr_dict.GetValueOrDefault((memberId, roleId));
+                var E_mr = F_mr + LinearExpr.Sum(X_mer.Select(pair => pair.Item2));
+                foreach (var ((otherRoleId, otherMemberId), otherX_mer) in X_mer_by_rm_dict)
+                {
+                    var otherF_mr = F_mr_dict.GetValueOrDefault((otherRoleId, otherMemberId));
+                    var otherE_mr = otherF_mr + LinearExpr.Sum(otherX_mer.Select(pair => pair.Item2));
+                    if (roleId == otherRoleId && memberId != otherMemberId)
+                    {
+                        var D_mmr = model.NewIntVar(0, 10000, "Diff");
+                        model.AddAbsEquality(D_mmr, E_mr - otherE_mr);
+                        D_mmr_list.Add(D_mmr);
+                    }
+                }
+            }
+            return D_mmr_list;
+        }
+
+        private static Dictionary<(string, string, string), bool> GetQualificationAssignments(IEnumerable<QualificationDTO> qualifications)
+        {
+            var S_mrq_dict = new Dictionary<(string, string, string), bool>();
+            foreach (var qualification in qualifications)
+            {
+                foreach (var member in qualification.MemberIds)
+                {
+                    S_mrq_dict[(member, qualification.RoleId, qualification.Id)] = true;
+                }
+            }
+            return S_mrq_dict;
         }
     }
 }
