@@ -260,10 +260,10 @@ namespace Optimizer
                         requirement,
                         new OptimizedAssignments
                         {
-                            LockedMembers = [.. lockedMembers.Union(preselectedMembers).Union(fillMembers)],
+                            LockedMembers = [.. lockedMembers.Union(preselectedMembers)],
                             PreselectedMembers = [],
                             AvailableMembers = [.. availableMembers],
-                            FillMembers = []
+                            FillMembers = [.. fillMembers]
                         });
                 }
             }
