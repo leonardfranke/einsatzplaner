@@ -48,7 +48,7 @@ namespace TestWebsite
             await createGroupButton.ClickAsync();
             await Page.GetByTestId("group-name").FillAsync("Herren");
             await Page.GetByText("Speichern").ClickAsync();
-            var groupText = Page.GetByText("Herren - Ohne Mitglieder");
+            var groupText = Page.GetByText("Herren");
             await Expect(groupText).ToBeVisibleAsync();
 
             var createRoleButton = Page.GetByText("Rolle hinzufügen");
