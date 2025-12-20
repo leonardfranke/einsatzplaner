@@ -23,6 +23,8 @@ namespace OptimizerTests
                 }
             };
 
+            var roles = new List<RoleDTO>();
+
             var firstRequirement = new HelperDTO
             {
                 Id = "1",
@@ -49,7 +51,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };            
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].PreselectedMembers.Count, Is.EqualTo(1));
             Assert.That(result[secondRequirement].PreselectedMembers.Count, Is.EqualTo(1));
@@ -68,6 +70,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -95,7 +99,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].PreselectedMembers.Union(result[secondRequirement].PreselectedMembers).Count(), Is.EqualTo(5));
         }
@@ -112,6 +116,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -139,7 +145,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].PreselectedMembers.Count, Is.EqualTo(4));
             CollectionAssert.DoesNotContain(result[firstRequirement].PreselectedMembers, 3);
@@ -158,6 +164,8 @@ namespace OptimizerTests
                 }
             };
 
+            var roles = new List<RoleDTO>();
+
             var requirement = new HelperDTO
             {
                 Id = "1",
@@ -172,7 +180,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { requirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string>() { "M3", "M4", "M5" }, result[requirement].PreselectedMembers);
         }
@@ -190,6 +198,8 @@ namespace OptimizerTests
                 }
             };
 
+            var roles = new List<RoleDTO>();
+
             var requirement = new HelperDTO
             {
                 Id = "1",
@@ -204,7 +214,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { requirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result[requirement].PreselectedMembers.Count, Is.EqualTo(2));
         }
@@ -221,6 +231,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -248,7 +260,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result[firstRequirement].PreselectedMembers.First(), Is.EqualTo("M1"));
             Assert.That(result[secondRequirement].PreselectedMembers.First(), Is.EqualTo("M2"));
@@ -276,6 +288,8 @@ namespace OptimizerTests
                     Date = now.AddDays(1),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -315,7 +329,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement, thirdRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[firstRequirement].LockedMembers);
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[secondRequirement].LockedMembers);
@@ -339,6 +353,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -366,7 +382,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             Assert.That(result.ContainsKey(firstRequirement), Is.False);
 
@@ -388,6 +404,8 @@ namespace OptimizerTests
                 }
             };
 
+            var roles = new List<RoleDTO>();
+
             var firstRequirement = new HelperDTO
             {
                 Id = "1",
@@ -402,7 +420,7 @@ namespace OptimizerTests
             };
             var requirements = new List<HelperDTO> { firstRequirement };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, new List<QualificationDTO>());
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, new List<QualificationDTO>());
 
             CollectionAssert.AreEquivalent(new List<string> { "M1", "M2" }, result[firstRequirement].LockedMembers);
             CollectionAssert.IsEmpty(result[firstRequirement].PreselectedMembers);
@@ -421,6 +439,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -445,7 +465,7 @@ namespace OptimizerTests
                 }
             };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, qualifications);
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
 
             CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[firstRequirement].PreselectedMembers);
         }
@@ -467,6 +487,8 @@ namespace OptimizerTests
                     Date = now.AddDays(2),
                 }
             };
+
+            var roles = new List<RoleDTO>();
 
             var firstRequirement = new HelperDTO
             {
@@ -503,9 +525,110 @@ namespace OptimizerTests
                 }
             };
 
-            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, qualifications);
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
 
             CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].PreselectedMembers);
+        }
+
+        [Test]
+        public void Test_FillMembers()
+        {
+            var now = DateTime.UtcNow;
+            var events = new List<EventDTO>
+            {
+                new EventDTO
+                {
+                    Id = "E1",
+                    Date = now.AddDays(2),
+                }
+            };
+
+            var roles = new List<RoleDTO>
+            {
+                new RoleDTO
+                {
+                    Id = "R1",
+                    MemberIds = new List<string> { "M1" }
+                }
+            };
+
+            var firstRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E1",
+                RoleId = "R1",
+                LockingTime = now.AddDays(1),
+                RequiredAmount = 1,
+                LockedMembers = new List<string> { },
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string>(),
+                RequiredQualifications = new Dictionary<string, int> { }
+            };
+            var requirements = new List<HelperDTO> { firstRequirement };
+            var qualifications = new List<QualificationDTO> { };
+
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
+
+            CollectionAssert.AreEquivalent(new List<string> { "M1" }, result[firstRequirement].FillMembers);
+        }
+
+        [Test]
+        public void Test_FillMembersConsiderFixedMembers()
+        {
+            var now = DateTime.UtcNow;
+            var events = new List<EventDTO>
+            {
+                new EventDTO
+                {
+                    Id = "E1",
+                    Date = now.AddDays(2),
+                },
+                new EventDTO
+                {
+                    Id = "E2",
+                    Date = now.AddDays(2),
+                }
+            };
+
+            var roles = new List<RoleDTO>
+            {
+                new RoleDTO
+                {
+                    Id = "R1",
+                    MemberIds = new List<string> { "M1", "M2" }
+                }
+            };
+
+            var firstRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E1",
+                RoleId = "R1",
+                LockingTime = now.AddDays(1),
+                RequiredAmount = 1,
+                LockedMembers = new List<string> { "M1" },
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string>(),
+                RequiredQualifications = new Dictionary<string, int> { }
+            };
+            var secondRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E2",
+                RoleId = "R1",
+                LockingTime = now.AddDays(1),
+                RequiredAmount = 1,
+                LockedMembers = new List<string>(),
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string> { },
+                RequiredQualifications = new Dictionary<string, int> { }
+            };
+            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var qualifications = new List<QualificationDTO> { };
+
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
+
+            CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].FillMembers);
         }
     }
 }

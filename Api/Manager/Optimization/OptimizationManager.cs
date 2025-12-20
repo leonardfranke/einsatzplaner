@@ -8,25 +8,30 @@ namespace Api.Manager
         private FirestoreDb _firestoreDb;
         private IEventManager _eventManager;
         private IQualificationManager _qualificationManager;
+        private IRoleManager _roleManager;
 
-        public OptimizationManager(FirestoreDb firestoreDb, IEventManager eventManager, IQualificationManager qualificationManager) 
+        public OptimizationManager(FirestoreDb firestoreDb, IEventManager eventManager, IQualificationManager qualificationManager, IRoleManager roleManager) 
         {
             _firestoreDb = firestoreDb;
             _eventManager = eventManager;
             _qualificationManager = qualificationManager;
+            _roleManager = roleManager;
         }
 
         public async Task OptimizeDepartment(string departmentId)
         {
             var eventsTask = _eventManager.GetAllEvents(departmentId, DateTime.MinValue, DateTime.MaxValue);
             var requirementsTask = _eventManager.GetAllRequirements(departmentId);
+            var rolesTask = _roleManager.GetAll(departmentId);
             var qualificationsTask = _qualificationManager.GetAll(departmentId);
 
             var events = await eventsTask;
             var requirements = await requirementsTask;
+            var roles = await rolesTask;
             var qualifications = await qualificationsTask;
 
-            var optimizerDict = Optimizer.Optimizer.OptimizeAssignments(events, requirements, qualifications);
+
+            var optimizerDict = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
 
             var batch = _firestoreDb.StartBatch();
             foreach (var (requirement, update) in optimizerDict)
