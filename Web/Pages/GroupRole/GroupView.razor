@@ -14,35 +14,24 @@
 
 @foreach (var group in Groups)
 {
-    var header = group.Name + (group.MemberIds.Any() ? "" : " - Ohne Mitglieder");
-    <div class="table-responsive">
-        <table class="table">
-            <thead>
-                <tr @onmouseenter="() => HoveredId = group.Id" @onmouseleave="() => HoveredId = null">                
-                    <th scope="col">@header</th>
-                    <th>
-                        <button style="visibility: @(HoveredId == group.Id ? "visible" : "hidden")"
-                                type="button" @onclick="() => EditOrCreateGroup(group)"
-                                class="btn btn-outline-dark">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <Button hidden="@(HoveredId != group.Id)" @onclick="() => EditGroupMembers(group)" Color="ButtonColor.Dark" Outline="true"><Icon Name="IconName.Plus"/></Button>                        
-                    </th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var memberId in group.MemberIds)
-                {
-                    <tr>
-                        <td>
-                            @GetMemberNameById(memberId)
-                        </td>
-                        <td></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <MudDataGrid Items="group.MemberIds" Dense Class="mb-5">
+        <ToolBarContent>
+            <MudText Typo="Typo.h5">@group.Name</MudText>
+            <MudSpacer />
+            <MudButtonGroup Variant="Variant.Outlined">
+                <MudIconButton Icon="@Icons.Material.Outlined.Edit" OnClick="() => EditOrCreateGroup(group)" />
+                <MudIconButton Icon="@Icons.Material.Outlined.Person" OnClick="() => EditGroupMembers(group)" />
+            </MudButtonGroup>
+        </ToolBarContent>
+        <Columns>
+            <PropertyColumn Property="memberId => GetMemberNameById(memberId)" Sortable="true" Title="Name">
+
+            </PropertyColumn>
+        </Columns>
+        <NoRecordsContent>
+            Keine Mitglieder in der Gruppe
+        </NoRecordsContent>
+    </MudDataGrid>
 }
 
 <br />
