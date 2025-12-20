@@ -152,7 +152,7 @@ namespace Optimizer
                 .ToDictionary(group => group.Key, group => F_mr_dict.GetValueOrDefault(group.Key, 0) + LinearExpr.Sum(group.Select(pair => pair.Value)));
             var E_mr_dict_additional = X_mer_dict_additional
                 .GroupBy(pair => (pair.Key.memberId, pair.Key.roleId))
-                .ToDictionary(group => group.Key, group => E_mr_dict_available.GetValueOrDefault(group.Key, new LinearExpr()) + LinearExpr.Sum(group.Select(pair => pair.Value)));
+                .ToDictionary(group => group.Key, group => E_mr_dict_available.GetValueOrDefault(group.Key, LinearExpr.Constant(0)) + LinearExpr.Sum(group.Select(pair => pair.Value)));
 
             var D_mmr_list_available = new List<IntVar>();
             var E_mr_list_available = E_mr_dict_available.ToList();
@@ -182,7 +182,7 @@ namespace Optimizer
                     var ((otherRoleId, otherMemberId), otherE_mr) = E_mr_list_additional[j];
                     if (roleId == otherRoleId && memberId != otherMemberId)
                     {
-                        var D_mmr = model.NewIntVar(0, allRequirements.Count, "Diff");
+                        var D_mmr = model.NewIntVar(0, allRequirements.Count, "");
                         model.AddAbsEquality(D_mmr, E_mr - otherE_mr);
                         D_mmr_list_available.Add(D_mmr);
                     }
@@ -262,7 +262,8 @@ namespace Optimizer
                         {
                             LockedMembers = [.. lockedMembers.Union(preselectedMembers).Union(fillMembers)],
                             PreselectedMembers = [],
-                            AvailableMembers = [.. availableMembers]
+                            AvailableMembers = [.. availableMembers],
+                            FillMembers = []
                         });
                 }
             }

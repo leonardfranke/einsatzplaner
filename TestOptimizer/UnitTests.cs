@@ -630,5 +630,47 @@ namespace OptimizerTests
 
             CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].FillMembers);
         }
+
+        [Test]
+        public void Test_FillMembersToLockedMembers()
+        {
+            var now = DateTime.UtcNow;
+            var events = new List<EventDTO>
+            {
+                new EventDTO
+                {
+                    Id = "E1",
+                    Date = now.AddDays(2),
+                }
+            };
+
+            var roles = new List<RoleDTO>
+            {
+                new RoleDTO
+                {
+                    Id = "R1",
+                    MemberIds = new List<string> { "M1", "M2" }
+                }
+            };
+
+            var firstRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E1",
+                RoleId = "R1",
+                LockingTime = now,
+                RequiredAmount = 2,
+                LockedMembers = new List<string> {  },
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string>(),
+                RequiredQualifications = new Dictionary<string, int> { }
+            };
+            var requirements = new List<HelperDTO> { firstRequirement };
+            var qualifications = new List<QualificationDTO> { };
+
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, qualifications);
+
+            CollectionAssert.AreEquivalent(new List<string> { "M1", "M2" }, result[firstRequirement].LockedMembers);
+        }
     }
 }

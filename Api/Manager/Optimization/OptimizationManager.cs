@@ -44,14 +44,17 @@ namespace Api.Manager
                 var newLockedMembers = update.LockedMembers;
                 var newPreselectedMembers = update.PreselectedMembers;
                 var newAvailableMembers = update.AvailableMembers;
+                var newFillMembers = update.FillMembers;
 
                 var oldLockedMembers = requirement.LockedMembers;
                 var oldPreselectedMembers = requirement.PreselectedMembers;
                 var oldAvailableMembers = requirement.AvailableMembers;
+                var oldFillMembers = requirement.FillMembers;
 
                 var lockedMembersToRemove = oldLockedMembers.Except(newLockedMembers);
                 var preselectedMembersToRemove = oldPreselectedMembers.Except(newPreselectedMembers);
                 var availableMembersToRemove = oldAvailableMembers.Except(newAvailableMembers);
+                var fillMembersToRemove = oldFillMembers.Except(newFillMembers);
 
                 var updates = new Dictionary<string, object>();
                 if (lockedMembersToRemove.Any())
@@ -60,12 +63,15 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(preselectedMembersToRemove.ToArray()));
                 if (availableMembersToRemove.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(availableMembersToRemove.ToArray()));
+                if(fillMembersToRemove.Any())
+                    updates.Add(nameof(Requirement.FillMembers), FieldValue.ArrayRemove(fillMembersToRemove.ToArray()));
                 if (updates.Any())
                     batch.Update(requirementRef, updates, Precondition.MustExist);
 
                 var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
                 var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
                 var availableMembersToAdd = newAvailableMembers.Except(oldAvailableMembers);
+                var fillMembersToAdd = newFillMembers.Except(oldFillMembers);
 
                 updates.Clear();
                 if (lockedMembersToAdd.Any())
@@ -74,7 +80,9 @@ namespace Api.Manager
                     updates.Add(nameof(Requirement.PreselectedMembers), FieldValue.ArrayUnion(preselectedMembersToAdd.ToArray()));
                 if (availableMembersToAdd.Any())
                     updates.Add(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(availableMembersToAdd.ToArray()));
-                if(updates.Any())
+                if (fillMembersToAdd.Any())
+                    updates.Add(nameof(Requirement.FillMembers), FieldValue.ArrayUnion(fillMembersToAdd.ToArray()));
+                if (updates.Any())
                     batch.Update(requirementRef, updates, Precondition.MustExist);
             }
             await batch.CommitAsync();

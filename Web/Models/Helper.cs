@@ -18,6 +18,8 @@
 
         public List<string> AvailableMembers { get; set; }
 
+        public List<string> FillMembers { get; set; }
+
         public List<string> RequiredGroups { get; set; }
 
         public Dictionary<string, int> RequiredQualifications { get; set; }

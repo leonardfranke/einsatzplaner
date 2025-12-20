@@ -15,6 +15,7 @@ namespace Web.Converter
                     LockedMembers = helper.LockedMembers,
                     PreselectedMembers = helper.PreselectedMembers,
                     AvailableMembers = helper.AvailableMembers,
+                    FillMembers = helper.FillMembers,
                     EventId = helper.EventId,
                     RequiredGroups = helper.RequiredGroups,
                     LockingTime = helper.LockingTime,

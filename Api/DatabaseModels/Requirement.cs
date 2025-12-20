@@ -20,6 +20,8 @@ namespace Api.Models
         [FirestoreProperty]
         public List<string> AvailableMembers { get; set; }
         [FirestoreProperty]
+        public List<string> FillMembers { get; set; }
+        [FirestoreProperty]
         public Dictionary<string, int> RequiredQualifications { get; set; }
 
     }

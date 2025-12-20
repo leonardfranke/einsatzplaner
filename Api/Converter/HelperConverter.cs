@@ -14,6 +14,7 @@ namespace Api.Converter
                 LockedMembers = helper.LockedMembers,
                 PreselectedMembers = helper.PreselectedMembers,
                 AvailableMembers = helper.AvailableMembers,
+                FillMembers = helper.FillMembers ?? new(),
                 RequiredAmount = helper.RequiredAmount,
                 EventId = eventId,
                 RequiredGroups = helper.RequiredGroups,
