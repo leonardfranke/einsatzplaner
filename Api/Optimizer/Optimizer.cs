@@ -14,7 +14,7 @@ namespace Optimizer
             public List<string> AvailableMembers { get; set; }
         }
 
-        public static Dictionary<HelperDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<HelperDTO> allRequirements, List<RoleDTO> roles, List<QualificationDTO> qualifications)
+        public static Dictionary<HelperDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<HelperDTO> allRequirements, List<RoleDTO> roles, List<GroupDTO> groups, List<QualificationDTO> qualifications)
         {
             var eventsToOptimize = allEvents.Where(@event => @event.Date > DateTime.UtcNow);
             var requirementsToOptimize = allRequirements.Where(requirement => eventsToOptimize.Any(@event => @event.Id == requirement.EventId));
@@ -91,9 +91,12 @@ namespace Optimizer
                         }
                         model.Add(X_mer == LinearExpr.Sum(X_merq_list));
                     }
-                    if(role?.MemberIds?.Count > 0)
+                    if(role?.MemberIds?.Count > 0 && requirement.RequiredGroups != null)
                     {
-                        foreach (var member in role.MemberIds.Except(availableMembers).Except(lockedMembersOfEvent))
+                        var allowedMembers = requirement.RequiredGroups
+                            .Select(groupId => groups.FirstOrDefault(group => group.Id == groupId))
+                            .SelectMany(group => group?.MemberIds ?? []);
+                        foreach (var member in role.MemberIds.Except(availableMembers).Except(lockedMembersOfEvent).Intersect(allowedMembers))
                         {
                             var X_mer = model.NewBoolVar($"{requirement.EventId}, {requirement.RoleId}: {member}");
                             X_mer_dict_additional[(member, requirement.EventId, requirement.RoleId)] = X_mer;
