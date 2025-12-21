@@ -1,6 +1,6 @@
 ﻿@inherits HelperCheckboxBase
 
-<MudCheckBox Color="@BackgroundColor"
+<MudCheckBox Color="BackgroundColor" UncheckedColor="UncheckedColor"
              Disabled="@(IsPlayerLocked || (!IsPreselectedOrAvailable && (!IsMemberPermitted || !IsEventInFuture)))"
              @onmousedown="ChangeHelpingEvent"
              @onclick:preventDefault

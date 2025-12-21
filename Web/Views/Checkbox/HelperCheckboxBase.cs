@@ -33,6 +33,8 @@ namespace Web.Views
 
         public bool IsPreselectedOrAvailable => IsPreselected || IsAvailable;
 
+        public bool IsFill => Helper.FillMembers.Contains(currentUserId);
+
         public bool IsEntered { get => IsPlayerLocked || IsPreselectedOrAvailable; set { } }
 
         public bool IsEventInFuture => Event.EventDate.ToUniversalTime() >= DateTime.UtcNow;
@@ -55,6 +57,17 @@ namespace Web.Views
                 else
                     return Color.Default;
             }}
+
+        public Color UncheckedColor
+        {
+            get
+            {
+                if (IsFill)
+                    return Color.Warning;
+                else
+                    return Color.Default;
+            }
+        }
 
         [Inject]
         private IAuthManager _authManager { get; set; }
