@@ -30,6 +30,8 @@ namespace Web.Services.Locations
         public async Task<Location> GetById(string departmentId, string locationId)
         {
             var response = await _httpClient.GetAsync(new Uri($"/api/Location/{departmentId}/{locationId}", UriKind.Relative));
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+                return null;
             var locations = await response.Content.ReadFromJsonAsync<LocationDTO>();
             return LocationConverter.Convert(locations);            
         }
