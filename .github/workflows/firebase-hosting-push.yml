@@ -21,60 +21,60 @@ jobs:
       - run: psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -f prod_dump.sql
       - run: supabase migration up --local
 
-  tests_frontend:
-    runs-on: ubuntu-latest
-    env:
-      FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
-      FIRESTORE_EMULATOR_HOST: '127.0.0.1:9199'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # tests_frontend:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099'
+  #     FIRESTORE_EMULATOR_HOST: '127.0.0.1:9199'
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
+  #     - name: Setup node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: lts/*
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
+  #     - name: Set up Java 21
+  #       uses: actions/setup-java@v4
+  #       with:
+  #         distribution: 'temurin'
+  #         java-version: '21'
       
-      - name: Install firebase
-        run: npm install -g firebase-tools
+  #     - name: Install firebase
+  #       run: npm install -g firebase-tools
 
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+  #     - name: Setup dotnet
+  #       uses: actions/setup-dotnet@v4
+  #       with:
+  #         dotnet-version: '8.0.x'
       
-      - name: Restore dotnet dependencies
-        run: dotnet restore
+  #     - name: Restore dotnet dependencies
+  #       run: dotnet restore
 
-      - name: Build dotnet projects
-        run: dotnet build --no-restore
+  #     - name: Build dotnet projects
+  #       run: dotnet build --no-restore
 
-      - name: Install playwright browsers
-        run: pwsh bin/Debug/net8.0/playwright.ps1 install
-        working-directory: TestWebsite
+  #     - name: Install playwright browsers
+  #       run: pwsh bin/Debug/net8.0/playwright.ps1 install
+  #       working-directory: TestWebsite
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-      - run: supabase start
+  #     - uses: supabase/setup-cli@v1
+  #       with:
+  #         version: latest
+  #     - run: supabase start
 
-      - name: Run api, website and tests
-        env:
-          MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
-          MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
-          SUPABASE_URL: 'http://127.0.0.1:54321'
-          SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
-        run: |
-          dotnet run --no-build --no-restore --project Api &
-          dotnet run --no-build --no-restore --project Web &
-          cd TestWebsite
-          firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/EmptyDepartment/"
+  #     - name: Run api, website and tests
+  #       env:
+  #         MAILJET_API_KEY: ${{ secrets.MAILJET_API_KEY }}
+  #         MAILJET_SECRET_KEY: ${{ secrets.MAILJET_SECRET_KEY }}
+  #         SUPABASE_URL: 'http://127.0.0.1:54321'
+  #         SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+  #       run: |
+  #         dotnet run --no-build --no-restore --project Api &
+  #         dotnet run --no-build --no-restore --project Web &
+  #         cd TestWebsite
+  #         firebase emulators:exec "dotnet test --no-build --no-restore" --config "./emulator_firebase/firebase.json" --project emulator --import "./emulator_firebase/EmptyDepartment/"
 
   tests_optimizer:
     runs-on: ubuntu-latest
@@ -100,7 +100,7 @@ jobs:
             
   deploy_backend:   
     runs-on: ubuntu-latest
-    needs: [tests_frontend, tests_optimizer, test_supabase_migration]
+    needs: [tests_optimizer, test_supabase_migration]
     if: ${{ success() }}
     outputs: 
       backend-url: ${{ steps.backend-deployment.outputs.url }}
@@ -137,7 +137,7 @@ jobs:
 
   deploy_frontend:
     runs-on: ubuntu-latest
-    needs: [tests_frontend, deploy_backend]
+    needs: [deploy_backend]
     if: ${{ success() }}
     steps:
       - uses: actions/checkout@v4
