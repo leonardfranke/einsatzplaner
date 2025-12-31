@@ -29,7 +29,7 @@
     <Columns>
         <TemplateColumn Title="Eintragung">
             <CellTemplate>
-                <HelperCheckbox Event="Event" Helper="@context.Item" Role="@GetRoleById(context.Item.RoleId)" Member="Member" Groups="Groups" ValueChangedCallback="StateHasChanged" />
+                <HelperCheckbox Event="Event" Helper="@context.Item" Role="@GetRoleById(context.Item.RoleId)" Member="Member" ValueChangedCallback="StateHasChanged" />
             </CellTemplate>
         </TemplateColumn>
         <TemplateColumn Title="Kategorie">

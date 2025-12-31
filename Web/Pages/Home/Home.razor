@@ -103,7 +103,7 @@
                         @if (helper != null)
                         {
                             <MudStack Row>
-                                <HelperCheckbox Event="@columnContext.Item" Helper="helper" Member="Member" Role="role" Groups="Groups" />
+                                <HelperCheckbox Event="@columnContext.Item" Helper="helper" Member="Member" Role="role"/>
                                 <AuthorizeView Roles="IsAdmin">
                                     <MudTooltip ShowOnFocus ShowOnHover="false">
                                         <ChildContent>

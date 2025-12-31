@@ -101,7 +101,7 @@ else
 
             @if(Groups.Count > 0)
             {
-                <MudSwitch Class="mt-3" @bind-Value="helperForm.RestrictGroups" Label="Gruppen beschränken" />
+                <MudSwitch Class="mt-3" @bind-Value="helperForm.RestrictGroups" Label="Gruppenempfehlungen aktivieren:" />
                 @if (helperForm.RestrictGroups)
                 {
                     <MudStack Row=true Wrap="Wrap.Wrap">
