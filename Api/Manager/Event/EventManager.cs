@@ -577,7 +577,8 @@ namespace Api.Manager
             var eventsInRange = await GetAllEvents(departmentId, fromDate, toDate);
             var requirementsInRange = await Task.WhenAll(eventsInRange.Select(@event => GetRequirementsOfEvent(departmentId, @event.Id)));
             var requirementsOfRole = requirementsInRange.SelectMany(l => l).Where(requirement => requirement.RoleId == roleId);
-                        
+            var role = await _roleManager.GetRole(departmentId, roleId);
+
             var countsTotal = requirementsOfRole.SelectMany(requirement =>
             {
                 return requirement.LockedMembers.Concat(requirement.PreselectedMembers).Concat(requirement.AvailableMembers);
@@ -586,7 +587,15 @@ namespace Api.Manager
             {
                 return requirement.LockedMembers.Concat(requirement.PreselectedMembers);
             }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
-            var counts = countsTotal.Select(pair => new StatDTO(pair.Key, pair.Value, countsFixed.GetValueOrDefault(pair.Key, 0)));
+            var countsRecommendations = requirementsOfRole.SelectMany(requirement =>
+            {
+                return requirement.FillMembers.Except(requirement.LockedMembers.Union(requirement.PreselectedMembers).Union(requirement.AvailableMembers));
+            }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
+            var counts = countsTotal.Keys.Union(countsFixed.Keys).Union(countsRecommendations.Keys).Select(memberId => 
+                new StatDTO(memberId, 
+                countsFixed.GetValueOrDefault(memberId, 0), 
+                countsTotal.GetValueOrDefault(memberId, 0), 
+                countsRecommendations.GetValueOrDefault(memberId, 0)));
             return counts;
         }
 

@@ -655,6 +655,74 @@ namespace OptimizerTests
             CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].FillMembers);
         }
 
+        [Test]
+        public void Test_FillMembersConsiderAvaialbleMembers()
+        {
+            var now = DateTime.UtcNow;
+            var events = new List<EventDTO>
+            {
+                new EventDTO
+                {
+                    Id = "E1",
+                    Date = now.AddDays(2),
+                },
+                new EventDTO
+                {
+                    Id = "E2",
+                    Date = now.AddDays(2),
+                }
+            };
+
+            var roles = new List<RoleDTO>
+            {
+                new RoleDTO
+                {
+                    Id = "R1",
+                    MemberIds = new List<string> { "M1", "M2" }
+                }
+            };
+            var groups = new List<GroupDTO>()
+            {
+                new GroupDTO
+                {
+                    Id = "G1",
+                    MemberIds = new List<string> { "M1", "M2" }
+                }
+            };
+
+            var firstRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E1",
+                RoleId = "R1",
+                LockingTime = now.AddDays(1),
+                RequiredAmount = 1,
+                LockedMembers = new List<string> (),
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string> { "M1" },
+                RequiredQualifications = new Dictionary<string, int> { }
+            };
+            var secondRequirement = new HelperDTO
+            {
+                Id = "1",
+                EventId = "E2",
+                RoleId = "R1",
+                LockingTime = now.AddDays(1),
+                RequiredAmount = 1,
+                LockedMembers = new List<string>(),
+                PreselectedMembers = new List<string>(),
+                AvailableMembers = new List<string> { },
+                RequiredQualifications = new Dictionary<string, int> { },
+                RequiredGroups = new List<string> { "G1" }
+            };
+            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var qualifications = new List<QualificationDTO> { };
+
+            var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);
+
+            CollectionAssert.AreEquivalent(new List<string> { "M2" }, result[secondRequirement].FillMembers);
+        }
+
         //[Test]
         //public void Test_FillMembersToLockedMembers()
         //{

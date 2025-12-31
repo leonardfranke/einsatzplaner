@@ -1,4 +1,4 @@
 ﻿namespace DTO
 {
-    public record StatDTO(string MemberId, int Availability, int Deployments);
+    public record StatDTO(string MemberId, int Deployments, int Availability, int Recommendations);
 }
