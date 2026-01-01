@@ -201,22 +201,21 @@ namespace Optimizer
             var max_De = D_mer_list.Count() + 1;
 
             model.Minimize(max_De * (max_D_available * LinearExpr.Sum(V_erq_available_list) + LinearExpr.Sum(D_mmr_list_available)) + LinearExpr.Sum(D_mer_list));
-            var solver_avaialble = new CpSolver();
-            solver_avaialble.Solve(model);  
+            var solver = new CpSolver() { StringParameters = "max_time_in_seconds:30.0" };
+            solver.Solve(model);  
             
             foreach(var X_mer in X_mer_dict_available.Values)
             {
-                model.Add(X_mer == solver_avaialble.Value(X_mer));
+                model.Add(X_mer == solver.Value(X_mer));
             }
 
             foreach (var X_merq in X_merq_dict_available.Values)
             {
-                model.Add(X_merq == solver_avaialble.Value(X_merq));
+                model.Add(X_merq == solver.Value(X_merq));
             }
 
             model.Minimize(max_D_additional * LinearExpr.Sum(V_erq_additional_list) + LinearExpr.Sum(D_mmr_list_additional));
-            var solver_additional = new CpSolver();
-            solver_additional.Solve(model);
+            solver.Solve(model);
 
             var filledHelpers = new Dictionary<HelperDTO, OptimizedAssignments>();
             var X_mer_by_er_available = X_mer_dict_available.GroupBy(pair => (pair.Key.eventId, pair.Key.roleId));
@@ -233,7 +232,7 @@ namespace Optimizer
                 {
                     foreach (var ((member, _, _), X_erm) in groupAvailable)
                     {
-                        if(solver_additional.Value(X_erm) == 1)
+                        if(solver.Value(X_erm) == 1)
                             preselectedMembers.Add(member);
                         else
                             availableMembers.Add(member);
@@ -245,7 +244,7 @@ namespace Optimizer
                 {
                     foreach (var ((member, _, _), X_erm) in groupAdditional)
                     {
-                        if (solver_additional.Value(X_erm) == 1)
+                        if (solver.Value(X_erm) == 1)
                             fillMembers.Add(member);
                     }
                 }
