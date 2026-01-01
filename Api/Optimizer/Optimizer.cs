@@ -152,7 +152,11 @@ namespace Optimizer
 
             var E_mr_dict_available = X_mer_dict_available
                 .GroupBy(pair => (pair.Key.memberId, pair.Key.roleId))
-                .ToDictionary(group => group.Key, group => F_mr_dict.GetValueOrDefault(group.Key, 0) + LinearExpr.Sum(group.Select(pair => pair.Value)));
+                .ToDictionary(group => group.Key, group => LinearExpr.Sum(group.Select(pair => pair.Value)));
+            foreach(var (mr, F_mr) in F_mr_dict)
+            {
+                E_mr_dict_available[mr] = E_mr_dict_available.GetValueOrDefault(mr, LinearExpr.Constant(0)) + F_mr;
+            }
             var E_mr_dict_additional = X_mer_dict_additional
                 .GroupBy(pair => (pair.Key.memberId, pair.Key.roleId))
                 .ToDictionary(group => group.Key, group => E_mr_dict_available.GetValueOrDefault(group.Key, LinearExpr.Constant(0)) + LinearExpr.Sum(group.Select(pair => pair.Value)));
@@ -179,15 +183,15 @@ namespace Optimizer
             var E_mr_list_additional = E_mr_dict_additional.ToList();
             for (var i = 0; i < E_mr_list_additional.Count; i++)
             {
-                var ((roleId, memberId), E_mr) = E_mr_list_additional[i];
+                var ((memberId, roleId), E_mr) = E_mr_list_additional[i];
                 for (var j = i + 1; j < E_mr_list_additional.Count; j++)
                 {
-                    var ((otherRoleId, otherMemberId), otherE_mr) = E_mr_list_additional[j];
+                    var ((otherMemberId, otherRoleId), otherE_mr) = E_mr_list_additional[j];
                     if (roleId == otherRoleId && memberId != otherMemberId)
                     {
                         var D_mmr = model.NewIntVar(0, allRequirements.Count, "");
                         model.AddAbsEquality(D_mmr, E_mr - otherE_mr);
-                        D_mmr_list_available.Add(D_mmr);
+                        D_mmr_list_additional.Add(D_mmr);
                     }
                 }
             }
