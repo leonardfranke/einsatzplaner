@@ -201,11 +201,7 @@ namespace Optimizer
             var max_De = D_mer_list.Count() + 1;
 
             model.Minimize(max_De * (max_D_available * LinearExpr.Sum(V_erq_available_list) + LinearExpr.Sum(D_mmr_list_available)) + LinearExpr.Sum(D_mer_list));
-            var solver = new CpSolver() { StringParameters = @"
-                max_time_in_seconds:30
-                num_search_workers:1
-                cp_model_presolve:false
-                " };
+            var solver = new CpSolver() { StringParameters = "max_time_in_seconds:30" };
             solver.Solve(model);  
             
             foreach(var X_mer in X_mer_dict_available.Values)
