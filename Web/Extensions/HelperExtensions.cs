@@ -13,14 +13,14 @@ namespace Web.Extensions
 
         public static MarkupString GetRegisteredMembers(this Models.Helper helper, IEnumerable<Member> members)
         {
-            var unknownUserString = "Unbekannter Nutzer";
-            var str = "";
+            var unknownUserString = new MarkupString("Unbekannter Nutzer");
+            var str = string.Empty;
             if (helper.LockedMembers.Any())
-                str += $"Fest: {string.Join(", ", helper.LockedMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.Name ?? unknownUserString))}<br/>";
+                str += $"Fest: {string.Join(", ", helper.LockedMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.GetMemberName() ?? unknownUserString))}<br/>";
             if (helper.PreselectedMembers.Any())
-                str += $"Ausgewählt: {string.Join(", ", helper.PreselectedMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.Name ?? unknownUserString))}<br/>";
+                str += $"Ausgewählt: {string.Join(", ", helper.PreselectedMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.GetMemberName() ?? unknownUserString))}<br/>";
             if (helper.AvailableMembers.Any())
-                str += $"Verfügbar: {string.Join(", ", helper.AvailableMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.Name ?? unknownUserString))}<br/>";
+                str += $"Verfügbar: {string.Join(", ", helper.AvailableMembers.Select(memberId => members.FirstOrDefault(member => member.Id == memberId)).Select(member => member?.GetMemberName() ?? unknownUserString))}<br/>";
             return new MarkupString(str);
         }
 

@@ -3,6 +3,7 @@ using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Web.Checks;
+using Web.Extensions;
 using Web.Manager;
 using Web.Models;
 using Web.Services;
@@ -129,11 +130,11 @@ namespace Web.Pages
             return _roles.Find(role => role.Id == roleId);
         }
 
-        protected string GetDisplayMemberNames(List<string> memberIds)
+        protected MarkupString GetDisplayMemberNames(List<string> memberIds)
         {
             if (memberIds == null || memberIds.Count == 0)
-                return "-";
-            return string.Join(", ", memberIds.Select(id => _members.FirstOrDefault(member => member.Id == id)?.Name ?? "Ohne Name"));
+                return new MarkupString("-");
+            return new MarkupString(string.Join(", ", memberIds.Select(id => _members.FirstOrDefault(member => member.Id == id)?.GetMemberName() ?? new MarkupString("Ohne Name"))));
         }
 
         protected (string, bool) GetDisplayGroupNames(List<string> groupIds)

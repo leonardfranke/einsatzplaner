@@ -28,7 +28,7 @@
     <Columns>
         <PropertyColumn Property="stat => stat.MemberId" Title="Nutzer">
             <CellTemplate>
-                @(GetMemberById(context.Item.MemberId)?.Name ?? "Unbekannter Nutzer")
+                @GetMemberNameById(context.Item.MemberId)
             </CellTemplate>
         </PropertyColumn>
         <PropertyColumn Property="stat => stat.Availability" Title="Eintragungen" />

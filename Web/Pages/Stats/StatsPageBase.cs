@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Web.Checks;
+using Web.Extensions;
 using Web.Services;
 using Web.Services.Stats;
 
@@ -58,9 +59,9 @@ namespace Web.Pages
             Members = await taskMembers;
         }
 
-        public Models.Member GetMemberById(string id)
+        public MarkupString GetMemberNameById(string memberId)
         {
-            return Members.FirstOrDefault(member => member.Id == id);
+            return Members.Find(member => member.Id == memberId)?.GetMemberName() ?? new MarkupString("Unbekannter Nutzer");
         }
 
         public async Task LoadStats()

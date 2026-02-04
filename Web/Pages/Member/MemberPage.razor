@@ -1,5 +1,6 @@
 ﻿@page "/{departmentUrl}/member"
 @using BlazorBootstrap
+@using Web.Extensions
 @inherits MemberPageBase
 
 <MudTable Loading="IsMembersLoading" @ref="Table" Items="Members" Breakpoint="Breakpoint.None" EditTrigger="TableEditTrigger.EditButton" CanCancelEdit="true" 
@@ -20,7 +21,7 @@
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.GetMemberName()</MudTd>
         <MudTd><MudCheckBox Disabled Value="context.IsAdmin"/></MudTd>
         <MudTd></MudTd>
     </RowTemplate>

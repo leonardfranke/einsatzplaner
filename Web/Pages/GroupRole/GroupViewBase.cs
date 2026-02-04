@@ -1,5 +1,6 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
+using Web.Extensions;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeGroup;
@@ -49,9 +50,9 @@ namespace Web.Pages
             StateHasChanged();
         }
 
-        public string GetMemberNameById(string memberId)
+        public MarkupString GetMemberNameById(string memberId)
         {
-            return _members.Find(member => member.Id == memberId)?.Name ?? "Unbekannter Nutzer";
+            return _members.Find(member => member.Id == memberId)?.GetMemberName() ?? new MarkupString("Unbekannter Nutzer");
         }
 
         public async Task EditGroupMembers(Group group)

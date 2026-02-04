@@ -29,7 +29,9 @@
         </ToolBarContent>
         <Columns>
             <PropertyColumn Property="memberId => GetMemberNameById(memberId)" Sortable="true" Title="Name">
-
+                <CellTemplate>
+                    @GetMemberNameById(context.Item)
+                </CellTemplate>
             </PropertyColumn>
         </Columns>
         <NoRecordsContent>
@@ -52,7 +54,9 @@
             </ToolBarContent>
             <Columns>
                 <PropertyColumn Property="memberId => GetMemberNameById(memberId)" Sortable="true" Title="Name">
-
+                    <CellTemplate>
+                        @GetMemberNameById(context.Item)
+                    </CellTemplate>
                 </PropertyColumn>
             </Columns>
             <NoRecordsContent>
