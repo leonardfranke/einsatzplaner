@@ -2,6 +2,7 @@
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using MudBlazor;
 using Web.Checks;
 using Web.Extensions;
 using Web.Manager;
@@ -58,6 +59,9 @@ namespace Web.Pages
 
         [Inject]
         private IMemberService _memberService { get; set; }
+
+        [Inject]
+        private IDialogService _dialogService { get; set; }
 
         [Inject]
         private AuthenticationStateProvider _authStateProvider { get; set; }
@@ -167,15 +171,21 @@ namespace Web.Pages
                 await _helperService.UpdateLockedMembers(_departmentId, helper.EventId, helper.Id, lockedMembersToRemove, lockedMembersToAdd);
                 await ReloadHelpers();
             };
-            var closeModalFunc = Modal.HideAsync;
-            var parameters = new Dictionary<string, object>
+
+            var groupingFunctions = new SortedDictionary<string, Func<Models.Member, bool>>()
             {
-                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
-                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
-                { nameof(MemberSelectionModal.Members), permittedMembers},
-                { nameof(MemberSelectionModal.SelectedMembers), lockedMembers }
+                { "Bereits zugewiesen", member => helper.LockedMembers.Contains(member.Id) },
+                { "Vorausgewählt", member => helper.PreselectedMembers.Contains(member.Id) },
+                { "Verfügbar", member => helper.AvailableMembers.Contains(member.Id) },
+                { "Empfehlungen", member => helper.FillMembers.Contains(member.Id) }
             };
-            await Modal.ShowAsync<MemberSelectionModal>(title: $"{role?.Name ?? "Nutzer"} auswählen, Bedarf: {helper.RequiredAmount}", parameters: parameters);
+            var parameter = new DialogParameters<MemberSelection>()
+            {
+                { x => x.Members, permittedMembers },
+                { x => x.SelectedMembers, lockedMembers },
+                { x => x.GroupingFunctions, groupingFunctions }
+            };
+            var dialog = await _dialogService.ShowAsync<MemberSelection>($"{role.Name} auswählen, Bedarf: {helper.RequiredAmount}", parameter);
         }
 
         protected string GetPageTitle()

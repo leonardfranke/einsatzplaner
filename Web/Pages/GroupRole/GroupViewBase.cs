@@ -1,6 +1,7 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
 using Web.Extensions;
+using MudBlazor;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeGroup;
@@ -21,6 +22,9 @@ namespace Web.Pages
 
         [Inject]
         private IMemberService _memberService { get; set; }
+
+        [Inject]
+        private IDialogService _dialogService { get; set; }
 
         public string HoveredId { get; set; }
         public List<Group> Groups { get; private set; }
@@ -68,15 +72,13 @@ namespace Web.Pages
                 await _groupService.UpdateGroupMembers(_departmentId, group.Id, newMembers, formerMembers);
                 await LoadGroups();
             };
-            var closeModalFunc = Modal.HideAsync;
-            var parameters = new Dictionary<string, object>
+
+            var parameter = new DialogParameters<MemberSelection>()
             {
-                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
-                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
-                { nameof(MemberSelectionModal.Members), _members},
-                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+                { x => x.Members, _members },
+                { x => x.SelectedMembers, currentSelectedMembers }
             };
-            await Modal.ShowAsync<MemberSelectionModal>(title: group.Name, parameters: parameters);
+            var dialog = await _dialogService.ShowAsync<MemberSelection>(group.Name, parameter);
         }
 
         public async Task EditOrCreateGroup(Group? group)

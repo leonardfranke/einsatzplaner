@@ -1,6 +1,7 @@
 ﻿using BlazorBootstrap;
 using Microsoft.AspNetCore.Components;
 using Web.Extensions;
+using MudBlazor;
 using Web.Models;
 using Web.Services;
 using Web.Views.ChangeHelperCategoryGroup;
@@ -23,6 +24,9 @@ namespace Web.Pages
 
         [Inject]
         private IRoleService _roleService { get; set; }
+
+        [Inject]
+        private IDialogService _dialogService { get; set; }
 
         [Inject]
         private IRequirementGroupService _requirementGroupService { get; set; }
@@ -129,15 +133,13 @@ namespace Web.Pages
                 if (formerMembers.Any())
                     await LoadQualifications();
             };
-            var closeModalFunc = Modal.HideAsync;
-            var parameters = new Dictionary<string, object>
+
+            var parameter = new DialogParameters<MemberSelection>()
             {
-                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
-                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
-                { nameof(MemberSelectionModal.Members), _members},
-                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+                { x => x.Members, _members },
+                { x => x.SelectedMembers, currentSelectedMembers }
             };
-            await Modal.ShowAsync<MemberSelectionModal>(title: role.Name, parameters: parameters);
+            var dialog = await _dialogService.ShowAsync<MemberSelection>(role.Name, parameter);
         }
         public async Task EditQualificationMembers(Qualification qualification)
         {
@@ -153,15 +155,13 @@ namespace Web.Pages
                 await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.Id, newMembers, formerMembers);
                 await LoadQualifications();
             };
-            var closeModalFunc = Modal.HideAsync;
-            var parameters = new Dictionary<string, object>
+
+            var parameter = new DialogParameters<MemberSelection>()
             {
-                { nameof(MemberSelectionModal.CloseModalFunc), closeModalFunc},
-                { nameof(MemberSelectionModal.ConfirmModalAction), confirmModalAction},
-                { nameof(MemberSelectionModal.Members), permittedMembers},
-                { nameof(MemberSelectionModal.SelectedMembers), currentSelectedMembers }
+                { x => x.Members, permittedMembers },
+                { x => x.SelectedMembers, currentSelectedMembers }
             };
-            await Modal.ShowAsync<MemberSelectionModal>(title: qualification.Name, parameters: parameters);
+            var dialog = await _dialogService.ShowAsync<MemberSelection>($"{qualification.Name} auswählen", parameter);
         }
 
         public string GetRoleHeader(Role role)
