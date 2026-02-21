@@ -10,6 +10,7 @@ namespace Api.Manager
         public Task UpdateOrCreateEvent(UpdateEventDTO updateEventDTO);
         public Task DeleteEvent(string departmentId, string eventId);
         public Task<List<HelperDTO>> GetAllRequirements(string departmentId);
+        public Task<List<HelperDTO>> GetEnteredMemberRequirements(string departmentId, string memberId);
         public Task<List<HelperDTO>> GetRequirementsOfEvent(string departmentId, string eventId);
         public Task SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable);
         public Task UpdateLockedMembers(string departmentId, string eventId, string helperId, UpdateMembersListDTO updateMembersList);

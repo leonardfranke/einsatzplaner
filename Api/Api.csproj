@@ -13,6 +13,7 @@
     <PackageReference Include="Google.Cloud.Tasks.V2" Version="3.5.0" />
     <PackageReference Include="Google.OrTools" Version="9.14.6206" />
     <PackageReference Include="GoogleApi" Version="5.8.11" />
+    <PackageReference Include="Ical.Net" Version="5.2.1" />
     <PackageReference Include="Mailjet.Api" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.QuickGrid.EntityFrameworkAdapter" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2" />

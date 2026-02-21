@@ -236,6 +236,15 @@ namespace Api.Manager
             return helpers.SelectMany(requirements => requirements).ToList();
         }
 
+        public async Task<List<HelperDTO>> GetEnteredMemberRequirements(string departmentId, string memberId)
+        {
+            var requirements = await GetAllRequirements(departmentId);
+            var memberRequirements = requirements
+                .Where(requirement => requirement.PreselectedMembers.Contains(memberId) || requirement.LockedMembers.Contains(memberId))
+                .ToList();
+            return memberRequirements;
+        }
+
         public async Task<List<HelperDTO>> GetRequirementsOfEvent(string departmentId, string eventId)
         {
             if (string.IsNullOrEmpty(eventId))
