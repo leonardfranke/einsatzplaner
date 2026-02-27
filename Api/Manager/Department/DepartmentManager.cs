@@ -3,59 +3,45 @@ using Api.Models;
 using DTO;
 using FirebaseAdmin.Auth;
 using Google.Cloud.Firestore;
+using Supabase;
 
 namespace Api.Manager
 {
     public class DepartmentManager : IDepartmentManager
     {
+        private Client _supabaseClient;
         private FirestoreDb _firestoreDb;
         private IMemberManager _memberManager;
-        private string path = "Department";
 
-        public DepartmentManager(FirestoreDb firestoreDb, IMemberManager memberManager)
+        public DepartmentManager(FirestoreDb firestoreDb, IMemberManager memberManager, Client supabaseClient)
         {
             _firestoreDb = firestoreDb;
             _memberManager = memberManager;
+            _supabaseClient = supabaseClient;
         }
 
         public async Task<List<DepartmentDTO>> GetAll()
         {
-            var snapshot = await _firestoreDb.Collection(path).GetSnapshotAsync();
-            var departments = new List<Department>();
-            foreach (var document in snapshot)
-            {
-                var department = document.ConvertTo<Department>();
-                if (department == null)
-                    continue;
-                departments.Add(department);
-            }
-            return DepartmentConverter.Convert(departments);                      
+            var res = await _supabaseClient.From<Department>().Get();
+            return DepartmentConverter.Convert(res.Models);                      
         }
 
         public async Task<DepartmentDTO> GetById(string departmentId)
         {
-            var snapshot = await _firestoreDb.Collection(path)
-                .Document(departmentId).GetSnapshotAsync();
-            var department = snapshot.ConvertTo<Department>();
-            return DepartmentConverter.Convert(department);
+            var res = await _supabaseClient.From<Department>().Where(dep => dep.Id == departmentId).Single();
+            return DepartmentConverter.Convert(res);
         }
 
         public async Task<DepartmentDTO> GetByUrl(string departmentUrl)
         {
-            var snapshots = await _firestoreDb.Collection(path).WhereEqualTo(nameof(Department.URL), departmentUrl).Limit(1).GetSnapshotAsync();
-            if (!snapshots.Any())
-                return null;
-            var department = snapshots.First().ConvertTo<Department>();
-            return DepartmentConverter.Convert(department);
+            var res = await _supabaseClient.From<Department>().Where(dep => dep.URL == departmentUrl).Single();
+            return DepartmentConverter.Convert(res);
         }
 
         public async Task<bool> IsMemberInDepartment(string memberId, string departmentId)
         {
-            var memberSnapshot = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(memberId).GetSnapshotAsync();
-
-            return memberSnapshot.Exists;
+            var res = await _supabaseClient.From<Member>().Select(nameof(Member.Id)).Where(member => member.DepartmentId == departmentId && member.Id == memberId).Single();
+            return res != null;
         }
 
         public async Task<bool> MembershipRequested(string departmentId, string userId)
@@ -72,8 +58,8 @@ namespace Api.Manager
             if (user == null)
                 return false;
 
-            var memberCount = await _memberManager.MemberCount(departmentId);
-            if (memberCount == 0)
+            var hasMembers = await _memberManager.HasMembers(departmentId);
+            if (!hasMembers)
             {  
                 await _memberManager.CreateMember(departmentId, userId, user.DisplayName, true);
                 return true;
@@ -136,9 +122,7 @@ namespace Api.Manager
 
         public Task RemoveMember(string departmentId, string memberId)
         {
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(memberId).DeleteAsync();
+            return _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId && member.Id == memberId).Delete();
         }
     }
 }

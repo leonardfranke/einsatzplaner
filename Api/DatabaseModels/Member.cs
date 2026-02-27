@@ -3,7 +3,7 @@
 namespace Api.Models
 {
     [FirestoreData]
-    public class Member : FirebaseDocument
+    public class MemberOld : FirebaseDocument
     {
         [FirestoreProperty]
         public string Name { get; set; }

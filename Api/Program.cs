@@ -1,3 +1,4 @@
+using Api.DataMigrations;
 using Api.Mailjet;
 using Api.Manager;
 using FirebaseAdmin;
@@ -88,6 +89,7 @@ builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
 builder.Services.AddSingleton<ILocationManager, LocationManager>();
+builder.Services.AddSingleton<MembersMigration, MembersMigration>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

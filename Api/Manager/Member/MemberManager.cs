@@ -1,92 +1,72 @@
 ﻿using Api.Converter;
 using Api.Models;
 using DTO;
-using Google.Cloud.Firestore;
+using Supabase;
 
 namespace Api.Manager
 {
     public class MemberManager : IMemberManager
     {
-        private FirestoreDb _firestoreDb;
+        private Client _supabaseClient;
 
-        public MemberManager(FirestoreDb firestoreDb)
+        public MemberManager(Client supabaseClient)
         {
-            _firestoreDb = firestoreDb;
+            _supabaseClient = supabaseClient;
         }
 
         public async Task<List<MemberDTO>> GetAll(string departmentId)
         {
-            var snapshot = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).GetSnapshotAsync();
-
-            var members = new List<Member>();
-            foreach (var document in snapshot)
-            {
-                var member = document.ConvertTo<Member>();
-                if (member == null)
-                    continue;
-                members.Add(member);
-            }
-            return MemberConverter.Convert(members);
+            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId).Get();
+            return MemberConverter.Convert(res.Models);
         }
 
-        public async Task UpdateMember(string departmentId, UpdateMemberDTO updateMemberDTO)
+        public Task UpdateMember(string departmentId, UpdateMemberDTO updateMemberDTO)
         {
-            var snapshot = _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(updateMemberDTO.Id);
+            var query = _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId && member.Id == updateMemberDTO.Id);
 
             var updateDict = new Dictionary<string, object>();
             if (updateMemberDTO.Name != null)
-                updateDict.Add(nameof(Member.Name), updateMemberDTO.Name);
+                query.Set(member => member.Name, updateMemberDTO.Name);
             if (updateMemberDTO.IsAdmin != null)
-                updateDict.Add(nameof(Member.IsAdmin), updateMemberDTO.IsAdmin);
-                        
-            await snapshot.UpdateAsync(updateDict, Precondition.MustExist);
+                query.Set(member => member.IsAdmin, updateMemberDTO.IsAdmin);
+
+            return query.Update();
         }
 
         public async Task<string> CreateDummyMember(string departmentId)
         {
             var newMember = new Member
             {
+                DepartmentId = departmentId,
                 Name = "Dummy-Nutzer",
                 IsAdmin = false,
                 IsDummy = true,
                 EmailNotificationActive = false
             };
 
-            var document = _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document();
-                
-            await document.CreateAsync(newMember);
-            return document.Id;
+            var res = await _supabaseClient.From<Member>().Insert(newMember);
+            return res.Model.Id;
         }
 
         public Task CreateMember(string departmentId, string id, string name, bool isAdmin)
         {
             var newMember = new Member
             {
+                DepartmentId= departmentId,
+                Id = id,
                 Name = name,
                 IsAdmin = isAdmin,
                 IsDummy = false,
                 EmailNotificationActive = true
             };
 
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(id).CreateAsync(newMember);
+            return _supabaseClient.From<Member>().Insert(newMember);
         }
 
         public async Task<MemberDTO> GetMember(string departmentId, string memberId)
         {
-            var snapshot = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBER).Document(memberId).GetSnapshotAsync();
-
-            var member = snapshot.ConvertTo<Member>();
-            return MemberConverter.Convert(member);
+            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId && member.Id == memberId).Single();            
+            return MemberConverter.Convert(res);
         }
 
         /*
@@ -153,20 +133,10 @@ namespace Api.Manager
                         isAddNotRemove ? FieldValue.ArrayUnion(id) : FieldValue.ArrayRemove(id) } });
         }*/
 
-        public async Task<long?> MemberCount(string departmentId)
+        public async Task<bool> HasMembers(string departmentId)
         {
-            var result = await GetMembersReference(departmentId).Count().GetSnapshotAsync();
-            return result.Count;
-        }
-
-        private DocumentReference GetMemberReference(string departmentId, string memberId)
-        {
-            return GetMembersReference(departmentId).Document(memberId);
-        }
-
-        private CollectionReference GetMembersReference(string departmentId)
-        {
-            return _firestoreDb.Collection(Paths.DEPARTMENT).Document(departmentId).Collection(Paths.MEMBER);
+            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId).Limit(1).Single();
+            return res != null;
         }
     }
 }

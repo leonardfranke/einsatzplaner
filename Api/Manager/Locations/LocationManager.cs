@@ -2,7 +2,6 @@
 using DTO;
 using GoogleApi.Entities.Common.Enums;
 using GoogleApi.Entities.PlacesNew.AutoComplete.Request;
-using GoogleApi.Entities.PlacesNew.Common.Enums;
 using GoogleApi.Entities.PlacesNew.Details.Request;
 using Microsoft.IdentityModel.Tokens;
 using Supabase;
@@ -14,7 +13,7 @@ namespace Api.Manager
         private Client _supabaseClient;
         private string _placesKey;
 
-        public LocationManager(Client supabaseClient, IHttpClientFactory httpClientFactory)
+        public LocationManager(Client supabaseClient)
         {
             _supabaseClient = supabaseClient;
             _placesKey = Environment.GetEnvironmentVariable("PLACES_API_KEY");

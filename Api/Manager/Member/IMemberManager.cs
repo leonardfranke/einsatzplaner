@@ -9,6 +9,6 @@ namespace Api.Manager
         public Task UpdateMember(string departmentId, UpdateMemberDTO updateMemberDTO);
         public Task CreateMember(string departmentId, string? id, string name, bool isAdmin);
         public Task<string> CreateDummyMember(string departmentId);
-        public Task<long?> MemberCount(string departmentId);
+        public Task<bool> HasMembers(string departmentId);
     }
 }
