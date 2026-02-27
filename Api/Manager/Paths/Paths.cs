@@ -8,6 +8,7 @@
         internal static string REQUIREMENT_GROUP = "RequirementGroup";
         internal static string GROUP = "Group";
         internal static string ROLE = "Role";
+        internal static string DEPARTMENT = "Department";
         internal static string QUALIFICATION = "Qualification";
         internal static string EVENT_CATEGORY = "EventCategory";
         internal static string EVENT = "Event";
