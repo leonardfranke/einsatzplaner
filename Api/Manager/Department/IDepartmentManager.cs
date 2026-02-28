@@ -19,10 +19,8 @@ namespace Api.Manager
 
         public Task<bool> AddRequest(string departmentId, string userId);
 
-        public Task RemoveRequest(string departmentId, string requestId);
-
         public Task<List<MembershipRequestDTO>> MembershipRequests(string departmentId);
 
-        public Task AnswerRequest(string departmentId, string requestId, bool accept);
+        public Task AnswerRequest(string departmentId, string userId, bool accept);
     }
 }

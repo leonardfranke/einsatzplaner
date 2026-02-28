@@ -46,10 +46,12 @@ namespace Api.Manager
 
         public async Task<bool> MembershipRequested(string departmentId, string userId)
         {
-            var snapshot = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBERSHIP_REQUEST).WhereEqualTo(nameof(MembershipRequest.UserId), userId).GetSnapshotAsync();
-            return snapshot.Count > 0;
+            var res = await _supabaseClient
+                .From<MembershipRequest>()
+                .Select(nameof(MembershipRequest.UserId))
+                .Where(request => request.DepartmentId == departmentId && request.UserId == userId)
+                .Single();
+            return res != null;
         }
 
         public async Task<bool> AddRequest(string departmentId, string userId)
@@ -71,52 +73,35 @@ namespace Api.Manager
 
             var request = new MembershipRequest
             {
+                DepartmentId = departmentId,
                 UserId = userId,
-                UserName = user.DisplayName
+                UserName = user.DisplayName,                
             };
 
-            await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBERSHIP_REQUEST).AddAsync(request);
+            await _supabaseClient.From<MembershipRequest>().Insert(request);
             return true;
         }
 
         public async Task<List<MembershipRequestDTO>> MembershipRequests(string departmentId)
         {
-            var documents = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBERSHIP_REQUEST).GetSnapshotAsync();
-            var memberships = documents.Select(doc => doc.ConvertTo<MembershipRequest>()).ToList();
-            return MembershipRequestConverter.Convert(memberships);
+            var res = await _supabaseClient.From<MembershipRequest>().Where(request => request.DepartmentId == departmentId).Get();            
+            return MembershipRequestConverter.Convert(res.Models);
         }
 
-        public async Task RemoveRequest(string departmentId, string requestId)
+        public async Task AnswerRequest(string departmentId, string userId, bool accept)
         {
-            var reference = _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBERSHIP_REQUEST).Document(requestId);
-            await reference.DeleteAsync();
-        }
-
-        public async Task AnswerRequest(string departmentId, string requestId, bool accept)
-        {
-            var snapshot = await _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.MEMBERSHIP_REQUEST).Document(requestId).GetSnapshotAsync();
-            var request = snapshot.ConvertTo<MembershipRequest>();
-            if (request == null)
+            if(await MembershipRequested(departmentId, userId) == false)
                 return;
 
-            await RemoveRequest(departmentId, requestId);
+            await _supabaseClient.From<MembershipRequest>().Where(request => request.DepartmentId == departmentId && request.UserId == userId).Delete();
 
             if (accept)
             {
-                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(request.UserId);
+                var user = await FirebaseAuth.DefaultInstance.GetUserAsync(userId);
                 if (user == null)
                     return;
                 
-                await _memberManager.CreateMember(departmentId, request.UserId, user.DisplayName, false);
-
+                await _memberManager.CreateMember(departmentId, userId, user.DisplayName, false);
             }
         }
 

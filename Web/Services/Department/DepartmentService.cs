@@ -92,9 +92,9 @@ namespace Web.Services
             return MembershipRequestConverter.Convert(requestDTOs);
         }
 
-        public async Task AnswerRequest(string departmentId, string requestId, bool accept)
+        public async Task AnswerRequest(string departmentId, string userId, bool accept)
         {
-            var query = QueryBuilder.Build(("departmentId", departmentId), ("requestId", requestId), ("acceptString", accept.ToString()));
+            var query = QueryBuilder.Build(("departmentId", departmentId), ("userId", userId), ("acceptString", accept.ToString()));
             var response = await _httpClient.GetAsync(new Uri($"/api/Department/AnswerRequest{query}", UriKind.Relative));            
         }
 

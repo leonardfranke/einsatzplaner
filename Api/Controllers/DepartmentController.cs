@@ -65,13 +65,13 @@ namespace Api.Controllers
         }
 
         [HttpGet("AnswerRequest")]
-        public Task AnswerRequest(string departmentId, string requestId, string acceptString)
+        public Task AnswerRequest(string departmentId, string userId, string acceptString)
         {
             var parsed = bool.TryParse(acceptString, out bool accept);
             if (!parsed)
                 return Task.CompletedTask;
 
-            return _departmentManager.AnswerRequest(departmentId, requestId, accept);
+            return _departmentManager.AnswerRequest(departmentId, userId, accept);
         }
     }
 }

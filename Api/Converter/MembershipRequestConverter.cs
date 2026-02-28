@@ -15,7 +15,6 @@ namespace Api.Converter
                 return null;
             return new MembershipRequestDTO
             {
-                Id = request.Id,
                 UserId = request.UserId,
                 UserName = request.UserName
             };

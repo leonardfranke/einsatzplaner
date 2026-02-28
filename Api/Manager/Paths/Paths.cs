@@ -13,7 +13,6 @@
         internal static string EVENT_CATEGORY = "EventCategory";
         internal static string EVENT = "Event";
         internal static string HELPER = "Helper";
-        internal static string MEMBERSHIP_REQUEST = "MembershipRequest";
         internal static string UPDATETIME = "UpdateTime";
     }
 }

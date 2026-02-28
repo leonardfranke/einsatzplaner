@@ -11,7 +11,7 @@ namespace Web.Services
         public Task<bool> RequestMembership(string departmentId, string userId);
         public Task<bool> MembershipRequested(string departmentId, string userId);
         public Task<List<MembershipRequest>> MembershipRequests(string departmentId);
-        public Task AnswerRequest(string departmentId, string requestId, bool accept);
+        public Task AnswerRequest(string departmentId, string userId, bool accept);
         public Task RemoveMember(string departmentId, string memberId);
 
     }

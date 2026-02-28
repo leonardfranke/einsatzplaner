@@ -17,7 +17,6 @@ namespace Web.Converter
 
             return new MembershipRequest
             {
-                Id = request.Id,
                 UserId = request.UserId,
                 UserName = request.UserName
             };

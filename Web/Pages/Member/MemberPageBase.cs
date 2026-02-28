@@ -72,9 +72,9 @@ namespace Web.Pages
             IsMembersLoading = false;
         }
 
-        public async Task AnswerRequest(string requestId, bool accept)
+        public async Task AnswerRequest(string userId, bool accept)
         {
-            await _departmentService.AnswerRequest(_departmentId, requestId, accept);
+            await _departmentService.AnswerRequest(_departmentId, userId, accept);
             await LoadRequests();
             if (accept)
                 await LoadMembers();

@@ -52,8 +52,8 @@
         <TemplateColumn>
             <CellTemplate>
                 <MudButtonGroup Variant="Variant.Outlined">
-                    <MudIconButton Icon="@Icons.Material.Filled.Check" OnClick="() => AnswerRequest(context.Item.Id, true)"></MudIconButton>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => AnswerRequest(context.Item.Id, false)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Check" OnClick="() => AnswerRequest(context.Item.UserId, true)"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="() => AnswerRequest(context.Item.UserId, false)"></MudIconButton>
                 </MudButtonGroup>
             </CellTemplate>
         </TemplateColumn>
