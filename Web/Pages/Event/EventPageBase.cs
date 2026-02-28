@@ -164,20 +164,13 @@ namespace Web.Pages
                         return true;
                     return requiredGroups.SelectMany(group => group.MemberIds).Contains(member.Id);
                 });
-            var confirmModalAction = async () =>
-            {
-                var lockedMembersToRemove = helper.LockedMembers.Except(lockedMembers).ToList();
-                var lockedMembersToAdd = lockedMembers.Except(helper.LockedMembers).ToList();
-                await _helperService.UpdateLockedMembers(_departmentId, helper.EventId, helper.Id, lockedMembersToRemove, lockedMembersToAdd);
-                await ReloadHelpers();
-            };
 
-            var groupingFunctions = new SortedDictionary<string, Func<Models.Member, bool>>()
+            var groupingFunctions = new List<(string, Func<Models.Member, bool>)>()
             {
-                { "Bereits zugewiesen", member => helper.LockedMembers.Contains(member.Id) },
-                { "Vorausgewählt", member => helper.PreselectedMembers.Contains(member.Id) },
-                { "Verfügbar", member => helper.AvailableMembers.Contains(member.Id) },
-                { "Empfehlungen", member => helper.FillMembers.Contains(member.Id) }
+                { ("Bereits zugewiesen", member => helper.LockedMembers.Contains(member.Id)) },
+                { ("Vorausgewählt", member => helper.PreselectedMembers.Contains(member.Id)) },
+                { ("Verfügbar", member => helper.AvailableMembers.Contains(member.Id)) },
+                { ("Empfehlungen", member => helper.FillMembers.Contains(member.Id)) },
             };
             var parameter = new DialogParameters<MemberSelection>()
             {
@@ -185,7 +178,16 @@ namespace Web.Pages
                 { x => x.SelectedMembers, lockedMembers },
                 { x => x.GroupingFunctions, groupingFunctions }
             };
-            var dialog = await _dialogService.ShowAsync<MemberSelection>($"{role.Name} auswählen, Bedarf: {helper.RequiredAmount}", parameter);
+            var dialog = await _dialogService.ShowAsync<MemberSelection>($"{role.Name} ({helper.RequiredAmount})", parameter);
+            var result = await dialog.Result;
+            if(!result.Canceled)
+            {
+                var newLockedMembers = result.Data as List<string>;
+                var lockedMembersToRemove = helper.LockedMembers.Except(newLockedMembers).ToList();
+                var lockedMembersToAdd = newLockedMembers.Except(helper.LockedMembers).ToList();
+                await _helperService.UpdateLockedMembers(_departmentId, helper.EventId, helper.Id, lockedMembersToRemove, lockedMembersToAdd);
+                await ReloadHelpers();
+            }
         }
 
         protected string GetPageTitle()

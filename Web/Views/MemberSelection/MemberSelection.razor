@@ -2,19 +2,18 @@
 
 <MudDialog>
     <DialogContent>
-        @foreach(var group in GroupedMembers)
-        {
-            <MudSimpleTable>
-                <tbody>
-                    @foreach(var member in group)
-                    {
-                        <tr>
-                            <td><input type="checkbox" checked="@GetIsSelected(member.Id)" @onchange="(e) => { SetMember(member.Id, (bool)e.Value); }" /></td>
-                            <td>@member.Name</td>
-                        </tr>
-                    }
-                </tbody>
-            </MudSimpleTable>
-        }
+        <MudTable Dense GroupBy="GroupDefinition" Items="OrderedMembers" Breakpoint="Breakpoint.None">
+            <RowTemplate>
+                <MudTd><input type="checkbox" checked="@GetIsSelected(context.Id)" @onchange="(e) => { SetMember(context.Id, (bool)e.Value); }" /></MudTd>
+                <MudTd>@context.Name</MudTd>
+            </RowTemplate> 
+            <GroupHeaderTemplate>
+                <MudTh colspan="2">@context.Key</MudTh>
+
+            </GroupHeaderTemplate>
+        </MudTable>        
     </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Submit" Color="Color.Primary" Variant="Variant.Filled">Speichern</MudButton>
+    </DialogActions>
 </MudDialog>
