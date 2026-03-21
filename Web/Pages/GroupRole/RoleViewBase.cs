@@ -142,8 +142,7 @@ namespace Web.Pages
             var dialog = await _dialogService.ShowAsync<MemberSelection>(role.Name, parameter);
         }
         public async Task EditQualificationMembers(Qualification qualification)
-        {
-         
+        {         
             var oldSelectedMembers = qualification.MemberIds;
             var roleOfQualification = Roles.First(role => role.Id == qualification.RoleId);
             var permittedMembers = _members.Where(member => roleOfQualification.MemberIds.Union(oldSelectedMembers).Contains(member.Id));
@@ -152,7 +151,7 @@ namespace Web.Pages
             {
                 var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
                 var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
-                await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.Id, newMembers, formerMembers);
+                await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.RoleId, qualification.Id, newMembers, formerMembers);
                 await LoadQualifications();
             };
 

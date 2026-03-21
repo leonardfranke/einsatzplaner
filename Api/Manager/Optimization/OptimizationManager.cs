@@ -31,8 +31,8 @@ namespace Api.Manager
             var events = await eventsTask;
             var requirements = await requirementsTask;
             var groups = await groupsTask;
-            var roles = await rolesTask;
-            var qualifications = await qualificationsTask;
+            var roles = await rolesTask.ToListAsync();
+            var qualifications = await qualificationsTask.ToListAsync();
 
             var optimizerDict = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);
 

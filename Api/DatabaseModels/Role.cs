@@ -3,7 +3,7 @@
 namespace Api.Models
 {
     [FirestoreData]
-    public class Role : FirebaseDocument
+    public class RoleOld : FirebaseDocument
     {
         [FirestoreProperty]
         public string Name { get; set; }

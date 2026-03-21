@@ -5,12 +5,7 @@ namespace Api.Converter
 {
     public class RoleConverter
     {
-        public static List<RoleDTO> Convert(List<Role> roles)
-        {
-            return roles.Select(Convert).ToList();
-        }
-
-        public static RoleDTO Convert(Role role)
+        public static RoleDTO Convert(Role role, List<string> members)
         {
             if (role == null)
                 return null;
@@ -20,7 +15,7 @@ namespace Api.Converter
                 Name = role.Name,
                 LockingPeriod = role.LockingPeriod,
                 IsFree = role.IsFree,
-                MemberIds = role.MemberIds
+                MemberIds = members
             };
         }
     }

@@ -15,7 +15,7 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? qualificationId, string? newName)
+        public Task UpdateOrCreate(string departmentId, string? roleId, string? qualificationId, string? newName)
         {
             var updatequalificationDTO = new UpdateQualificationDTO
             {
@@ -25,8 +25,7 @@ namespace Web.Services
                 NewName = newName
             };
             var content = JsonContent.Create(updatequalificationDTO);
-            var response = await _httpClient.PostAsync(new Uri($"/api/Qualification", UriKind.Relative), content);
-            return await response.Content.ReadAsStringAsync();
+            return _httpClient.PostAsync(new Uri($"/api/Qualification", UriKind.Relative), content);
         }
 
         public Task Delete(string departmentId, string qualificationId)
@@ -49,7 +48,7 @@ namespace Web.Services
             return QualificationConverter.Convert(roleDTO);
         }
 
-        public Task UpdateQualificationMembers(string departmentId, string qualificationId, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
+        public Task UpdateQualificationMembers(string departmentId, string roleId, string qualificationId, IEnumerable<string> newMembers, IEnumerable<string> formerMembers)
         {
             var updateMembersListDTO = new UpdateMembersListDTO
             {
@@ -57,7 +56,7 @@ namespace Web.Services
                 FormerMembers = formerMembers
             };
             var content = JsonContent.Create(updateMembersListDTO);
-            return _httpClient.PatchAsync(new Uri($"/api/Qualification/{departmentId}/{qualificationId}", UriKind.Relative), content);
+            return _httpClient.PatchAsync(new Uri($"/api/Qualification/{departmentId}/{roleId}/{qualificationId}", UriKind.Relative), content);
         }
     }
 }

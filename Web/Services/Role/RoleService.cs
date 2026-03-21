@@ -15,7 +15,7 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
+        public Task UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
         {
             var updateCategoryDTO = new UpdateRoleDTO
             {
@@ -26,8 +26,7 @@ namespace Web.Services
                 NewIsFree = newIsFree
             };
             var content = JsonContent.Create(updateCategoryDTO);
-            var response = await _httpClient.PostAsync(new Uri($"/api/Role", UriKind.Relative), content);
-            return await response.Content.ReadAsStringAsync();
+            return _httpClient.PostAsync(new Uri($"/api/Role", UriKind.Relative), content);            
         }
 
         public Task Delete(string departmentId, string roleId)

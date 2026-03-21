@@ -89,7 +89,7 @@ builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
 builder.Services.AddSingleton<ILocationManager, LocationManager>();
-builder.Services.AddSingleton<MembersMigration, MembersMigration>();
+builder.Services.AddSingleton<Migration, Migration>();
 builder.Services.AddHttpClient();
 
 var app = builder.Build();

@@ -1,59 +1,82 @@
-﻿using Api.Models;
+﻿using Api.FirestoreModels;
+using Api.Models;
 using Google.Cloud.Firestore;
 using Supabase;
 
 namespace Api.DataMigrations
 {
-    public class MembersMigration
+    public class Migration
     {
         private Client _supabaseClient;
         private FirestoreDb _firestoreDb;
 
-        public MembersMigration(FirestoreDb firestoreDb, Client supabaseClient)
+        public Migration(FirestoreDb firestoreDb, Client supabaseClient)
         {
             _supabaseClient = supabaseClient;
             _firestoreDb = firestoreDb;
         }
 
-        public async Task Migrate()
+        public async Task MigrateRoles()
         {
-            var depSnap = await _firestoreDb.Collection("Department").GetSnapshotAsync();
+            var departmentId = "v87avboSu7Dc74ZJpJFk";
 
-            foreach (var depDoc in depSnap)
+            var rolesSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Role").GetSnapshotAsync();
+            foreach (var roleDoc in rolesSnap)
             {
-                var department = depDoc.ConvertTo<DepartmentOld>();
-                if (department == null)
+                var role = roleDoc.ConvertTo<RoleOld>();
+                if (role == null)
                     continue;
 
-                var newDepartment = new Department
+                var newRole = new Role
                 {
-                    Id = department.Id,
-                    Name = department.Name,
-                    URL = department.URL
+                    Id = role.Id,
+                    Name = role.Name,
+                    DepartmentId = departmentId,
+                    IsFree = role.IsFree,
+                    LockingPeriod = role.LockingPeriod,
                 };
-                await _supabaseClient.From<Department>().Insert(newDepartment);
+                await _supabaseClient.From<Role>().Insert(newRole);
 
-                var memSnap = await _firestoreDb.Collection("Department").Document(department.Id).Collection("Member").GetSnapshotAsync();
-
-                foreach(var memDoc in memSnap)
+                foreach(var member in role.MemberIds)
                 {
-                    var member = memDoc.ConvertTo<MemberOld>();
-                    if (member == null)
-                        continue;
-
-                    var newMember = new Member
+                    var newMemberRoleJoin = new MemberRoleJoin
                     {
-                        DepartmentId = department.Id,
-                        Id = member.Id,
-                        Name = member.Name,
-                        IsAdmin = member.IsAdmin,
-                        IsDummy = member.IsDummy,
-                        EmailNotificationActive = member.EmailNotificationActive
+                        RoleId = role.Id,
+                        MemberId = member,
+                        DepartmentId = departmentId                        
                     };
-                    await _supabaseClient.From<Member>().Insert(newMember);
+                    await _supabaseClient.From<MemberRoleJoin>().Insert(newMemberRoleJoin);
                 }
             }
 
+            var qualificationSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Qualification").GetSnapshotAsync();
+            foreach (var qualDoc in qualificationSnap)
+            {
+                var qual = qualDoc.ConvertTo<QualificationOld>();
+                if (qual == null)
+                    continue;
+
+                var newQual = new Qualification
+                {
+                    DepartmentId = departmentId,
+                    Id = qual.Id,
+                    Name = qual.Name,
+                    RoleId = qual.RoleId
+                };
+                await _supabaseClient.From<Qualification>().Insert(newQual);
+
+                foreach (var member in qual.MemberIds)
+                {
+                    var newMemberQualJoin = new MemberQualificationJoin
+                    {
+                        RoleId = qual.RoleId,
+                        DepartmentId = departmentId,
+                        MemberId = member,
+                        QualificationId = qual.Id
+                    };
+                    await _supabaseClient.From<MemberQualificationJoin>().Insert(newMemberQualJoin);
+                }
+            }
         }
     }
 }

@@ -1,89 +1,106 @@
-﻿using Google.Cloud.Firestore;
-using Api.Converter;
+﻿using Api.Converter;
+using Api.Models;
 using DTO;
-using Api.FirestoreModels;
+using Supabase;
 
 namespace Api.Manager
 {
     public class QualificationManager : IQualificationManager
     {
-        private FirestoreDb _firestoreDb;
+        private Client _supabaseClient;
 
-        public QualificationManager(FirestoreDb firestoreDb)
+        public QualificationManager(Client supabaseClient)
         {
-            _firestoreDb = firestoreDb;
+            _supabaseClient = supabaseClient;
         }
 
-        private CollectionReference GetQualificationCollectionReference(string departmentId)
+        public Task Delete(string departmentId, string qualificationId)
         {
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.QUALIFICATION);
+            return _supabaseClient
+                .From<Qualification>()
+                .Where(qual => qual.DepartmentId == departmentId && qual.Id == qualificationId)
+                .Limit(1)
+                .Delete();
         }
 
-        public async Task Delete(string departmentId, string qualificationId)
+        public async IAsyncEnumerable<QualificationDTO> GetAll(string departmentId)
         {
-            var roleCollectionReference = GetQualificationCollectionReference(departmentId);
-            var roleRef = roleCollectionReference.Document(qualificationId);
-            await roleRef.DeleteAsync();
+            var res = await _supabaseClient.From<Qualification>().Where(qual => qual.DepartmentId == departmentId).Get();
+            foreach (var qualification in res.Models)
+            {
+                var members = await GetQualificationMembers(departmentId, qualification.Id);
+                yield return QualificationConverter.Convert(qualification, members);
+            }
         }
 
-        public async Task<List<QualificationDTO>> GetAll(string departmentId)
+        public Task UpdateOrCreate(string departmentId, string? roleId, string? qualificationId, string? newName)
         {
-            var roleReference = GetQualificationCollectionReference(departmentId);
-            var snapshot = await roleReference.GetSnapshotAsync();
-            var qualifications = snapshot.Select(doc => doc.ConvertTo<Qualification>()).ToList();
-            return QualificationConverter.Convert(qualifications);
-        }
-
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? qualificationId, string? newName)
-        {
-            var qualificationReference = GetQualificationCollectionReference(departmentId);
             if (string.IsNullOrEmpty(qualificationId))
             {
                 if(newName == null || roleId == null)
                     throw new ArgumentNullException("Name or roleId were null when creating a new qualification");
                 var newQualification = new Qualification
                 {
+                    DepartmentId = departmentId,
                     Name = newName,   
                     RoleId = roleId,
-                    MemberIds = new()
                 };
 
-                var newQualificationRef = await qualificationReference.AddAsync(newQualification);
-                return newQualificationRef.Id;
+                return _supabaseClient.From<Qualification>().Insert(newQualification);
             }
             else
             {
-                var updates = new Dictionary<string, object>();
+                var query = _supabaseClient
+                    .From<Qualification>()
+                    .Where(qual => qual.Id == roleId && qual.DepartmentId == departmentId)
+                    .Limit(1);
+
                 if (newName != null)
                 {
-                    updates.Add(nameof(Qualification.Name), newName);
-                    await qualificationReference.Document(qualificationId).UpdateAsync(updates, Precondition.MustExist);
+                    query = query.Set(qual => qual.Name, newName);
+                    return query.Update();
                 }
-                return roleId;
+
+                return Task.CompletedTask;
             }
         }
 
-        public async Task UpdateRoleMembers(string departmentId, string qualificationId, UpdateMembersListDTO updateMembersList)
+        public async Task UpdateRoleMembers(string departmentId, string roleId, string qualificationId, UpdateMembersListDTO updateMembersList)
         {
-            var qualificationCollectionReference = GetQualificationCollectionReference(departmentId);
-            var qualificationRef = qualificationCollectionReference.Document(qualificationId);
-            await qualificationRef.UpdateAsync(nameof(Qualification.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
-            await qualificationRef.UpdateAsync(nameof(Qualification.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
+            await _supabaseClient
+                .From<MemberQualificationJoin>()
+                .Insert(updateMembersList.NewMembers
+                    .Select(newMember => new MemberQualificationJoin
+                    {
+                        DepartmentId = departmentId,
+                        RoleId = roleId,
+                        QualificationId = qualificationId,
+                        MemberId = newMember
+                    }).ToList());
+
+            await _supabaseClient
+                .From<MemberQualificationJoin>()
+                .Where(join => join.DepartmentId == departmentId && join.QualificationId == qualificationId && updateMembersList.FormerMembers.Contains(join.MemberId))
+                .Delete();
+        }
+
+        public async Task<List<string>> GetQualificationMembers(string departmentId, string qualification)
+        {
+            var res = await _supabaseClient
+                .From<MemberQualificationJoin>()
+                .Select(nameof(MemberQualificationJoin.MemberId))
+                .Where(join => join.DepartmentId == departmentId && join.QualificationId == qualification)
+                .Get();
+
+            return res.Models.Select(join => join.MemberId).ToList();
         }
 
         public async Task RemoveMembersFromQualifications(string departmentId, string roleId, IEnumerable<string>? members)
         {
-            var qualificationCollectionReference = GetQualificationCollectionReference(departmentId);
-            var snapshot = await qualificationCollectionReference.WhereEqualTo(nameof(Qualification.RoleId), roleId).GetSnapshotAsync();
-            Parallel.ForEach(snapshot.Documents, doc =>
-            {
-                if(members == null)
-                    doc.Reference.UpdateAsync(nameof(Qualification.MemberIds), new List<string>());
-                else
-                    doc.Reference.UpdateAsync(nameof(Qualification.MemberIds), FieldValue.ArrayRemove(members.ToArray()));
-            });
+            await _supabaseClient
+                .From<MemberQualificationJoin>()
+                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId && members.Contains(join.MemberId))
+                .Delete();
         }
     }
 }

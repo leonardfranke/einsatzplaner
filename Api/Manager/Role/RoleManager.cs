@@ -1,100 +1,112 @@
-﻿using Google.Cloud.Firestore;
+﻿using Api.Converter;
 using Api.Models;
-using Api.Converter;
 using DTO;
+using Supabase;
 
 namespace Api.Manager
 {
     public class RoleManager : IRoleManager
     {
-        private FirestoreDb _firestoreDb;
+        private Client _supabaseClient;
         private IQualificationManager _qualificationManager;
 
-        public RoleManager(FirestoreDb firestoreDb, IQualificationManager qualificationManager)
+        public RoleManager(Client supabaseClient, IQualificationManager qualificationManager)
         {
-            _firestoreDb = firestoreDb;
+            _supabaseClient = supabaseClient;
             _qualificationManager = qualificationManager;
         }
 
-        private CollectionReference GetRoleCollectionReference(string departmentId)
+        public Task Delete(string departmentId, string roleId)
         {
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.ROLE);
+            return _supabaseClient
+                .From<Role>()
+                .Where(role => role.DepartmentId == departmentId && role.Id == roleId)
+                .Limit(1)
+                .Delete();
         }
 
-        public async Task Delete(string departmentId, string roleId)
+        public async IAsyncEnumerable<RoleDTO> GetAll(string departmentId)
         {
-            var roleCollectionReference = GetRoleCollectionReference(departmentId);
-            var roleRef = roleCollectionReference.Document(roleId);
-            await roleRef.DeleteAsync();
+            var res = await _supabaseClient.From<Role>().Where(role => role.DepartmentId == departmentId).Get();
+            foreach (var role in res.Models)
+            {
+                var members = await GetRoleMembers(departmentId, role.Id);
+                yield return RoleConverter.Convert(role, members);
+            }
         }
 
-        public async Task<List<RoleDTO>> GetAll(string departmentId)
+        public Task UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
         {
-            var roleReference = GetRoleCollectionReference(departmentId);
-            var snapshot = await roleReference.GetSnapshotAsync();
-            var roles = snapshot.Select(doc => doc.ConvertTo<Role>()).ToList();
-            return RoleConverter.Convert(roles);
-        }
-
-        public async Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree)
-        {
-            var roleReference = GetRoleCollectionReference(departmentId);
             if (string.IsNullOrEmpty(roleId))
             {
                 if(newName == null || newLockingPeriod == null || newIsFree == null)
                     throw new ArgumentNullException("Name, LockingPeriod or IsFree were null when creating a new role");
                 var newRole = new Role
                 {
+                    DepartmentId = departmentId,
                     Name = newName,
                     LockingPeriod = newLockingPeriod.Value,
-                    IsFree = newIsFree.Value,
-                    MemberIds = new()
+                    IsFree = newIsFree.Value
                 };
 
-                var newRoleRef = await roleReference.AddAsync(newRole);
-                return newRoleRef.Id;
+                return _supabaseClient.From<Role>().Insert(newRole);
             }
             else
             {
+                var query = _supabaseClient
+                    .From<Role>()
+                    .Where(role => role.Id == roleId && role.DepartmentId == departmentId)
+                    .Limit(1);
+
                 var updates = new Dictionary<string, object>();
                 if (newName != null)
-                    updates.Add(nameof(Role.Name), newName);
+                    query = query.Set(role => role.Name, newName);
                 if (newLockingPeriod != null)
-                    updates.Add(nameof(Role.LockingPeriod), newLockingPeriod);
+                    query = query.Set(role => role.LockingPeriod, newLockingPeriod);
                 if (newIsFree != null)
-                {
-                    updates.Add(nameof(Role.IsFree), newIsFree);
-                    if (newIsFree == true)
-                        updates.Add(nameof(Role.MemberIds), new List<string>());
-                    else
-                        await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, null);
-                }
+                    query = query.Set(role => role.IsFree, newIsFree);
 
-                await roleReference.Document(roleId).UpdateAsync(updates, Precondition.MustExist);
-                return roleId;
+                //TODO Remove members from role if set to free
+
+                return query.Update();                
             }
         }
 
         public async Task UpdateRoleMembers(string departmentId, string roleId, UpdateMembersListDTO updateMembersList)
         {
-            var roleCollectionReference = GetRoleCollectionReference(departmentId);
-            var roleRef = roleCollectionReference.Document(roleId);
-            await roleRef.UpdateAsync(nameof(Role.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
-            await roleRef.UpdateAsync(nameof(Role.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
+            await _supabaseClient
+                .From<MemberRoleJoin>()
+                .Insert(updateMembersList.NewMembers
+                    .Select(newMember => new MemberRoleJoin
+                    {
+                        DepartmentId = departmentId,
+                        RoleId = roleId,
+                        MemberId = newMember
+                    }).ToList());
+
+            await _supabaseClient
+                .From<MemberRoleJoin>()
+                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId && updateMembersList.FormerMembers.Contains(join.MemberId))
+                .Delete();
 
             if (updateMembersList.FormerMembers.Any())
                 await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, updateMembersList.FormerMembers);
         }
 
-        public async Task<Role> GetRole(string departmentId, string roleId)
+        public async Task<List<string>> GetRoleMembers(string departmentId, string roleId)
         {
+            var res = await _supabaseClient
+                .From<MemberRoleJoin>()
+                .Select(nameof(MemberRoleJoin.MemberId))
+                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId)
+                .Get();
+            
+            return res.Models.Select(join => join.MemberId).ToList();
+        }
 
-            var rolesReference = GetRoleCollectionReference(departmentId);
-            var roleReference = rolesReference.Document(roleId);
-            var snapshot = await roleReference.GetSnapshotAsync();
-            return snapshot.ConvertTo<Role>();
+        public Task<Role?> GetRole(string departmentId, string roleId)
+        {
+            return _supabaseClient.From<Role>().Where(role => role.Id == roleId && role.DepartmentId == departmentId).Single();
         }
     }
 }

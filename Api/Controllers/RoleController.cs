@@ -16,7 +16,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{departmentId}")]
-        public Task<List<RoleDTO>> GetAll([FromRoute] string departmentId)
+        public IAsyncEnumerable<RoleDTO> GetAll([FromRoute] string departmentId)
         {
             return _roleManager.GetAll(departmentId);
         }
@@ -28,7 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public Task<string> UpdateOrCreate([FromBody] UpdateRoleDTO updateDTO)
+        public Task UpdateOrCreate([FromBody] UpdateRoleDTO updateDTO)
         {
             return _roleManager.UpdateOrCreate(updateDTO.DepartmentId, updateDTO.RoleId, updateDTO.NewName, updateDTO.NewLockingPeriod, updateDTO.NewIsFree);
         }

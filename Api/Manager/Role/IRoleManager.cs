@@ -5,13 +5,14 @@ namespace Api.Manager
 {
     public interface IRoleManager
     {
-        public Task<List<RoleDTO>> GetAll(string departmentId);
+        public IAsyncEnumerable<RoleDTO> GetAll(string departmentId);
+
         public Task<Role> GetRole(string departmentId, string roleId);
 
         public Task Delete(string departmentId, string roleId);
 
-        public Task<string> UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree);
+        public Task UpdateOrCreate(string departmentId, string? roleId, string? newName, int? newLockingPeriod, bool? newIsFree);
 
-        public Task UpdateRoleMembers(string departmentId, string groupId, UpdateMembersListDTO updateMembersList);
+        public Task UpdateRoleMembers(string departmentId, string roleId, UpdateMembersListDTO updateMembersList);
     }
 }

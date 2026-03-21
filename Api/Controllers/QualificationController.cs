@@ -16,7 +16,7 @@ namespace Api.Controllers
         }
 
         [HttpGet("{departmentId}")]
-        public Task<List<QualificationDTO>> GetAll([FromRoute] string departmentId)
+        public IAsyncEnumerable<QualificationDTO> GetAll([FromRoute] string departmentId)
         {
             return _qualificationManager.GetAll(departmentId);
         }
@@ -28,15 +28,15 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public Task<string> UpdateOrCreate([FromBody] UpdateQualificationDTO updateDTO)
+        public Task UpdateOrCreate([FromBody] UpdateQualificationDTO updateDTO)
         {
             return _qualificationManager.UpdateOrCreate(updateDTO.DepartmentId, updateDTO.RoleId, updateDTO.QualificationId, updateDTO.NewName);
         }
 
-        [HttpPatch("{departmentId}/{qualificationId}")]
-        public Task UpdateQualificationMembers([FromRoute] string departmentId, [FromRoute] string qualificationId, [FromBody] UpdateMembersListDTO updateMembersList)
+        [HttpPatch("{departmentId}/{roleId}/{qualificationId}")]
+        public Task UpdateQualificationMembers([FromRoute] string departmentId, [FromRoute] string roleId, [FromRoute] string qualificationId, [FromBody] UpdateMembersListDTO updateMembersList)
         {
-            return _qualificationManager.UpdateRoleMembers(departmentId, qualificationId, updateMembersList);
+            return _qualificationManager.UpdateRoleMembers(departmentId, roleId, qualificationId, updateMembersList);
         }
     }
 }

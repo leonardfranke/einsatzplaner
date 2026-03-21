@@ -4,7 +4,7 @@ using Google.Cloud.Firestore;
 namespace Api.FirestoreModels
 {
     [FirestoreData]
-    public class Qualification : FirebaseDocument
+    public class QualificationOld : FirebaseDocument
     {
         [FirestoreProperty]
         public string Name { get; set; }

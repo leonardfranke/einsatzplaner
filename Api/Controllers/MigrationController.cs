@@ -5,17 +5,17 @@ namespace Api.Controllers
 {
     public class MigrationController : ControllerBase
     {
-        private MembersMigration _membersMigration;
+        private Migration _migration;
 
-        public MigrationController(MembersMigration membersMigration)
+        public MigrationController(Migration migration)
         {
-            _membersMigration = membersMigration;
+            _migration = migration;
         }
 
-        [HttpGet("MigrateMembers")]
-        public Task MigrateMembers()
+        [HttpGet("MigrateRoles")]
+        public Task MigrateRoles()
         {
-            return _membersMigration.Migrate();
+            return _migration.MigrateRoles();
         }
     }
 }

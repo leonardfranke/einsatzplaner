@@ -1,16 +1,11 @@
-﻿using Api.FirestoreModels;
+﻿using Api.Models;
 using DTO;
 
 namespace Api.Converter
 {
     public class QualificationConverter
     {
-        public static List<QualificationDTO> Convert(List<Qualification> qualifications)
-        {
-            return qualifications.Select(Convert).ToList();
-        }
-
-        public static QualificationDTO Convert(Qualification qualification)
+        public static QualificationDTO Convert(Qualification qualification, List<string> members)
         {
             if (qualification == null)
                 return null;
@@ -19,7 +14,7 @@ namespace Api.Converter
                 Id = qualification.Id,
                 Name = qualification.Name,
                 RoleId = qualification.RoleId,
-                MemberIds = qualification.MemberIds
+                MemberIds = members
             };
         }
     }
