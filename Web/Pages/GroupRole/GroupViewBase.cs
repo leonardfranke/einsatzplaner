@@ -65,13 +65,6 @@ namespace Web.Pages
                 .Where(member => group.MemberIds.Contains(member.Id))
                 .Select(member => member.Id);
             var currentSelectedMembers = new List<string>(oldSelectedMembers);
-            var confirmModalAction = async () =>
-            {
-                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
-                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
-                await _groupService.UpdateGroupMembers(_departmentId, group.Id, newMembers, formerMembers);
-                await LoadGroups();
-            };
 
             var parameter = new DialogParameters<MemberSelection>()
             {
@@ -79,6 +72,15 @@ namespace Web.Pages
                 { x => x.SelectedMembers, currentSelectedMembers }
             };
             var dialog = await _dialogService.ShowAsync<MemberSelection>(group.Name, parameter);
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                var newSelectedMembers = result.Data as List<string>;
+                var membersToRemove = oldSelectedMembers.Except(newSelectedMembers).ToList();
+                var membersToAdd = newSelectedMembers.Except(oldSelectedMembers).ToList();
+                await _groupService.UpdateGroupMembers(_departmentId, group.Id, membersToAdd, membersToRemove);
+                await LoadGroups();
+            }
         }
 
         public async Task EditOrCreateGroup(Group? group)

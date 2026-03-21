@@ -11,7 +11,5 @@ namespace Api.Manager
         public Task UpdateOrCreate(string departmentId, string? roleId, string? qualificationId, string? newName);
 
         public Task UpdateRoleMembers(string departmentId, string roleId, string qualificationId, UpdateMembersListDTO updateMembersList);
-
-        public Task RemoveMembersFromQualifications(string departmentId, string roleId, IEnumerable<string>? members);
     }
 }

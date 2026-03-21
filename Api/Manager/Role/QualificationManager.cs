@@ -2,6 +2,7 @@
 using Api.Models;
 using DTO;
 using Supabase;
+using static Supabase.Postgrest.Constants;
 
 namespace Api.Manager
 {
@@ -67,7 +68,9 @@ namespace Api.Manager
 
         public async Task UpdateRoleMembers(string departmentId, string roleId, string qualificationId, UpdateMembersListDTO updateMembersList)
         {
-            await _supabaseClient
+            if (updateMembersList.NewMembers.Any())
+            {
+                await _supabaseClient
                 .From<MemberQualificationJoin>()
                 .Insert(updateMembersList.NewMembers
                     .Select(newMember => new MemberQualificationJoin
@@ -77,11 +80,16 @@ namespace Api.Manager
                         QualificationId = qualificationId,
                         MemberId = newMember
                     }).ToList());
+            }
 
-            await _supabaseClient
+            if (updateMembersList.FormerMembers.Any())
+            {
+                await _supabaseClient
                 .From<MemberQualificationJoin>()
-                .Where(join => join.DepartmentId == departmentId && join.QualificationId == qualificationId && updateMembersList.FormerMembers.Contains(join.MemberId))
+                .Where(join => join.DepartmentId == departmentId && join.QualificationId == qualificationId)
+                .Filter(nameof(MemberQualificationJoin.MemberId), Operator.In, updateMembersList.FormerMembers)
                 .Delete();
+            }
         }
 
         public async Task<List<string>> GetQualificationMembers(string departmentId, string qualification)
@@ -93,14 +101,6 @@ namespace Api.Manager
                 .Get();
 
             return res.Models.Select(join => join.MemberId).ToList();
-        }
-
-        public async Task RemoveMembersFromQualifications(string departmentId, string roleId, IEnumerable<string>? members)
-        {
-            await _supabaseClient
-                .From<MemberQualificationJoin>()
-                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId && members.Contains(join.MemberId))
-                .Delete();
         }
     }
 }

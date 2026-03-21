@@ -123,44 +123,46 @@ namespace Web.Pages
         public async Task EditRoleMembers(Role role)
         {
             var oldSelectedMembers = role.MemberIds;
-            var currentSelectedMembers = new List<string>(oldSelectedMembers);
-            var confirmModalAction = async () =>
-            {
-                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
-                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
-                await _roleService.UpdateRoleMembers(Department.Id, role.Id, newMembers, formerMembers);
-                await LoadRoles();
-                if (formerMembers.Any())
-                    await LoadQualifications();
-            };
 
             var parameter = new DialogParameters<MemberSelection>()
             {
                 { x => x.Members, _members },
-                { x => x.SelectedMembers, currentSelectedMembers }
+                { x => x.SelectedMembers, oldSelectedMembers }
             };
             var dialog = await _dialogService.ShowAsync<MemberSelection>(role.Name, parameter);
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                var newSelectedMembers = result.Data as List<string>;
+                var membersToRemove = oldSelectedMembers.Except(newSelectedMembers).ToList();
+                var membersToAdd = newSelectedMembers.Except(oldSelectedMembers).ToList();
+                await _roleService.UpdateRoleMembers(Department.Id, role.Id, membersToAdd, membersToRemove);
+                await LoadRoles();
+                if (membersToRemove.Any())
+                    await LoadQualifications();
+            }
         }
         public async Task EditQualificationMembers(Qualification qualification)
         {         
             var oldSelectedMembers = qualification.MemberIds;
             var roleOfQualification = Roles.First(role => role.Id == qualification.RoleId);
             var permittedMembers = _members.Where(member => roleOfQualification.MemberIds.Union(oldSelectedMembers).Contains(member.Id));
-            var currentSelectedMembers = new List<string>(oldSelectedMembers);
-            var confirmModalAction = async () =>
-            {
-                var newMembers = currentSelectedMembers.Except(oldSelectedMembers);
-                var formerMembers = oldSelectedMembers.Except(currentSelectedMembers);
-                await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.RoleId, qualification.Id, newMembers, formerMembers);
-                await LoadQualifications();
-            };
 
             var parameter = new DialogParameters<MemberSelection>()
             {
                 { x => x.Members, permittedMembers },
-                { x => x.SelectedMembers, currentSelectedMembers }
+                { x => x.SelectedMembers, oldSelectedMembers }
             };
             var dialog = await _dialogService.ShowAsync<MemberSelection>($"{qualification.Name} auswählen", parameter);
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                var newSelectedMembers = result.Data as List<string>;
+                var membersToRemove = oldSelectedMembers.Except(newSelectedMembers).ToList();
+                var membersToAdd = newSelectedMembers.Except(oldSelectedMembers).ToList();
+                await _qualificationService.UpdateQualificationMembers(Department.Id, qualification.RoleId, qualification.Id, membersToAdd, membersToRemove);
+                await LoadQualifications();
+            }
         }
 
         public string GetRoleHeader(Role role)

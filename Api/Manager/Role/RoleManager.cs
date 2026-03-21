@@ -2,6 +2,7 @@
 using Api.Models;
 using DTO;
 using Supabase;
+using static Supabase.Postgrest.Constants;
 
 namespace Api.Manager
 {
@@ -66,31 +67,33 @@ namespace Api.Manager
                 if (newIsFree != null)
                     query = query.Set(role => role.IsFree, newIsFree);
 
-                //TODO Remove members from role if set to free
-
                 return query.Update();                
             }
         }
 
         public async Task UpdateRoleMembers(string departmentId, string roleId, UpdateMembersListDTO updateMembersList)
         {
-            await _supabaseClient
-                .From<MemberRoleJoin>()
-                .Insert(updateMembersList.NewMembers
-                    .Select(newMember => new MemberRoleJoin
-                    {
-                        DepartmentId = departmentId,
-                        RoleId = roleId,
-                        MemberId = newMember
-                    }).ToList());
+            if(updateMembersList.NewMembers.Any())
+            {
+                await _supabaseClient
+                    .From<MemberRoleJoin>()
+                    .Insert(updateMembersList.NewMembers
+                        .Select(newMember => new MemberRoleJoin
+                        {
+                            DepartmentId = departmentId,
+                            RoleId = roleId,
+                            MemberId = newMember
+                        }).ToList());
+            }
 
-            await _supabaseClient
-                .From<MemberRoleJoin>()
-                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId && updateMembersList.FormerMembers.Contains(join.MemberId))
-                .Delete();
-
-            if (updateMembersList.FormerMembers.Any())
-                await _qualificationManager.RemoveMembersFromQualifications(departmentId, roleId, updateMembersList.FormerMembers);
+            if(updateMembersList.FormerMembers.Any())
+            {
+                await _supabaseClient
+                    .From<MemberRoleJoin>()
+                    .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId)
+                    .Filter(nameof(MemberRoleJoin.MemberId), Operator.In, updateMembersList.FormerMembers)
+                    .Delete();
+            }
         }
 
         public async Task<List<string>> GetRoleMembers(string departmentId, string roleId)
