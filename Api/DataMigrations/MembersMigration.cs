@@ -19,6 +19,8 @@ namespace Api.DataMigrations
         public async Task MigrateRoles()
         {
             var departmentId = "v87avboSu7Dc74ZJpJFk";
+            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId).Get();
+            var memberIds = res.Models.Select(member => member.Id);
 
             var rolesSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Role").GetSnapshotAsync();
             foreach (var roleDoc in rolesSnap)
@@ -37,7 +39,7 @@ namespace Api.DataMigrations
                 };
                 await _supabaseClient.From<Role>().Insert(newRole);
 
-                foreach(var member in role.MemberIds)
+                foreach(var member in role.MemberIds.Intersect(memberIds))
                 {
                     var newMemberRoleJoin = new MemberRoleJoin
                     {
@@ -65,7 +67,7 @@ namespace Api.DataMigrations
                 };
                 await _supabaseClient.From<Qualification>().Insert(newQual);
 
-                foreach (var member in qual.MemberIds)
+                foreach (var member in qual.MemberIds.Intersect(memberIds))
                 {
                     var newMemberQualJoin = new MemberQualificationJoin
                     {
