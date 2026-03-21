@@ -1,0 +1,21 @@
+\documentclass[a4paper,12pt]{scrartcl}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{mathtools}
+
+\begin{document}
+Gegeben sind eine Menge $M$ von Nutzern (Member), die den Veranstaltungen (Events) $E$ zugeordnet werden. Die Gesamtheit der zu übernehmenden Aufgaben wird durch die Rollen $R$ dargestellt. Der Bedarf an zugewiesenen Personen wird über die Werte $B_{er}\in \mathbb{N}$ angegeben. 
+
+Nicht jede Person darf jede beliebige Rolle ausführen. Die zugelassenen Member einer Rolle $r\in R$ werden durch die Menge $M_r\subseteq M$ repräsentiert. Da weiterhin gewisse Teilaufgaben Personen mit zusätzlichen Fähigkeiten/Weiterbildungen voraussetzen, können Qualifikationen $Q_r$ für jede Rolle existieren. Analog werden für die Qualifikationen $Q\coloneqq \bigcup_{r\in R} Q_r$ die befähigten Member durch die Mengen $M_q\subseteq M$ beschrieben. Der Bedarf an Personen mit einer Qualifikation $q\in Q_r$ beim Event $e\in E$ wird durch den Wert $B_{erq}\in \mathbb{N}$ angegeben, wobei sinnvollerweise $B_{erq} \leq B_{er}$ gilt.
+
+Die Nutzer können in der Anwendung ihre Bereitschaft angeben eine Rolle zu übernehmen. Zusätzlich können Personen von den Administratoren diesen Rollen fest zugeordnet werden. Insgesamt gibt es vier Zustände die Einsatzbereitschaft der Member angeben. 
+
+\begin{align*}
+    A_{mer} = 0 &\iff m \text{ ist verfügbar}\\
+    A_{mer} = 1 &\iff m \text{ ist nicht verfügbar}\\
+    A_{mer} = 2 &\iff m \text{ ist für den Einsatz vorgemerkt}\\
+    A_{mer} = 3 &\iff m \text{ ist für den Einsatz fest zugewiesen}\\
+\end{align*}
+
+\end{document}

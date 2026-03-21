@@ -483,3 +483,7 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 /Optimizer/venv
+*.aux
+*.fdb_latexmk
+*.fls
+*.gz
