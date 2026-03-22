@@ -16,18 +16,21 @@ namespace Api.Controllers
         private ILocationManager _locationManager;
         private IGroupManager _groupManager;
         private IRoleManager _roleManager;
+        private IDepartmentManager _departmentManager;
 
-        public CalendarController(IEventManager eventManager, ILocationManager locationManager, IGroupManager groupManager, IRoleManager roleManager)
+        public CalendarController(IDepartmentManager departmentManager, IEventManager eventManager, ILocationManager locationManager, IGroupManager groupManager, IRoleManager roleManager)
         {
             _eventManager = eventManager;
             _locationManager = locationManager;
             _groupManager = groupManager;
             _roleManager = roleManager;
+            _departmentManager = departmentManager;
         }
 
         [HttpGet("{departmentId}/{memberId}")]
         public async Task<IActionResult> GetCalendar([FromRoute] string departmentId, [FromRoute] string memberId)
         {
+            var department = await _departmentManager.GetById(departmentId);
             var memberRequirements = await _eventManager.GetEnteredMemberRequirements(departmentId, memberId);
             var calendar = new Calendar();
             foreach(var requirement in memberRequirements)
@@ -39,18 +42,22 @@ namespace Api.Controllers
                 {
                     Start = new CalDateTime(@event.Date),
                     End = new CalDateTime(@event.Date.AddHours(1.5)),
-                    Summary = role.Name + " " + group.Name
+                    Summary = role.Name + " " + group?.Name,
+                    Uid = @event.Id
                 };
                 if(!string.IsNullOrEmpty(@event.LocationId))
                 {
                     var location = await _locationManager.GetById(departmentId, @event.LocationId);
                     calendarEvent.GeographicLocation = new GeographicLocation(location.Latitude, location.Longitude);
+                    calendarEvent.Location = location.Name;
                 }
                 else if(@event.Latitude.HasValue && @event.Longitude.HasValue)
                 {
                     calendarEvent.GeographicLocation = new GeographicLocation(@event.Latitude.Value, @event.Longitude.Value);
                     calendarEvent.Location = @event.LocationText;
                 }
+                calendarEvent.Categories = [role.Name];
+                calendarEvent.Url = new Uri($"https://einsatzplaner.net/{department.URL}/event/{@event.Id}");
                 calendar.Events.Add(calendarEvent);
             }
 
