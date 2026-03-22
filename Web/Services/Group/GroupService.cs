@@ -15,11 +15,10 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<string> UpdateOrCreateGroup(string departmentId, string? groupId, string name)
+        public Task UpdateOrCreateGroup(string departmentId, string? groupId, string name)
         {
             var query = QueryBuilder.Build(("departmentId", departmentId), ("groupId", groupId), ("name", name));
-            var response = await _httpClient.PostAsync(new Uri($"/api/Group{query}", UriKind.Relative), null);
-            return await response.Content.ReadAsStringAsync();
+            return _httpClient.PostAsync(new Uri($"/api/Group{query}", UriKind.Relative), null);
         }
 
         public Task DeleteGroup(string departmentId, string groupId)

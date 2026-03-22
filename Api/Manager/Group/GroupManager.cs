@@ -1,82 +1,101 @@
-﻿using Google.Cloud.Firestore;
+﻿using Api.Converter;
 using Api.Models;
-using Api.Converter;
 using DTO;
+using Supabase;
+using static Supabase.Postgrest.Constants;
 
 namespace Api.Manager
 {
     public class GroupManager : IGroupManager
     {
-        private FirestoreDb _firestoreDb;
-        private IMemberManager _memberManager;
+        private Client _supabaseClient;
 
-        public GroupManager(FirestoreDb firestoreDb, IMemberManager memberManager)
+        public GroupManager(Client supabaseClient)
         {
-            _firestoreDb = firestoreDb;
-            _memberManager = memberManager;
+            _supabaseClient = supabaseClient;
         }
 
-        private CollectionReference GetGroupCollectionReference(string departmentId)
+        public Task Delete(string departmentId, string groupId)
         {
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.GROUP);
+            return _supabaseClient
+                .From<Group>()
+                .Where(group => group.DepartmentId == departmentId && group.Id == groupId)
+                .Limit(1)
+                .Delete();
         }
 
-        public async Task Delete(string departmentId, string groupId)
+        public async IAsyncEnumerable<GroupDTO> GetAll(string departmentId)
         {
-            var groupCollectionReference = GetGroupCollectionReference(departmentId);
-            var groupRef = groupCollectionReference.Document(groupId);
-            await groupRef.DeleteAsync();
+            var res = await _supabaseClient.From<Group>().Where(role => role.DepartmentId == departmentId).Get();
+            foreach (var group in res.Models)
+            {
+                var members = await GetGroupMembers(departmentId, group.Id);
+                yield return GroupConverter.Convert(group, members);
+            }
         }
 
-        public async Task<List<GroupDTO>> GetAll(string departmentId)
+        private async Task<List<string>> GetGroupMembers(string departmentId, string groupId)
         {
-            var groupReference = GetGroupCollectionReference(departmentId);
-            var snapshot = await groupReference.GetSnapshotAsync();
-            var groups = snapshot.Select(doc => doc.ConvertTo<Group>()).ToList();
-            return GroupConverter.Convert(groups);
+            var res = await _supabaseClient
+                .From<MemberGroupJoin>()
+                .Select(nameof(MemberGroupJoin.MemberId))
+                .Where(join => join.DepartmentId == departmentId && join.GroupId == groupId)
+                .Get();
+
+            return res.Models.Select(join => join.MemberId).ToList();
         }
 
-        public async Task<string> UpdateOrCreate(string departmentId, string? groupId, string name)
+        public Task UpdateOrCreate(string departmentId, string? groupId, string name)
         {
-            var groupReference = GetGroupCollectionReference(departmentId);
             if (string.IsNullOrEmpty(groupId))
             {
                 var newGroup = new Group
                 {
                     Name = name,
-                    MemberIds = new()
+                    DepartmentId = departmentId,
                 };
 
-                var newGroupReference = await groupReference.AddAsync(newGroup);
-                return newGroupReference.Id;
+                return _supabaseClient.From<Group>().Insert(newGroup);
             }
             else
             {
-                await groupReference.Document(groupId)
-                .UpdateAsync(new Dictionary<string, object> {
-                    { nameof(Group.Name), name }
-                }, Precondition.MustExist);
-                return groupId;
+                return _supabaseClient
+                    .From<Group>()
+                    .Where(group => group.Id == groupId && group.DepartmentId == departmentId)
+                    .Limit(1)                    
+                    .Set(role => role.Name, name)
+                    .Update();
             }
         }
 
         public async Task UpdateGroupMembers(string departmentId, string groupId, UpdateMembersListDTO updateMembersList)
         {
-            var groupCollectionReference = GetGroupCollectionReference(departmentId);
-            var groupRef = groupCollectionReference.Document(groupId);
-            await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
-            await groupRef.UpdateAsync(nameof(Group.MemberIds), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
+            if (updateMembersList.NewMembers.Any())
+            {
+                await _supabaseClient
+                    .From<MemberGroupJoin>()
+                    .Insert(updateMembersList.NewMembers
+                        .Select(newMember => new MemberGroupJoin
+                        {
+                            DepartmentId = departmentId,
+                            GroupId = groupId,
+                            MemberId = newMember
+                        }).ToList());
+            }
+
+            if (updateMembersList.FormerMembers.Any())
+            {
+                await _supabaseClient
+                    .From<MemberGroupJoin>()
+                    .Where(join => join.DepartmentId == departmentId && join.GroupId == groupId)
+                    .Filter(nameof(MemberGroupJoin.MemberId), Operator.In, updateMembersList.FormerMembers)
+                    .Delete();
+            }
         }
 
-        public async Task<Group> GetById(string departmentId, string groupId)
+        public Task<Group> GetById(string departmentId, string groupId)
         {
-            if (string.IsNullOrEmpty(groupId))
-                return null;
-            var groupReference = GetGroupCollectionReference(departmentId).Document(groupId);
-            var snapshot = await groupReference.GetSnapshotAsync();
-            return snapshot.ConvertTo<Group>();
+            return _supabaseClient.From<Group>().Where(group => group.Id == groupId && group.DepartmentId == departmentId).Single();
         }
     }
 }

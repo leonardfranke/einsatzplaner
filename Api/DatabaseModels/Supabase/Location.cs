@@ -2,7 +2,7 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace Api.DatabaseModels
+namespace Api.Models
 {
     [Table("locations")]
     public class Location : BaseModel

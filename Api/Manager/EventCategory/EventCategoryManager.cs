@@ -1,70 +1,61 @@
 ﻿using Api.Converter;
 using Api.Models;
 using DTO;
-using Google.Cloud.Firestore;
+using Supabase;
 
 namespace Api.Manager
 {
     public class EventCategoryManager : IEventCategoryManager
     {
-        private FirestoreDb _firestoreDb;
+        private Client _supabaseClient;
 
-        public EventCategoryManager(FirestoreDb firestoreDb)
+        public EventCategoryManager(Client supabaseClient)
         {
-            _firestoreDb = firestoreDb;
-        }
-        private CollectionReference GetCollectionReference(string departmentId)
-        {
-            return _firestoreDb
-                .Collection(Paths.DEPARTMENT).Document(departmentId)
-                .Collection(Paths.EVENT_CATEGORY);
+            _supabaseClient = supabaseClient;
         }
 
-        public async Task Delete(string departmentId, string eventCategoryId)
+        public Task Delete(string departmentId, string eventCategoryId)
         {
-            var groupCollectionReference = GetCollectionReference(departmentId);
-            var groupRef = groupCollectionReference.Document(eventCategoryId);
-            await groupRef.DeleteAsync();
+            return _supabaseClient
+                .From<EventCategory>()
+                .Where(category => category.DepartmentId == departmentId && category.Id == eventCategoryId)
+                .Limit(1)
+                .Delete();
         }
 
         public async Task<List<EventCategoryDTO>> GetAll(string departmentId)
         {
-            var groupReference = GetCollectionReference(departmentId);
-            var snapshot = await groupReference.GetSnapshotAsync();
-            var eventCategories = snapshot.Select(doc => doc.ConvertTo<EventCategory>()).ToList();
-            return EventCategoryConverter.Convert(eventCategories);
+            var res = await _supabaseClient.From<EventCategory>().Where(category => category.DepartmentId == departmentId).Get();
+            return EventCategoryConverter.Convert(res.Models);
         }
 
         public Task UpdateOrCreate(string departmentId, string? eventCategoryId, string name)
         {
-            var eventCategoryReference = GetCollectionReference(departmentId);
             if (string.IsNullOrEmpty(eventCategoryId))
             {
-                var newEventCategory = new EventCategory
+                var newCategory = new EventCategory
                 {
-                    Name = name
+                    Name = name,
+                    DepartmentId = departmentId
                 };
 
-                return eventCategoryReference.AddAsync(newEventCategory);
+                return _supabaseClient.From<EventCategory>().Insert(newCategory);
             }
             else
             {
-                return eventCategoryReference.Document(eventCategoryId)
-                .UpdateAsync(new Dictionary<string, object> {
-                    { nameof(Group.Name), name }
-                }, Precondition.MustExist);
+                return _supabaseClient
+                    .From<EventCategory>()
+                    .Where(category => category.Id == eventCategoryId && category.DepartmentId == departmentId)
+                    .Limit(1)
+                    .Set(category => category.Name, name)
+                    .Update();
             }
         }
 
         public async Task<EventCategoryDTO> GetById(string departmentId, string eventCategoryId)
         {
-            if (string.IsNullOrEmpty(eventCategoryId))
-                return null;
-            var eventCategoryReference = GetCollectionReference(departmentId)
-                .Document(eventCategoryId);
-            var snapshot = await eventCategoryReference.GetSnapshotAsync();
-            var eventCategory = snapshot.ConvertTo<EventCategory>();
-            return EventCategoryConverter.Convert(eventCategory);
+            var category = await _supabaseClient.From<EventCategory>().Where(category => category.Id == eventCategoryId && category.DepartmentId == departmentId).Single();
+            return EventCategoryConverter.Convert(category);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Api.Manager;
-using Api.Models;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
 

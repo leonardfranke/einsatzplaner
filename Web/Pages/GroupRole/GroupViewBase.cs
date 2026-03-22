@@ -108,7 +108,7 @@ namespace Web.Pages
 
         private async Task UpdateGroup(string groupId, string name)
         {
-            var newGroupId = await _groupService.UpdateOrCreateGroup(_departmentId, groupId, name);
+            await _groupService.UpdateOrCreateGroup(_departmentId, groupId, name);
             await LoadGroups();
         }
     }

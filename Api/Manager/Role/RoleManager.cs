@@ -9,12 +9,10 @@ namespace Api.Manager
     public class RoleManager : IRoleManager
     {
         private Client _supabaseClient;
-        private IQualificationManager _qualificationManager;
 
-        public RoleManager(Client supabaseClient, IQualificationManager qualificationManager)
+        public RoleManager(Client supabaseClient)
         {
             _supabaseClient = supabaseClient;
-            _qualificationManager = qualificationManager;
         }
 
         public Task Delete(string departmentId, string roleId)
@@ -96,7 +94,7 @@ namespace Api.Manager
             }
         }
 
-        public async Task<List<string>> GetRoleMembers(string departmentId, string roleId)
+        private async Task<List<string>> GetRoleMembers(string departmentId, string roleId)
         {
             var res = await _supabaseClient
                 .From<MemberRoleJoin>()

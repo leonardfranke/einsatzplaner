@@ -3,7 +3,7 @@
 namespace Api.Models
 {
     [FirestoreData]
-    public class EventCategory : FirebaseDocument
+    public class EventCategoryOld : FirebaseDocument
     {
         [FirestoreProperty]
         public string Name { get; set; }

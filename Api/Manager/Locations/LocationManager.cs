@@ -1,4 +1,4 @@
-﻿using Api.DatabaseModels;
+﻿using Api.Models;
 using DTO;
 using GoogleApi.Entities.Common.Enums;
 using GoogleApi.Entities.PlacesNew.AutoComplete.Request;

@@ -1,5 +1,4 @@
 ﻿using Api.Manager;
-using Api.Models;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,16 +9,14 @@ namespace Api.Controllers
     public class GroupController : ControllerBase
     {
         private IGroupManager _groupManager;
-        private IMemberManager _memberManager;
 
-        public GroupController(IGroupManager groupManager, IMemberManager memberManager)
+        public GroupController(IGroupManager groupManager)
         {
             _groupManager = groupManager;
-            _memberManager = memberManager;
         }
 
         [HttpGet("{departmentId}")]
-        public Task<List<GroupDTO>> GetAll([FromRoute] string departmentId)
+        public IAsyncEnumerable<GroupDTO> GetAll([FromRoute] string departmentId)
         {
             return _groupManager.GetAll(departmentId);
         }
@@ -31,7 +28,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
-        public Task<string> UpdateOrCreate([FromQuery] string departmentId, [FromQuery] string? groupId, [FromQuery] string name)
+        public Task UpdateOrCreate([FromQuery] string departmentId, [FromQuery] string? groupId, [FromQuery] string name)
         {
             return _groupManager.UpdateOrCreate(departmentId, groupId, name);
         }

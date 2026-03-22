@@ -1,5 +1,4 @@
-﻿using Api.FirestoreModels;
-using Api.Models;
+﻿using Api.Models;
 using Google.Cloud.Firestore;
 using Supabase;
 
@@ -22,62 +21,47 @@ namespace Api.DataMigrations
             var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId).Get();
             var memberIds = res.Models.Select(member => member.Id);
 
-            var rolesSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Role").GetSnapshotAsync();
-            foreach (var roleDoc in rolesSnap)
+            var groupsSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Group").GetSnapshotAsync();
+            foreach (var groupDoc in groupsSnap)
             {
-                var role = roleDoc.ConvertTo<RoleOld>();
-                if (role == null)
+                var group = groupDoc.ConvertTo<GroupOld>();
+                if (group == null)
                     continue;
 
-                var newRole = new Role
+                var newGroup = new Group
                 {
-                    Id = role.Id,
-                    Name = role.Name,
-                    DepartmentId = departmentId,
-                    IsFree = role.IsFree,
-                    LockingPeriod = role.LockingPeriod,
+                    Id = group.Id,
+                    Name = group.Name,
+                    DepartmentId = departmentId
                 };
-                await _supabaseClient.From<Role>().Insert(newRole);
+                await _supabaseClient.From<Group>().Insert(newGroup);
 
-                foreach(var member in role.MemberIds.Intersect(memberIds))
+                foreach(var member in group.MemberIds.Intersect(memberIds))
                 {
-                    var newMemberRoleJoin = new MemberRoleJoin
+                    var newMemberGroupJoin = new MemberGroupJoin
                     {
-                        RoleId = role.Id,
+                        GroupId = group.Id,
                         MemberId = member,
                         DepartmentId = departmentId                        
                     };
-                    await _supabaseClient.From<MemberRoleJoin>().Insert(newMemberRoleJoin);
+                    await _supabaseClient.From<MemberGroupJoin>().Insert(newMemberGroupJoin);
                 }
             }
 
-            var qualificationSnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("Qualification").GetSnapshotAsync();
-            foreach (var qualDoc in qualificationSnap)
+            var categorySnap = await _firestoreDb.Collection("Department").Document(departmentId).Collection("EventCategory").GetSnapshotAsync();
+            foreach (var categoryDoc in categorySnap)
             {
-                var qual = qualDoc.ConvertTo<QualificationOld>();
-                if (qual == null)
+                var category = categoryDoc.ConvertTo<EventCategoryOld>();
+                if (category == null)
                     continue;
 
-                var newQual = new Qualification
+                var newCategory = new EventCategory
                 {
-                    DepartmentId = departmentId,
-                    Id = qual.Id,
-                    Name = qual.Name,
-                    RoleId = qual.RoleId
+                    Id = category.Id,
+                    Name = category.Name,
+                    DepartmentId = departmentId
                 };
-                await _supabaseClient.From<Qualification>().Insert(newQual);
-
-                foreach (var member in qual.MemberIds.Intersect(memberIds))
-                {
-                    var newMemberQualJoin = new MemberQualificationJoin
-                    {
-                        RoleId = qual.RoleId,
-                        DepartmentId = departmentId,
-                        MemberId = member,
-                        QualificationId = qual.Id
-                    };
-                    await _supabaseClient.From<MemberQualificationJoin>().Insert(newMemberQualJoin);
-                }
+                await _supabaseClient.From<EventCategory>().Insert(newCategory);
             }
         }
     }

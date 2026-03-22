@@ -1,4 +1,4 @@
-﻿using Api.DatabaseModels;
+﻿using Api.Models;
 using DTO;
 
 namespace Api.Manager

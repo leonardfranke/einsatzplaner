@@ -30,7 +30,7 @@ namespace Api.Manager
 
             var events = await eventsTask;
             var requirements = await requirementsTask;
-            var groups = await groupsTask;
+            var groups = await groupsTask.ToListAsync();
             var roles = await rolesTask.ToListAsync();
             var qualifications = await qualificationsTask.ToListAsync();
 

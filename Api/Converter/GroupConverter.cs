@@ -5,12 +5,7 @@ namespace Api.Converter
 {
     public class GroupConverter
     {
-        public static List<GroupDTO> Convert(List<Group> groups)
-        {
-            return groups.Select(Convert).ToList();
-        }
-
-        public static GroupDTO Convert(Group group)
+        public static GroupDTO Convert(Group group, List<string> members)
         {
             if (group == null)
                 return null;
@@ -18,7 +13,7 @@ namespace Api.Converter
             {
                 Id = group.Id,
                 Name = group.Name,
-                MemberIds = group.MemberIds
+                MemberIds = members
             };
         }
     }
