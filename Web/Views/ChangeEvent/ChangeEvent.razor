@@ -5,174 +5,166 @@
 @using Web.Models
 @using Web.Views.Location
 
-@if(IsEventLoading)
-{
-    <div class="text-center">
-        <div class="spinner-border m-5"></div>
-    </div>
-}
-else
-{    
-    <MudGrid>
-        <MudItem xs="6">
-            <MudBlazor.MudSelect Label="Gruppe" @bind-Value="EventData.GroupId">
-                @foreach (var groups in Groups ?? new())
-                {
-                    <MudBlazor.MudSelectItem Value="@groups.Id">@groups.Name</MudBlazor.MudSelectItem>
-                }
-            </MudBlazor.MudSelect>
-        </MudItem>
-        <MudItem xs="6">
-            <MudBlazor.MudSelect Label="Eventkategorie" @bind-Value="EventData.EventCategoryId" Class="d-flex flex-grow-1">
-                @foreach (var category in EventCategories ?? new())
-                {
-                    <MudBlazor.MudSelectItem Value="@category.Id">@category.Name</MudBlazor.MudSelectItem>
-                }
-            </MudBlazor.MudSelect>
-        </MudItem>
-        <MudItem xs="6">
-            <MudDatePicker Label="Datum" AutoClose="true" @bind-Date="EventData.Date" DisplayMonths="2"/>
-        </MudItem>
-        <MudItem xs="6">
-            <LocationAutocomplete LocationChangedFunc="PositionChanged" Locations="Locations" />
-        </MudItem>
-        <MudItem xs="6">
-            <MudTimePicker Label="Beginn" AutoClose="true" MinuteSelectionStep="5" @bind-Time="EventData.Begin" />
-        </MudItem>
-        <MudItem xs="6">
-            <MudTimePicker Label="Ende" Clearable="true" Disabled="true" Placeholder="Feature nicht verfügbar" AutoClose="true" MinuteSelectionStep="5" @bind-Time="EventData.End" />
-        </MudItem>
-    </MudGrid>
-
-    <MudStack Row=true Justify="Justify.SpaceBetween">
-        <MudText Class="my-3" Typo="Typo.h5">Bedarfe:</MudText>
-        @if (Roles != null)
+<MudDialog>
+    <DialogContent>
+        @if (IsEventLoading)
         {
-            <MudMenu Dense="true" Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled">
-                @if (RequirementGroups != null && RequirementGroups.Count > 0)
-                {
-                    <MudText Typo="Typo.overline" Class="ma-3">Bedarfsgruppen:</MudText>
-                    @foreach (var requirementGroup in RequirementGroups)
-                    {
-                        <MudMenuItem OnClick="() => SetHelperGroup(requirementGroup)">@requirementGroup.GetRequirementGroupDisplayText(Roles, Qualifications)</MudMenuItem>
-
-                    }
-                    <MudDivider />
-                }
-                <MudText Typo="Typo.overline" Class="ma-3">Rollen:</MudText>
-                @{
-                    var alreadySelectedCategoryIds = EventData.Helpers?.Select(helper => helper.RoleId);
-                    var dropdownListHelpers = Roles.Where(category => !alreadySelectedCategoryIds.Contains(category.Id));
-                    if (dropdownListHelpers.Count() == 0)
-                    {
-                        <MudMenuItem Disabled=true>Keine weiteren Rollen</MudMenuItem>
-                    }
-                    else
-                    {
-                        foreach (var category in dropdownListHelpers)
-                        {
-                            <MudMenuItem OnClick="() => AddCategoryToGame(category.Id, 1)">@category.Name</MudMenuItem>
-                        }
-                    }
-                }
-            </MudMenu>
+            <div class="text-center">
+                <div class="spinner-border m-5"></div>
+            </div>
         }
-    </MudStack>
-    
-
-    
-
-    @if (EventData.Helpers.Count > 0)
-    {
-        @foreach (var helperForm in EventData.Helpers)
+        else
         {
-            <MudDivider Class="mt-4"/>
-
-            <MudText Typo="Typo.h5">@GetRoleById(helperForm.RoleId)?.Name</MudText>
-
-            <MudGrid Class="mt-1">
+            <MudGrid>
                 <MudItem xs="6">
-                    <MudNumericField T="int" Label="Bedarf" Min="1" Value="@helperForm.RequiredAmount" ValueChanged="(value) => SetRequiredAmount(helperForm, value)" HideSpinButtons=true AdornmentIcon="@Icons.Material.Outlined.Delete" Adornment="Adornment.End" OnAdornmentClick="() => RemoveCategoryFromGame(helperForm)" />
+                    <MudBlazor.MudSelect Label="Gruppe" @bind-Value="GroupId">
+                        @foreach (var groups in Groups ?? new())
+                        {
+                            <MudBlazor.MudSelectItem Value="@groups.Id">@groups.Name</MudBlazor.MudSelectItem>
+                        }
+                    </MudBlazor.MudSelect>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudNumericField T="int" Label="Sperrzeitraum" Min="0" Value="@helperForm.LockingPeriod" ValueChanged="(value) => SetLockingPeriod(helperForm, value)" HideSpinButtons=true />
-                </MudItem>
-            </MudGrid>            
-
-            @if(Groups.Count > 0)
-            {
-                <MudSwitch Class="mt-3" @bind-Value="helperForm.RestrictGroups" Label="Gruppenempfehlungen aktivieren:" />
-                @if (helperForm.RestrictGroups)
-                {
-                    <MudStack Row=true Wrap="Wrap.Wrap">
-                    @foreach (var group in Groups)
-                    {
-                        <MudCheckBox Dense=true T="bool" Label="@group.Name" Value="@IsGroupSetForCategory(helperForm, group.Id)" ValueChanged="value => SetRequiredGroup(helperForm, group.Id, value)" />
-                    }
-                    </MudStack>
-                }
-            }
-
-           
-            var qualificationsOfRole = GetQualificationsOfRole(helperForm.RoleId);            
-            @if (qualificationsOfRole.Any())
-            {             
-                <MudMenu Class="mt-3 mb-1" Dense="true" Label="Qualifikation hinzufügen" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Color="Color.Primary" Variant="Variant.Filled">
-                    @{
-                        var qualificationsToShow = qualificationsOfRole.Where(qualification => !helperForm.RequiredQualifications.ContainsKey(qualification.Id));
-                    }
-                    @if (qualificationsToShow.Any())
-                    {
-                        @foreach (var qualification in qualificationsToShow)
+                    <MudBlazor.MudSelect Label="Eventkategorie" @bind-Value="EventCategoryId" Class="d-flex flex-grow-1">
+                        @foreach (var category in EventCategories ?? new())
                         {
-                            <MudMenuItem Onclick="() => AddQualificationToRole(helperForm, qualification.Id)">@qualification.Name</MudMenuItem>
+                            <MudBlazor.MudSelectItem Value="@category.Id">@category.Name</MudBlazor.MudSelectItem>
                         }
-                    }
-                    else
-                    {
-                        <MudMenuItem Disabled=true>Keine weiteren Qualifikationen</MudMenuItem>
-                    }
-                </MudMenu>
-            }
+                    </MudBlazor.MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudDatePicker Label="Datum" AutoClose="true" @bind-Date="Date" DisplayMonths="2" />
+                </MudItem>
+                <MudItem xs="6">
+                    <LocationAutocomplete LocationChangedFunc="PositionChanged" Locations="Locations" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTimePicker Label="Beginn" AutoClose="true" MinuteSelectionStep="5" @bind-Time="Begin" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTimePicker Label="Ende" Clearable="true" Disabled="true" Placeholder="Feature nicht verfügbar" AutoClose="true" MinuteSelectionStep="5"/>
+                </MudItem>
+            </MudGrid>
 
-            @foreach(var qualificationRequirement in helperForm.RequiredQualifications)
+            <MudStack Row=true Justify="Justify.SpaceBetween">
+                <MudText Class="my-3" Typo="Typo.h5">Bedarfe:</MudText>
+                @if (Roles != null)
+                {
+                    <MudMenu Dense="true" Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled">
+                        @if (RequirementGroups != null && RequirementGroups.Count > 0)
+                        {
+                            <MudText Typo="Typo.overline" Class="ma-3">Bedarfsgruppen:</MudText>
+                            @foreach (var requirementGroup in RequirementGroups)
+                            {
+                                <MudMenuItem OnClick="() => SetHelperGroup(requirementGroup)">@requirementGroup.GetRequirementGroupDisplayText(Roles, Qualifications)</MudMenuItem>
+
+                            }
+                            <MudDivider />
+                        }
+                        <MudText Typo="Typo.overline" Class="ma-3">Rollen:</MudText>
+                        @{
+                            var alreadySelectedCategoryIds = RequirementForms?.Select(helper => helper.RoleId);
+                            var dropdownListHelpers = Roles.Where(category => !alreadySelectedCategoryIds.Contains(category.Id));
+                            if (dropdownListHelpers.Count() == 0)
+                            {
+                                <MudMenuItem Disabled=true>Keine weiteren Rollen</MudMenuItem>
+                            }
+                            else
+                            {
+                                foreach (var category in dropdownListHelpers)
+                                {
+                                    <MudMenuItem OnClick="() => AddRequirementToEvent(false, category.Id, 1)">@category.Name</MudMenuItem>
+                                }
+                            }
+                        }
+                    </MudMenu>
+                }
+            </MudStack>
+
+            @foreach (var requirementForm in RequirementForms)
             {
-                var qualification = Qualifications.First(qualification => qualification.Id == qualificationRequirement.Key);
-                var qualificationAmount = qualificationRequirement.Value;
+                <MudDivider Class="mt-4" />
 
-                <MudNumericField Class="mt-2" T="int" Label="@qualification.Name" Min="1" Max="@helperForm.RequiredAmount" Value="@qualificationAmount" ValueChanged="@(v => helperForm.RequiredQualifications[qualificationRequirement.Key] = v)" HideSpinButtons=true AdornmentIcon="@Icons.Material.Outlined.Delete" Adornment="Adornment.End" OnAdornmentClick="() => RemoveQualificationFromRole(helperForm, qualification.Id)" />
-            }
+                <MudText Typo="Typo.h5">@GetRoleById(requirementForm.RoleId)?.Name</MudText>
+
+                <MudGrid Class="mt-1">
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Label="Bedarf" Min="1" Value="@requirementForm.RequiredAmount" ValueChanged="(value) => SetRequiredAmount(requirementForm, value)" HideSpinButtons=true AdornmentIcon="@Icons.Material.Outlined.Delete" Adornment="Adornment.End" OnAdornmentClick="() => RemoveCategoryFromGame(requirementForm)" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudNumericField T="int" Label="Sperrzeitraum" Min="0" Value="@requirementForm.LockingPeriod" ValueChanged="(value) => SetLockingPeriod(requirementForm, value)" HideSpinButtons=true />
+                    </MudItem>
+                </MudGrid>
+
+                @if (Groups.Count > 0)
+                {
+                    <MudSwitch Class="mt-3" @bind-Value="requirementForm.RestrictGroups" Label="Gruppenempfehlungen aktivieren:" />
+                    @if (requirementForm.RestrictGroups)
+                    {
+                        <MudStack Row=true Wrap="Wrap.Wrap">
+                            @foreach (var group in Groups)
+                            {
+                                <MudCheckBox Dense=true T="bool" Label="@group.Name" Value="@IsGroupSetForCategory(requirementForm, group.Id)" ValueChanged="value => SetRequiredGroup(requirementForm, group.Id, value)" />
+                            }
+                        </MudStack>
+                    }
+                }
+
+
+                var qualificationsOfRole = GetQualificationsOfRole(requirementForm.RoleId);
+                @if (qualificationsOfRole.Any())
+                {
+                    <MudMenu Class="mt-3 mb-1" Dense="true" Label="Qualifikation hinzufügen" EndIcon="@Icons.Material.Filled.KeyboardArrowDown" Color="Color.Primary" Variant="Variant.Filled">
+                        @{
+                            var qualificationsToShow = qualificationsOfRole.Where(qualification => !requirementForm.RequiredQualifications.ContainsKey(qualification.Id));
+                        }
+                        @if (qualificationsToShow.Any())
+                        {
+                            @foreach (var qualification in qualificationsToShow)
+                            {
+                                <MudMenuItem Onclick="() => AddQualificationToRole(requirementForm, qualification.Id)">@qualification.Name</MudMenuItem>
+                            }
+                        }
+                        else
+                        {
+                            <MudMenuItem Disabled=true>Keine weiteren Qualifikationen</MudMenuItem>
+                        }
+                    </MudMenu>
+                }
+
+                @foreach (var qualificationRequirement in requirementForm.RequiredQualifications)
+                {
+                    var qualification = Qualifications.First(qualification => qualification.Id == qualificationRequirement.Key);
+                    var qualificationAmount = qualificationRequirement.Value;
+
+                    <MudNumericField Class="mt-2" T="int" Label="@qualification.Name" Min="1" Max="@requirementForm.RequiredAmount" Value="@qualificationAmount" ValueChanged="@(v => requirementForm.RequiredQualifications[qualificationRequirement.Key] = v)" HideSpinButtons=true AdornmentIcon="@Icons.Material.Outlined.Delete" Adornment="Adornment.End" OnAdornmentClick="() => RemoveQualificationFromRole(requirementForm, qualification.Id)" />
+                }
+            }            
         }
-    }
-
-        
-
-    <hr />
-    @if (IsUpdate)
-    {
-            @if (IsEventDeleting) 
-            { 
-                <button class="btn btn-danger" type="button">
-                    <span class="spinner-border spinner-border-sm"></span>
-                    <span>Löschen</span>
-                </button>
+    </DialogContent>
+    <DialogActions>
+        @if (IsUpdate)
+        {
+            @if (IsEventDeleting)
+            {
+                <MudButton Color="Color.Error">Löschen</MudButton>
             }
             else
             {
-                <button class="btn btn-danger" type="button" @onclick="DeleteGame">Löschen</button>
+                <MudButton OnClick="DeleteGame" Color="Color.Error">Löschen</MudButton>
             }
-    }
-    <div class="float-end">
+        }
+        <div class="float-end">
             @if (IsEventSaving)
             {
-                <button class="btn btn-primary" type="button">
-                    <span class="spinner-border spinner-border-sm"></span>
-                    <span>Speichern</span>
-                </button>
+                <MudButton Color="Color.Primary">Speichern</MudButton>
+                
             }
             else
             {
-                <button class="btn btn-primary" @onclick="SaveGame">Speichern</button>
+                <MudButton OnClick="SaveGame" Color="Color.Primary">Speichern</MudButton>
             }
-    </div>
-}
+        </div>
+    </DialogActions>
+</MudDialog>
+

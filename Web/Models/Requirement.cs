@@ -1,14 +1,14 @@
 ﻿namespace Web.Models
 {
-    public class Helper
+    public class Requirement
     {
-        public string Id { get; set; }
+        public string DepartmentId { get; set; }
 
         public string EventId { get; set; }
 
         public string RoleId { get; set; }
 
-        public DateTime LockingTime { get; set; }
+        public DateTimeOffset LockingTime { get; set; }
 
         public int RequiredAmount { get; set; }
 

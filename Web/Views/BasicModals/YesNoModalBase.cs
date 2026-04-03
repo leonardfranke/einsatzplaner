@@ -1,9 +1,13 @@
 ﻿using Microsoft.AspNetCore.Components;
+using MudBlazor;
 
 namespace Web.Views
 {
     public class YesNoModalBase : ComponentBase
     {
+        [CascadingParameter]
+        public IMudDialogInstance MudDialog { get; set; }
+
         [Parameter]
         public string Text { get; set; }
 
@@ -21,8 +25,7 @@ namespace Web.Views
 
         public async Task SendResult(bool result)
         {
-            await ResultFunc(result);
-            await CloseModalFunc();
+            MudDialog.Close(result);
         }
     }
 }

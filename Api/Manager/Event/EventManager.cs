@@ -5,12 +5,15 @@ using DTO;
 using Google.Cloud.Firestore;
 using Mailjet.Client;
 using Mailjet.Client.TransactionalEmails;
+using Supabase;
 using System.Text;
+using static Supabase.Postgrest.Constants;
 
 namespace Api.Manager
 {
     public class EventManager : IEventManager
     {
+        private Client _supabaseClient;
         private FirestoreDb _firestoreDb;
         private IMailjetClient _mailjetClient;
         private IGroupManager _groupManager;
@@ -20,7 +23,7 @@ namespace Api.Manager
         private IEventCategoryManager _eventCategoryManager;
         private IUserManager _userManager;
 
-        public EventManager(FirestoreDb firestoreDb, IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager, IUserManager userManager)
+        public EventManager(FirestoreDb firestoreDb, IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager, IUserManager userManager, Client supabaseClient)
         {
             _firestoreDb = firestoreDb;
             _groupManager = groupManager;
@@ -30,284 +33,288 @@ namespace Api.Manager
             _memberManager = memberManager;
             _eventCategoryManager = eventCategoryManager;
             _userManager = userManager;
+            _supabaseClient = supabaseClient;
         }
 
-        public async Task UpdateOrCreateEvent(UpdateEventDTO updateEventDTO)
+        public Task CreateEvent(UpdateEventDTO updateEventDTO)
         {
-            var departmentId = updateEventDTO.DepartmentId;
-            var eventId = updateEventDTO.EventId;
-            var dateUTC = updateEventDTO.Date?.ToUniversalTime();
-            var groupId = updateEventDTO.GroupId;
-            var eventCategoryId = updateEventDTO.EventCategoryId;
-            var updateHelpers = updateEventDTO.Helpers;
-            var removeMembers = updateEventDTO.RemoveMembers;
-            var locationId = updateEventDTO.LocationId;
-            var locationText = updateEventDTO.LocationText;
-            GeoPoint? location = updateEventDTO.Latitude != null && updateEventDTO.Longitude != null 
-                ? new GeoPoint(updateEventDTO.Latitude.Value, updateEventDTO.Longitude.Value) : null;
-
-            var eventsRef = GetEventsReference(departmentId);
-            DocumentReference eventRef;
-
-            DateTime? oldDate = null;
-            var dataChangesTasks = new List<Task>();
-            if (string.IsNullOrEmpty(eventId))
+            var newEvent = new Event
             {
-                if (dateUTC == null)
-                    throw new ArgumentException("Date must be present when creating a new event.");
+                DepartmentId = updateEventDTO.DepartmentId,
+                GroupId = updateEventDTO.GroupId,
+                EventCategoryId = updateEventDTO.EventCategoryId,
+                Date = updateEventDTO.Date,
+            };
 
-                var newEvent = new Event
-                {
-                    GroupId = groupId,
-                    EventCategoryId = eventCategoryId,
-                    Date = (DateTime)dateUTC
-                };
-                if(string.IsNullOrEmpty(updateEventDTO.LocationId))
-                {
-                    newEvent.LocationText = locationText;
-                    newEvent.Location = location;
-                }
-                else
-                {
-                    newEvent.LocationId = updateEventDTO.LocationId;
-                }
-                eventRef = await eventsRef.AddAsync(newEvent);
+            if(string.IsNullOrEmpty(updateEventDTO.LocationId))
+            {
+                newEvent.LocationId = updateEventDTO.LocationId;
             }
             else
             {
-                eventRef = eventsRef.Document(eventId);
-                var valueToUpdate = new Dictionary<string, object>
-                {
-                    { nameof(Event.LocationId), locationId },
-                    { nameof(Event.Location), location },
-                    { nameof(Event.LocationText), locationText }
-                };
-                if(groupId != null)
-                    valueToUpdate.Add(nameof(Event.GroupId), groupId);
-                if (eventCategoryId != null)
-                    valueToUpdate.Add(nameof(Event.EventCategoryId), eventCategoryId);
-                if(dateUTC != null)
-                {
-                    valueToUpdate.Add(nameof(Event.Date), dateUTC);
-                    var snapshot = await eventRef.GetSnapshotAsync();
-                    var @event = snapshot.ConvertTo<Event>();
-                    oldDate = @event.Date;
-                }
-                var updateTask = eventRef.UpdateAsync(valueToUpdate, Precondition.MustExist);
-                dataChangesTasks.Add(updateTask);
+                newEvent.LocationText = updateEventDTO.LocationText;
+                newEvent.LocationLatitude = updateEventDTO.Latitude;
+                newEvent.LocationLongitude = updateEventDTO.Longitude;
             }
 
-            var helpersRef = eventRef.Collection(Paths.HELPER);
-            var currentHelpers = await GetRequirementsOfEvent(departmentId, eventId);
-
-            var requirementsToDelete = currentHelpers.Where(requirement => !updateHelpers.Any(updateRequirement => updateRequirement.RoleId == requirement.RoleId));
-            foreach(var requirement in requirementsToDelete)
-            {
-                var notificationTask = helpersRef.Document(requirement.Id).DeleteAsync().ContinueWith(async (task) =>
-                {
-                    await UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.AvailableMembers, HelperStatus.Available, HelperStatus.RequirementDeleted);
-                    await UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.PreselectedMembers, HelperStatus.Preselected, HelperStatus.RequirementDeleted);
-                    await UpdateChangedStatus(departmentId, eventId, requirement.RoleId, requirement.LockedMembers, HelperStatus.Locked, HelperStatus.RequirementDeleted);
-                }, TaskContinuationOptions.NotOnFaulted);
-                dataChangesTasks.Add(notificationTask);
-            }
-
-            var requirementsToAdd = updateHelpers.Where(requirement => !currentHelpers.Any(currentRequirement => currentRequirement.RoleId == requirement.RoleId));
-            foreach(var requirement in requirementsToAdd)
-            {
-                var newHelper = new Requirement
-                {
-                    RoleId = requirement.RoleId,
-                    RequiredAmount = requirement.RequiredAmount,
-                    RequiredGroups = requirement.RequiredGroups,
-                    LockingTime = requirement.LockingTime.Date.ToUniversalTime(),
-                    LockedMembers = new(),
-                    PreselectedMembers = new(),
-                    AvailableMembers = new(),
-                    RequiredQualifications = requirement.RequiredQualifications
-                };
-                var addTask = helpersRef.AddAsync(newHelper);
-                dataChangesTasks.Add(addTask);
-            }
-
-            var existingRequirements = updateHelpers.Where(requirement => currentHelpers.Any(currentRequirement => currentRequirement.RoleId == requirement.RoleId));
-            var dateInvolvedMembers = new List<string>();
-            foreach (var existingRequirement in existingRequirements)
-            {
-                var currentRequirement = currentHelpers.First(requirement => requirement.RoleId == existingRequirement.RoleId);
-                var updateDict = new Dictionary<string, object> {
-                    { nameof(Requirement.RoleId), existingRequirement.RoleId },
-                    { nameof(Requirement.RequiredAmount), existingRequirement.RequiredAmount },
-                    { nameof(Requirement.RequiredGroups), existingRequirement.RequiredGroups },
-                    { nameof(Requirement.LockingTime), existingRequirement.LockingTime.Date.ToUniversalTime() },
-                    { nameof(Requirement.RequiredQualifications), existingRequirement.RequiredQualifications }
-                };
-                if (removeMembers)
-                {
-                    updateDict.Add(nameof(Requirement.LockedMembers), new List<string>());
-                    updateDict.Add(nameof(Requirement.PreselectedMembers), new List<string>());
-                    updateDict.Add(nameof(Requirement.AvailableMembers), new List<string>());
-                }
-                var helperRef = helpersRef.Document(currentRequirement.Id);
-                var updateTask = helperRef.UpdateAsync(updateDict);
-                dataChangesTasks.Add(updateTask);
-                if (removeMembers)
-                {
-                    var notificationTask = updateTask.ContinueWith(async task =>
-                    {
-                        await UpdateChangedStatus(departmentId, eventId, existingRequirement.RoleId, currentRequirement.LockedMembers, HelperStatus.Locked, HelperStatus.NotAvailable);
-                        await UpdateChangedStatus(departmentId, eventId, existingRequirement.RoleId, currentRequirement.PreselectedMembers, HelperStatus.Preselected, HelperStatus.NotAvailable);
-                        await UpdateChangedStatus(departmentId, eventId, existingRequirement.RoleId, currentRequirement.AvailableMembers, HelperStatus.Available, HelperStatus.NotAvailable);
-                    }, TaskContinuationOptions.NotOnFaulted).Unwrap();
-                    dataChangesTasks.Add(notificationTask);
-                }
-                if(dateUTC != null)
-                {
-                    dateInvolvedMembers.AddRange(currentRequirement.LockedMembers);
-                    dateInvolvedMembers.AddRange(currentRequirement.PreselectedMembers);
-                    dateInvolvedMembers.AddRange(currentRequirement.AvailableMembers);
-                }
-            }
-
-            if(dateInvolvedMembers.Any())
-            {
-                var notificationTask = CreateEventNotification(departmentId, eventId, oldDate.Value, dateUTC.Value, dateInvolvedMembers);
-                dataChangesTasks.Add(notificationTask);
-            }            
-            
-            await Task.WhenAll(dataChangesTasks);
+            return _supabaseClient.From<Event>().Insert(newEvent);
         }
 
-        public async Task DeleteEvent(string departmentId, string eventId)
+        public async Task UpdateEvent(UpdateEventDTO updateEventDTO)
         {
-            var eventRef = GetEventReference(departmentId, eventId);
-            var @event = await GetEvent(departmentId, eventId);
-            var requirementsRef = GetRequirementsReference(departmentId, eventId);
-            var requirements = await GetRequirementsOfEvent(departmentId, eventId);
-            var allInvolvedMembers = requirements.SelectMany(requirement => requirement.LockedMembers.Union(requirement.PreselectedMembers)).Distinct().ToList();
+            await _supabaseClient
+                .From<Event>()
+                .Filter(nameof(Event.DepartmentId), Operator.Equals, updateEventDTO.DepartmentId)
+                .Filter(nameof(Event.Id), Operator.Equals, updateEventDTO.EventId)
+                .Limit(1)
+                .Set(@event => @event.GroupId, updateEventDTO.GroupId)
+                .Set(@event => @event.EventCategoryId, updateEventDTO.EventCategoryId)
+                .Set(@event => @event.Date, updateEventDTO.Date)
+                .Set(@event => @event.LocationId, updateEventDTO.LocationId)
+                .Set(@event => @event.LocationLatitude, updateEventDTO.Latitude)
+                .Set(@event => @event.LocationLongitude, updateEventDTO.Longitude)
+                .Set(@event => @event.LocationText, updateEventDTO.LocationText)
+                .Update();
 
-            var tasks = new List<Task>();
-            foreach(var requirement in requirements)
+            if (updateEventDTO.RemoveMembers)
+                await RemoveMemberEnterings(updateEventDTO.DepartmentId, updateEventDTO.EventId);
+        }
+
+        public Task CreateRequirement(UpdateRequirementDTO updateRequirementDTO)
+        {
+            return _supabaseClient.From<Requirement>().Insert(new Requirement
             {
-                var requirementTask = requirementsRef.Document(requirement.Id).DeleteAsync();
-                tasks.Add(requirementTask);
-            }
-            await Task.WhenAll(tasks);
-            await eventRef.DeleteAsync().ContinueWith(task => CreateEventDeletionNotification(@event, allInvolvedMembers), TaskContinuationOptions.NotOnFaulted).Unwrap();
+                DepartmentId = updateRequirementDTO.DepartmentId,
+                EventId = updateRequirementDTO.EventId,
+                RoleId = updateRequirementDTO.RoleId,
+                LockingTime = updateRequirementDTO.LockingTime.Value,
+                RequiredAmount = updateRequirementDTO.RequiredAmount.Value,
+                RecommendedGroups = updateRequirementDTO.RecommendedGroups
+            });
+        }
+
+        public async Task UpdateRequirement(UpdateRequirementDTO updateRequirementDTO)
+        {
+            var query = _supabaseClient
+                .From<Requirement>()
+                .Filter(nameof(Requirement.DepartmentId), Operator.Equals, updateRequirementDTO.DepartmentId)
+                .Filter(nameof(Requirement.EventId), Operator.Equals, updateRequirementDTO.EventId)
+                .Filter(nameof(Requirement.RoleId), Operator.Equals, updateRequirementDTO.RoleId)
+                .Limit(1);
+
+            if(updateRequirementDTO.RequiredAmount != null)
+                query = query.Set(requirement => requirement.RequiredAmount, updateRequirementDTO.RequiredAmount);
+            if (updateRequirementDTO.LockingTime != null)
+                query = query.Set(requirement => requirement.LockingTime, updateRequirementDTO.LockingTime);
+            if (updateRequirementDTO.RecommendedGroups != null)
+                query = query.Set(requirement => requirement.RecommendedGroups, updateRequirementDTO.RecommendedGroups);
+
+            await query.Update();
+        }
+
+        public Task DeleteRequirement(string departmentId, string eventId, string roleId)
+        {
+            return _supabaseClient
+                .From<Requirement>()
+                .Filter(nameof(Requirement.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Requirement.EventId), Operator.Equals, eventId)
+                .Filter(nameof(Requirement.RoleId), Operator.Equals, roleId)
+                .Delete();
+        }
+
+        public Task UpdateOrCreateQualificationRequirement(UpdateQualificationRequirementDTO updateQualificationRequirementDTO)
+        {
+            return _supabaseClient.From<QualificationRequirement>().Upsert(new QualificationRequirement
+            {
+                DepartmentId = updateQualificationRequirementDTO.DepartmentId,
+                EventId = updateQualificationRequirementDTO.EventId,
+                RoleId = updateQualificationRequirementDTO.RoleId,
+                QualificationId = updateQualificationRequirementDTO.QualificationId,
+                RequiredAmount = updateQualificationRequirementDTO.RequiredAmount
+            });
+        }
+
+        public Task DeleteQualificationRequirement(string departmentId, string eventId, string roleId, string qualificationId)
+        {
+            return _supabaseClient
+                .From<QualificationRequirement>()
+                .Filter(nameof(QualificationRequirement.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(QualificationRequirement.EventId), Operator.Equals, eventId)
+                .Filter(nameof(QualificationRequirement.RoleId), Operator.Equals, roleId)
+                .Filter(nameof(QualificationRequirement.QualificationId), Operator.Equals, qualificationId)
+                .Delete();
+        }
+
+        public Task DeleteEvent(string departmentId, string eventId)
+        {
+            return _supabaseClient
+                .From<Event>()
+                .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Event.Id), Operator.Equals, eventId)
+                .Delete();
+
+            //TODO Save notifications
+            //var requirements = await GetRequirementsOfEvent(departmentId, eventId);
+            //var allInvolvedMembers = requirements.SelectMany(requirement => requirement.LockedMembers.Union(requirement.PreselectedMembers)).Distinct().ToList();
+            //.ContinueWith(task => CreateEventDeletionNotification(@event, allInvolvedMembers), TaskContinuationOptions.NotOnFaulted).Unwrap();
         }
 
         public async Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate)
         {
-            var snapshot = await GetEventsReference(departmentId)
-                .WhereGreaterThanOrEqualTo(nameof(Event.Date), fromDate.ToUniversalTime())
-                .WhereLessThanOrEqualTo(nameof(Event.Date), toDate.ToUniversalTime())
-                .GetSnapshotAsync();
-            var events = new List<Event>();
-            foreach (var document in snapshot)
-            {
-                var @event = document.ConvertTo<Event>();
-                if (@event == null)
-                    continue;
-                events.Add(@event);
-            }
-            return EventConverter.Convert(events, departmentId);
+            var res = await _supabaseClient
+                .From<Event>()
+                .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Event.Date), Operator.GreaterThanOrEqual, fromDate.ToUniversalTime().ToString("O"))
+                .Filter(nameof(Event.Date), Operator.LessThanOrEqual, toDate.ToUniversalTime().ToString("O"))
+                .Get();            
+            return EventConverter.Convert(res.Models, departmentId);
         }
 
         public async Task<EventDTO?> GetEvent(string departmentId, string eventId)
         {
-            var snapshot = await GetEventReference(departmentId, eventId).GetSnapshotAsync();
-
-            if (!snapshot.Exists)
-                return null;
-
-            var @event = snapshot.ConvertTo<Event>();
+            var @event = await _supabaseClient
+                .From<Event>()
+                .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Event.Id), Operator.Equals, eventId).Single();            
             return EventConverter.Convert(@event, departmentId);            
         }
 
-        public async Task<List<HelperDTO>> GetAllRequirements(string departmentId)
+        public async IAsyncEnumerable<RequirementDTO> GetEnteredMemberRequirements(string departmentId, string memberId)
         {
-            var snapshot = await GetEventsReference(departmentId).GetSnapshotAsync();
-
-            var helpersList = snapshot.Select(eventSnapshot =>
+            var requirements = GetRequirements(departmentId, null, null);
+            await foreach (var requirement in requirements)
             {
-                return GetRequirementsOfEvent(departmentId, eventSnapshot.Id);
-            });
-            var helpers = await Task.WhenAll(helpersList);
-            return helpers.SelectMany(requirements => requirements).ToList();
-        }
-
-        public async Task<List<HelperDTO>> GetEnteredMemberRequirements(string departmentId, string memberId)
-        {
-            var requirements = await GetAllRequirements(departmentId);
-            var memberRequirements = requirements
-                .Where(requirement => requirement.PreselectedMembers.Contains(memberId) || requirement.LockedMembers.Contains(memberId))
-                .ToList();
-            return memberRequirements;
-        }
-
-        public async Task<List<HelperDTO>> GetRequirementsOfEvent(string departmentId, string eventId)
-        {
-            if (string.IsNullOrEmpty(eventId))
-                return new();
-
-            var helpersSnapshot = await GetRequirementsReference(departmentId, eventId).GetSnapshotAsync();
-
-            var helpers = new List<Requirement>();
-            foreach (var document in helpersSnapshot)
-            {
-                var helper = document.ConvertTo<Requirement>();
-                if (helper == null)
-                    continue;
-                helpers.Add(helper);
+                if(requirement.PreselectedMembers.Contains(memberId) || requirement.LockedMembers.Contains(memberId))
+                    yield return requirement;
             }
-            return HelperConverter.Convert(helpers, eventId);
         }
 
-        public async Task SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable)
+        public async IAsyncEnumerable<RequirementDTO> GetRequirements(string departmentId, string? eventId, string? roleId)
         {
-            var helperReference = GetRequirementReference(departmentId, eventId, helperId);
+            var query = _supabaseClient.From<Requirement>().Where(requirement => requirement.DepartmentId == departmentId);
+            if(eventId != null)
+                query = query.Where(requirement => requirement.EventId == eventId);
+            if (roleId != null)
+                query = query.Where(requirement => requirement.RoleId == roleId);
 
-            var helperSnapshot = await helperReference.GetSnapshotAsync();
-            if (!helperSnapshot.Exists)
+            var res = await query.Get();
+            foreach(var requirement in res.Models)
+            {
+                var enterings = await GetEnteringsOfRequirement(departmentId, requirement.EventId, requirement.RoleId);
+                var groupedEnterings = enterings.GroupBy(pair => pair.Value).ToDictionary(group => group.Key, group => group.Select(pair => pair.Key).ToList());
+                groupedEnterings.TryGetValue(EnteringType.Locked, out var lockedMembers);
+                groupedEnterings.TryGetValue(EnteringType.Preselected, out var preselectedMembers);
+                groupedEnterings.TryGetValue(EnteringType.Available, out var availableMembers);
+                groupedEnterings.TryGetValue(EnteringType.Recommended, out var recommendedMembers);
+                var qualificationRequirements = await GetQualificationRequirements(departmentId, requirement.EventId, requirement.RoleId);
+                yield return RequirementConverter.Convert(requirement, lockedMembers ?? [], preselectedMembers ?? [], availableMembers ?? [], recommendedMembers ?? [], qualificationRequirements);
+            }            
+        }
+
+        private async Task<Dictionary<string, int>> GetQualificationRequirements(string departmentId, string eventId, string roleId)
+        {
+            var res = await _supabaseClient
+                .From<QualificationRequirement>()
+                .Select($"{nameof(QualificationRequirement.QualificationId)}, {nameof(QualificationRequirement.RequiredAmount)}")
+                .Filter(nameof(QualificationRequirement.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(QualificationRequirement.EventId), Operator.Equals, eventId)
+                .Filter(nameof(QualificationRequirement.RoleId), Operator.Equals, roleId)
+                .Get();
+            return res.Models.ToDictionary(qr => qr.QualificationId, qr => qr.RequiredAmount);
+        }
+
+        private async Task<Dictionary<string, EnteringType>> GetEnteringsOfRequirement(string departmentId, string eventId, string roleId)
+        {
+            var res = await _supabaseClient
+                .From<Entering>()
+                .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
+                .Select($"{nameof(Entering.MemberId)}, {nameof(Entering.EnteringType)}")
+                .Get();
+            return res.Models.ToDictionary(entering => entering.MemberId, entering => entering.EnteringType);
+        }
+
+        private Task<Entering> GetEntering(string departmentId, string eventId, string roleId, string memberId)
+        {
+            return _supabaseClient
+                .From<Entering>()
+                .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
+                .Filter(nameof(Entering.MemberId), Operator.Equals, memberId)
+                .Single();
+        }
+
+        public async Task SetIsAvailable(string departmentId, string eventId, string roleId, string memberId, bool isAvailable)
+        {
+            var entering = await GetEntering(departmentId, eventId, roleId, memberId);
+            if(entering == null)
+            {
+                if(isAvailable)
+                {
+                    var newEntering = new Entering
+                    {
+                        DepartmentId = departmentId,
+                        EventId = eventId,
+                        RoleId = roleId,
+                        MemberId = memberId,
+                        EnteringType = EnteringType.Available
+                    };
+
+                    await _supabaseClient.From<Entering>().Insert(newEntering);
+                }
                 return;
-            var helper = helperSnapshot.ConvertTo<Requirement>();
+            }
 
+            if (entering.EnteringType == EnteringType.Locked 
+                || (isAvailable && (entering.EnteringType == EnteringType.Preselected || entering.EnteringType == EnteringType.Available))
+                || !isAvailable && entering.EnteringType == EnteringType.Recommended)
+                return;
+
+            
             if (isAvailable)
             {
-                if (!helper.LockedMembers.Union(helper.PreselectedMembers).Union(helper.AvailableMembers).Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Requirement.AvailableMembers), FieldValue.ArrayUnion(memberId), Precondition.MustExist);
+                await SetMembersEntering(departmentId, eventId, roleId, [memberId], EnteringType.Available);
             }
             else
             {
-                if (helper.PreselectedMembers.Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
-                if (helper.AvailableMembers.Contains(memberId))
-                    await helperReference.UpdateAsync(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(memberId), Precondition.MustExist);
+                await SetMembersEntering(departmentId, eventId, roleId, [memberId], null);
             }
         }
 
-        public async Task UpdateLockedMembers(string departmentId, string eventId, string helperId, UpdateMembersListDTO updateMembersList)
+        public Task SetMembersEntering(string departmentId, string eventId, string roleId, List<string> memberIds, EnteringType? type)
         {
-            if ((updateMembersList.FormerMembers.Any() || updateMembersList.NewMembers.Any()) == false)
-                return;
+            if(type == null)
+            {
+                return _supabaseClient
+                    .From<Entering>()
+                    .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                    .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                    .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
+                    .Filter(nameof(Entering.MemberId), Operator.In, memberIds)
+                    .Delete();
+            }
+            else
+            {
+                return _supabaseClient.From<Entering>().Upsert(memberIds.Select(memberId => new Entering
+                {
+                    DepartmentId = departmentId,
+                    EventId = eventId,
+                    RoleId = roleId,
+                    MemberId = memberId,
+                    EnteringType = type.Value
+                }).ToList());
+            }
+        }
 
-            var requirementReference = GetRequirementReference(departmentId, eventId, helperId);
-            var requirementSnapshot = await requirementReference.GetSnapshotAsync();
-            var previousRequirement = requirementSnapshot.ConvertTo<Requirement>();
-
-            await requirementReference.UpdateAsync(nameof(Requirement.LockedMembers), FieldValue.ArrayRemove(updateMembersList.FormerMembers.ToArray()));
-            await requirementReference.UpdateAsync(nameof(Requirement.LockedMembers), FieldValue.ArrayUnion(updateMembersList.NewMembers.ToArray()));
-            await requirementReference.UpdateAsync(nameof(Requirement.PreselectedMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
-            await requirementReference.UpdateAsync(nameof(Requirement.AvailableMembers), FieldValue.ArrayRemove(updateMembersList.NewMembers.ToArray()));
-
-            await UpdateChangedStatus(departmentId, eventId, previousRequirement.RoleId, updateMembersList.FormerMembers, HelperStatus.Locked, HelperStatus.NotAvailable);
-            var previouslyAvailable = updateMembersList.NewMembers.Where(previousRequirement.AvailableMembers.Contains);
-            var previouslyPreselected = updateMembersList.NewMembers.Where(previousRequirement.PreselectedMembers.Contains);
-            var previouslyNotAvailable = updateMembersList.NewMembers.Except(previouslyAvailable).Except(previouslyPreselected);
-            await UpdateChangedStatus(departmentId, eventId, previousRequirement.RoleId, previouslyAvailable, HelperStatus.Available, HelperStatus.Locked);
-            await UpdateChangedStatus(departmentId, eventId, previousRequirement.RoleId, previouslyPreselected, HelperStatus.Preselected, HelperStatus.Locked);
-            await UpdateChangedStatus(departmentId, eventId, previousRequirement.RoleId, previouslyNotAvailable, HelperStatus.NotAvailable, HelperStatus.Locked);
-
+        private Task RemoveMemberEnterings(string departmentId, string eventId)
+        {
+            return _supabaseClient
+                .From<Entering>()
+                .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                .Delete();
         }
 
         public async Task UpdateChangedStatus(string departmentId, string eventId, string roleId, IEnumerable<string> memberIds, HelperStatus previousStatus, HelperStatus newStatus)
@@ -361,7 +368,7 @@ namespace Api.Manager
                 EventId = @event.Id,
                 GroupName = group?.Name,
                 EventCategoryName = eventCategory?.Name,
-                Date = @event.Date,
+                Date = @event.Date.UtcDateTime,
                 Members = members,
             };
             
@@ -490,7 +497,7 @@ namespace Api.Manager
                             foreach (var change in changes)
                             {
                                 var @event = releventEvents.Values.First(e => e?.Id == change.Item1);
-                                var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(@event.Date.ToUniversalTime(), timeZoneOfMember);
+                                var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(@event.Date.UtcDateTime, timeZoneOfMember);
 
                                 var group = string.IsNullOrEmpty(@event.GroupId) ? null : relevantGroups.FirstOrDefault(group => group.Id == @event.GroupId);
                                 var eventCategory = string.IsNullOrEmpty(@event.EventCategoryId) ? null : relevantEventCategories.FirstOrDefault(eventCategory => eventCategory.Id == @event.EventCategoryId);
@@ -584,19 +591,23 @@ namespace Api.Manager
         public async Task<IEnumerable<StatDTO>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate)
         {
             var eventsInRange = await GetAllEvents(departmentId, fromDate, toDate);
-            var requirementsInRange = await Task.WhenAll(eventsInRange.Select(@event => GetRequirementsOfEvent(departmentId, @event.Id)));
-            var requirementsOfRole = requirementsInRange.SelectMany(l => l).Where(requirement => requirement.RoleId == roleId);
+            var requirements = new List<RequirementDTO>();
+            foreach(var @event in eventsInRange)
+            {
+                var requirementsOfEvent = await GetRequirements(departmentId, @event.Id, roleId).ToListAsync();
+                requirements.AddRange(requirementsOfEvent);
+            }
             var role = await _roleManager.GetRole(departmentId, roleId);
 
-            var countsTotal = requirementsOfRole.SelectMany(requirement =>
+            var countsTotal = requirements.SelectMany(requirement =>
             {
                 return requirement.LockedMembers.Concat(requirement.PreselectedMembers).Concat(requirement.AvailableMembers);
             }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
-            var countsFixed = requirementsOfRole.SelectMany(requirement =>
+            var countsFixed = requirements.SelectMany(requirement =>
             {
                 return requirement.LockedMembers.Concat(requirement.PreselectedMembers);
             }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
-            var countsRecommendations = requirementsOfRole.SelectMany(requirement =>
+            var countsRecommendations = requirements.SelectMany(requirement =>
             {
                 return requirement.FillMembers.Except(requirement.LockedMembers.Union(requirement.PreselectedMembers).Union(requirement.AvailableMembers));
             }).GroupBy(memberId => memberId).ToDictionary(group => group.Key, group => group.Count());
@@ -616,26 +627,6 @@ namespace Api.Manager
         private CollectionReference GetNotificationsReference(string departmentId)
         {
             return GetDepartmentReference(departmentId).Collection(Paths.HelperNotification);
-        }
-
-        private CollectionReference GetEventsReference(string departmentId)
-        {
-            return GetDepartmentReference(departmentId).Collection(Paths.EVENT);
-        }
-
-        private DocumentReference GetEventReference(string departmentId, string eventId)
-        {
-            return GetEventsReference(departmentId).Document(eventId);
-        }
-
-        private CollectionReference GetRequirementsReference(string departmentId, string eventId)
-        {
-            return GetEventReference(departmentId, eventId).Collection(Paths.HELPER);
-        }
-
-        private DocumentReference GetRequirementReference(string departmentId, string eventId, string requirementId)
-        {
-            return GetRequirementsReference(departmentId, eventId).Document(requirementId);
         }
 
         private CollectionReference GetDeletionNotificationsReference(string departmentId)

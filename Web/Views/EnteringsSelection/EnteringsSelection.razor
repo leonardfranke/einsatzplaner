@@ -1,0 +1,36 @@
+﻿@inherits EnteringsSelectionBase
+
+<MudDialog>
+    <DialogContent>        
+        <MudSimpleTable Striped>
+            <tbody>
+                @foreach(var (category, members) in GroupedMembers)
+                {
+                    @if (members.Count() == 0)
+                        continue;
+
+                    <tr><td><MudText Typo="Typo.h5">@category:</MudText></td><td></td></tr>
+            
+                    @foreach (var member in members.OrderBy(member => member.Name))
+                    {
+                        <tr>
+                            <td>
+                                <MudText>@member.Name</MudText>
+                            </td>
+
+                            <td>
+                                <MudToggleGroup Size="Size.Small" T="string" SelectionMode="SelectionMode.ToggleSelection" Value="GetEnteringType(member.Id)" ValueChanged="(val) => SetEnteringType(member.Id, val)">
+                                    <MudToggleItem Text="@("Fest")" Value="@("Locked")" />
+                                    <MudToggleItem Text="@("Verfügbar")" Value="@("Available")" />
+                                </MudToggleGroup>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </MudSimpleTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Submit" Color="Color.Primary" Variant="Variant.Filled">Speichern</MudButton>
+    </DialogActions>
+</MudDialog>

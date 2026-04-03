@@ -12,6 +12,9 @@ namespace Api.Converter
 
         public static EventDTO Convert(Event @event, string departmentId)
         {
+            if(@event == null)
+                return null;
+
             var eventDTO = new EventDTO
             {
                 Date = @event.Date,
@@ -19,12 +22,11 @@ namespace Api.Converter
                 GroupId = @event.GroupId,
                 EventCategoryId = @event.EventCategoryId,
                 Id = @event.Id,
-                Latitude = @event.Location?.Latitude,
-                Longitude = @event.Location?.Longitude,
+                Latitude = @event.LocationLatitude,
+                Longitude = @event.LocationLongitude,
                 LocationId = @event.LocationId,
                 LocationText = @event.LocationText
             };
-
             return eventDTO;
         }
     }

@@ -35,7 +35,7 @@ builder.Services.AddScoped<IAuthManager>(provider => provider.GetRequiredService
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IStatsService, StatsService>();
-builder.Services.AddScoped<IHelperService, HelperService>();
+builder.Services.AddScoped<IRequirementService, RequirementService>();
 builder.Services.AddScoped<IEventCategoryService, EventCategoryService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IRoleService, RoleService>();

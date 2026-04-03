@@ -3,7 +3,7 @@
 namespace Api.Models
 {
     [FirestoreData]
-    public class Event : FirebaseDocument
+    public class EventOld : FirebaseDocument
     {
         [FirestoreProperty]
         public string? GroupId { get; set; }

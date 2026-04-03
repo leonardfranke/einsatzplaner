@@ -18,7 +18,7 @@ namespace Web.Views
         public Models.Event Event{ private get; set; }
 
         [Parameter]
-        public Models.Helper Helper { get; set; }
+        public Models.Requirement Helper { get; set; }
 
         [Parameter]
         public Models.Member Member { private get; set; }
@@ -66,7 +66,7 @@ namespace Web.Views
         private IAuthManager _authManager { get; set; }
 
         [Inject]
-        private IHelperService _helperService { get; set; }
+        private IRequirementService _helperService { get; set; }
 
         private bool IsPreselected => Helper.PreselectedMembers.Contains(currentUserId);
         private bool IsAvailable => Helper.AvailableMembers.Contains(currentUserId);
@@ -90,7 +90,7 @@ namespace Web.Views
                 Helper.AvailableMembers.Remove(currentUserId);
             }
             StateHasChanged();
-            return _helperService.SetIsAvailable(Event.DepartmentId, Event.Id, Helper.Id, currentUserId, setHelping);
+            return _helperService.SetIsAvailable(Event.DepartmentId, Event.Id, Helper.RoleId, currentUserId, setHelping);
         }
 
         public Task ChangeHelpingEvent()

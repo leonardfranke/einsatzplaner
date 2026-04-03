@@ -21,9 +21,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -33,9 +32,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E1",
                 RoleId = "R2",
                 LockingTime = now.AddDays(1),
@@ -45,7 +43,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };            
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };            
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -70,9 +68,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -82,9 +79,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2", "M3", "M4", "M5" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E1",
                 RoleId = "R2",
                 LockingTime = now.AddDays(1),
@@ -94,7 +90,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M3" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -117,9 +113,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -129,9 +124,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2", "M3", "M4", "M5" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E1",
                 RoleId = "R2",
                 LockingTime = now.AddDays(1),
@@ -141,7 +135,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -165,9 +159,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var requirement = new HelperDTO
+            var requirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -177,7 +170,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M3", "M4", "M5" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { requirement };
+            var requirements = new List<RequirementDTO> { requirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -200,9 +193,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var requirement = new HelperDTO
+            var requirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -212,7 +204,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M3", "M4", "M5" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { requirement };
+            var requirements = new List<RequirementDTO> { requirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -235,9 +227,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -247,9 +238,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M2" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E1",
                 RoleId = "R2",
                 LockingTime = now.AddDays(1),
@@ -259,7 +249,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -293,9 +283,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now,
@@ -305,9 +294,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E2",
                 RoleId = "R2",
                 LockingTime = now,
@@ -317,9 +305,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var thirdRequirement = new HelperDTO
+            var thirdRequirement = new RequirementDTO
             {
-                Id = "3",
                 EventId = "E3",
                 RoleId = "R3",
                 LockingTime = now,
@@ -329,7 +316,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement, thirdRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement, thirdRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -359,9 +346,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(-2),
@@ -371,9 +357,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "2",
                 EventId = "E2",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -383,7 +368,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M2" },
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -410,9 +395,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -422,7 +406,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int>()
             };
-            var requirements = new List<HelperDTO> { firstRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, new List<QualificationDTO>());
 
@@ -447,9 +431,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -459,7 +442,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2" },
                 RequiredQualifications = new Dictionary<string, int> { { "Q1", 1 } }
             };
-            var requirements = new List<HelperDTO> { firstRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement };
             var qualifications = new List<QualificationDTO>
             {
                 new QualificationDTO
@@ -496,9 +479,8 @@ namespace OptimizerTests
             var roles = new List<RoleDTO>();
             var groups = new List<GroupDTO>();
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -508,9 +490,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int> { { "Q1", 1 } }
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E2",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -520,7 +501,7 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1", "M2" },
                 RequiredQualifications = new Dictionary<string, int> { { "Q1", 1 } }
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
             var qualifications = new List<QualificationDTO>
             {
                 new QualificationDTO
@@ -566,9 +547,8 @@ namespace OptimizerTests
                 }
             };
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -579,7 +559,7 @@ namespace OptimizerTests
                 RequiredQualifications = new Dictionary<string, int> { },
                 RequiredGroups = new List<string> { "G1" }
             };
-            var requirements = new List<HelperDTO> { firstRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement };
             var qualifications = new List<QualificationDTO> { };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);
@@ -622,9 +602,8 @@ namespace OptimizerTests
                 }
             };
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -634,9 +613,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string>(),
                 RequiredQualifications = new Dictionary<string, int> { }
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E2",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -647,7 +625,7 @@ namespace OptimizerTests
                 RequiredQualifications = new Dictionary<string, int> { },
                 RequiredGroups = new List<string> { "G1" }
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
             var qualifications = new List<QualificationDTO> { };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);
@@ -690,9 +668,8 @@ namespace OptimizerTests
                 }
             };
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -702,9 +679,8 @@ namespace OptimizerTests
                 AvailableMembers = new List<string> { "M1" },
                 RequiredQualifications = new Dictionary<string, int> { }
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E2",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -715,7 +691,7 @@ namespace OptimizerTests
                 RequiredQualifications = new Dictionary<string, int> { },
                 RequiredGroups = new List<string> { "G1" }
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
             var qualifications = new List<QualificationDTO> { };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);
@@ -758,9 +734,8 @@ namespace OptimizerTests
                 }
             };
 
-            var firstRequirement = new HelperDTO
+            var firstRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E1",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -771,9 +746,8 @@ namespace OptimizerTests
                 RequiredQualifications = new Dictionary<string, int> { },
                 RequiredGroups = new List<string> { "G1" }
             };
-            var secondRequirement = new HelperDTO
+            var secondRequirement = new RequirementDTO
             {
-                Id = "1",
                 EventId = "E2",
                 RoleId = "R1",
                 LockingTime = now.AddDays(1),
@@ -784,7 +758,7 @@ namespace OptimizerTests
                 RequiredQualifications = new Dictionary<string, int> { },
                 RequiredGroups = new List<string> { "G1" }
             };
-            var requirements = new List<HelperDTO> { firstRequirement, secondRequirement };
+            var requirements = new List<RequirementDTO> { firstRequirement, secondRequirement };
             var qualifications = new List<QualificationDTO> { };
 
             var result = Optimizer.Optimizer.OptimizeAssignments(events, requirements, roles, groups, qualifications);

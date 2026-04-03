@@ -15,23 +15,10 @@ namespace Web.Services
             _httpClient = httpClientFactory.CreateClient("BACKEND");
         }
 
-        public async Task<bool> UpdateOrCreate(UpdateEventDTO updateEventDTO)
-        {            
-            try
-            {
-                var content = JsonContent.Create(updateEventDTO);
-                var response = await _httpClient.PostAsync(new Uri($"/api/Event", UriKind.Relative), content);
-                var ret = await response.Content.ReadAsStringAsync();
-                var parsed = bool.TryParse(ret, out bool result);
-                if (parsed)
-                    return result;
-                else
-                    return false;
-            }
-            catch
-            {
-                return false;
-            }
+        public Task CreateOrUpdate(UpdateEventDTO updateEventDTO)
+        {  
+            var content = JsonContent.Create(updateEventDTO);
+            return _httpClient.PostAsync(new Uri($"/api/Event", UriKind.Relative), content);
         }
 
         public Task DeleteGame(string departmentId, string gameId)

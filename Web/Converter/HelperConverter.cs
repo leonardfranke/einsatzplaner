@@ -4,23 +4,23 @@ namespace Web.Converter
 {
     public static class HelperConverter
     {
-        public static List<Models.Helper> Convert(List<HelperDTO> helpers)
+        public static List<Models.Requirement> Convert(List<RequirementDTO> requirements)
         {
-            return helpers.Select(helper =>
+            return requirements.Select(requirement =>
             {
-                return new Models.Helper
+                return new Models.Requirement
                 {
-                    Id = helper.Id,
-                    RoleId = helper.RoleId,
-                    LockedMembers = helper.LockedMembers,
-                    PreselectedMembers = helper.PreselectedMembers,
-                    AvailableMembers = helper.AvailableMembers,
-                    FillMembers = helper.FillMembers,
-                    EventId = helper.EventId,
-                    RequiredGroups = helper.RequiredGroups,
-                    LockingTime = helper.LockingTime,
-                    RequiredAmount = helper.RequiredAmount,
-                    RequiredQualifications = helper.RequiredQualifications
+                    DepartmentId = requirement.DepartmentId,
+                    RoleId = requirement.RoleId,
+                    LockedMembers = requirement.LockedMembers,
+                    PreselectedMembers = requirement.PreselectedMembers,
+                    AvailableMembers = requirement.AvailableMembers,
+                    FillMembers = requirement.FillMembers,
+                    EventId = requirement.EventId,
+                    RequiredGroups = requirement.RequiredGroups,
+                    LockingTime = requirement.LockingTime,
+                    RequiredAmount = requirement.RequiredAmount,
+                    RequiredQualifications = requirement.RequiredQualifications
                 };
             }).ToList();
         }

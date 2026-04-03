@@ -31,17 +31,17 @@ namespace Api.Controllers
         public async Task<IActionResult> GetCalendar([FromRoute] string departmentId, [FromRoute] string memberId)
         {
             var department = await _departmentManager.GetById(departmentId);
-            var memberRequirements = await _eventManager.GetEnteredMemberRequirements(departmentId, memberId);
+            var memberRequirements = _eventManager.GetEnteredMemberRequirements(departmentId, memberId);
             var calendar = new Calendar();
-            foreach(var requirement in memberRequirements)
+            await foreach(var requirement in memberRequirements)
             {
                 var @event = await _eventManager.GetEvent(departmentId, requirement.EventId);
                 var role = await _roleManager.GetRole(departmentId, requirement.RoleId);
                 var group = await _groupManager.GetById(departmentId, @event.GroupId);
                 var calendarEvent = new CalendarEvent
                 {
-                    Start = new CalDateTime(@event.Date),
-                    End = new CalDateTime(@event.Date.AddHours(1.5)),
+                    Start = new CalDateTime(@event.Date.UtcDateTime),
+                    End = new CalDateTime(@event.Date.UtcDateTime.AddHours(1.5)),
                     Summary = role.Name + " " + group?.Name,
                     Uid = @event.Id
                 };

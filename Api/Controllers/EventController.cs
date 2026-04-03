@@ -28,9 +28,12 @@ namespace Api.Controllers
         }
 
         [HttpPost()]
-        public Task UpdateOrCreate([FromBody] UpdateEventDTO updateEvent)
+        public Task CreateOrUpdateEvent([FromBody] UpdateEventDTO updateEvent)
         {
-            return _eventManager.UpdateOrCreateEvent(updateEvent);
+            if(string.IsNullOrEmpty(updateEvent.EventId))
+                return _eventManager.CreateEvent(updateEvent);
+            else
+                return _eventManager.UpdateEvent(updateEvent);
         }
 
         [HttpDelete("{departmentId}/{eventId}")]

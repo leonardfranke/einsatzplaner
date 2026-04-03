@@ -6,8 +6,7 @@
         public string? EventId { get; set; }
         public string? GroupId { get; set; }
         public string? EventCategoryId { get; set; }
-        public DateTime? Date { get; set; }
-        public List<UpdateHelperDTO>? Helpers { get; set; }
+        public DateTimeOffset Date { get; set; }
         public bool RemoveMembers { get; set; }
         public string? LocationId { get; set; }
         public double? Latitude { get; set; }

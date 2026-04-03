@@ -1,6 +1,5 @@
 ﻿using BlazorBootstrap;
 using Blazored.LocalStorage;
-using DTO;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Web.Checks;
@@ -8,8 +7,8 @@ using Web.Manager;
 using Web.Models;
 using Web.Services;
 using Web.Services.Locations;
-using Web.Views.BasicModals;
 using Web.Views.ChangeEvent;
+using Web.Views.EnteringsSelection;
 using Web.Views.InfoModal;
 
 namespace Web.Pages
@@ -72,14 +71,14 @@ namespace Web.Pages
         private IQualificationService _qualificationService { get; set; }
 
         [Inject]
-        private IHelperService _helperService { get; set; }
+        private IRequirementService _helperService { get; set; }
 
         [Inject]
         private IDialogService _dialogService { get; set; }
 
         public List<Group> Groups { get; private set; }
 
-        public List<Models.Helper> Helpers { get; private set; }
+        public List<Requirement> Helpers { get; private set; }
 
         public Models.Member Member { get; private set; }
 
@@ -210,80 +209,11 @@ namespace Web.Pages
 
         protected Models.EventCategory GetEventCategoryById(string categoryId) => _eventCategories.FirstOrDefault(category => category.Id == categoryId);
 
-        protected List<Models.Helper> GetHelpers(Models.Event @event)
+        protected List<Requirement> GetHelpers(Models.Event @event)
         {
             if (@event == null)
                 return null;
             return Helpers.Where(helper => helper.EventId == @event.Id).ToList();
-        }
-
-        private async Task SaveGame(string? eventId, string? groupId, string? eventCategoryId, DateTime? gameDate, string? locationId, double? latitude, double? longitude, string? locationText, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>> helpers, bool dateHasChanged)
-        {
-            var sendChangesFunc = async (bool removeMembers) =>
-            {
-                var updateEventDTO = new UpdateEventDTO
-                {
-                    DepartmentId = _departmentId,
-                    EventId = eventId,
-                    GroupId = groupId,
-                    EventCategoryId = eventCategoryId,
-                    Date = gameDate,
-                    RemoveMembers = removeMembers,
-                    LocationId = locationId,
-                    LocationText = locationText,
-                    Latitude = latitude,
-                    Longitude = longitude
-                };
-
-                if (helpers != null)
-                {
-                    var updateHelpers = helpers.Select(helper =>
-                    {
-                        var roleId = helper.Key;
-                        var value = helper.Value;
-                        var requiredAmount = value.Item1;
-                        var lockingTime = value.Item2;
-                        var requiredGroups = value.Item3;
-                        var requiredQualifications = value.Item4;
-                        return new UpdateHelperDTO
-                        {
-                            RoleId = roleId,
-                            RequiredAmount = requiredAmount,
-                            LockingTime = lockingTime,
-                            RequiredGroups = requiredGroups,
-                            RequiredQualifications = requiredQualifications
-                        };
-                    });
-                    updateEventDTO.Helpers = updateHelpers.ToList();
-                }
-
-                await _eventService.UpdateOrCreate(updateEventDTO);
-                await LoadEventData();
-                if(string.IsNullOrEmpty(eventId))
-                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
-                else if(removeMembers)
-                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert. Die eingetragenen Helfer wurden entfernt."));
-                else
-                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert."));
-            };
-
-            if(dateHasChanged)
-            {
-                var closeModalFunc = Modal.HideAsync;
-                var parameters = new Dictionary<string, object>
-                {
-                    { nameof(YesNoModal.Text), "Das Datum des Events wird verändert. Sollen die Eintragungen zu verfügbaren und fest eingetragenen Helfern entfernt werden?" },
-                    { nameof(YesNoModal.TrueButtonText), "Entfernen" },
-                    { nameof(YesNoModal.FalseButtonText), "Einträge belassen" },
-                    { nameof(YesNoModal.ResultFunc), sendChangesFunc },
-                    { nameof(YesNoModal.CloseModalFunc), closeModalFunc }
-                };
-                await Modal.ShowAsync<YesNoModal>(title: "Eintragungen entfernen", parameters: parameters);
-            }
-            else
-            {
-                await sendChangesFunc(false);
-            }            
         }
         
         public MarkupString GetLocationText(Models.Event @event)
@@ -339,20 +269,30 @@ namespace Web.Pages
 
         public async Task EditGame(Models.Event? @event)
         {
-            var parameters = new Dictionary<string, object>
+            var parameter = new DialogParameters<EnteringsSelection>()
             {
                 { nameof(ChangeEvent.DepartmentId), _departmentId },
                 { nameof(ChangeEvent.Event), @event },
                 { nameof(ChangeEvent.CloseModalFunc), Modal.HideAsync },
                 { nameof(ChangeEvent.DeleteGameFunc), DeleteGame },
-                { nameof(ChangeEvent.SaveEventFunc), SaveGame },
                 { nameof(ChangeEvent.Roles), _roles },
                 { nameof(ChangeEvent.EventCategories), _eventCategories },
                 { nameof(ChangeEvent.Groups), Groups },
                 { nameof(ChangeEvent.Qualifications), _qualifications },
                 { nameof(ChangeEvent.Locations), _locations }
             };
-            await Modal.ShowAsync<ChangeEvent>(title: @event == null ? "Event erstellen" : "Event bearbeiten", parameters: parameters);
+            var dialog = await _dialogService.ShowAsync<ChangeEvent>(title: @event == null ? "Event erstellen" : "Event bearbeiten", parameter);
+            var res = await dialog.Result;
+            var removeMembers = (bool)res.Data;
+
+            if (string.IsNullOrEmpty(@event?.Id))
+                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
+            else if (removeMembers)
+                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert. Alle eingetragenen Helfer wurden entfernt."));
+            else
+                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert."));
+
+            await LoadEventData();
         }
 
         private async Task DeleteGame(string gameId)

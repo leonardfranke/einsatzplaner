@@ -1,22 +1,32 @@
 ﻿using DTO;
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
+using MudBlazor;
 using Web.Models;
 using Web.Services;
+using Web.Views.BasicModals;
 
 namespace Web.Views
 {
     public class ChangeEventBase : ComponentBase
     {
+        [CascadingParameter]
+        public IMudDialogInstance MudDialog { get; set; }
+
         [Parameter]
         public string DepartmentId { get; set; }
 
         [Inject]
-        private IHelperService _helperService { get; set; }
+        private IEventService _eventService { get; set; }
+
+        [Inject]
+        private IRequirementService _requirementService { get; set; }
 
         [Inject]
         private IRequirementGroupService _requirementGroupService { get; set; }
+
+        [Inject]
+        private IDialogService _dialogService { get; set; }
 
         [Parameter]
         public Event? Event { get; set; }
@@ -50,46 +60,46 @@ namespace Web.Views
         public bool IsEventDeleting { get; set; }
         public bool IsEventLoading { get; set; }
 
-        [Parameter]
-        public Func<string?, string?, string?, DateTime?, string?, double?, double?, string?, Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>, bool, Task> SaveEventFunc { get; set; }
+        public string? GroupId { get; set; }
+        public string? EventCategoryId { get; set; }
+        public DateTime? Date { get; set; }
+        public TimeSpan? Begin { get; set; }
+        public string? LocationId { get; set; }
+        public double? Latitude { get; set; }
+        public double? Longitude { get; set; }
+        public string? LocationText { get; set; }
+        public List<RequirementForm> RequirementForms { get; set; } = new();
+        public List<RequirementForm> OldRequirementForms { get; set; } = new();
 
-        [SupplyParameterFromForm]
-        public FormModel EventData { get; set; }
-        public EditContext EditContext { get; set; }
-        public bool IsUpdate { get; set; }
-
-        protected override void OnParametersSet()
-        {
-            EventData = new();
-        }
+        public bool IsUpdate => Event != null;
 
         protected override async Task OnParametersSetAsync()
         {
             IsEventLoading = true;
             var requirementGroupsTask = _requirementGroupService.GetAll(DepartmentId);
-            IsUpdate = Event != null;
             if (IsUpdate)
             {
-                EventData.GroupId = Event.GroupId;
-                EventData.EventCategoryId = Event.EventCategoryId;
-                EventData.Date = Event.EventDate.Date;
-                EventData.Begin = Event.EventDate.TimeOfDay;
-                EventData.Latitude = Event.Latitude;
-                EventData.Longitude = Event.Longitude;
-                EventData.LocationId = Event.LocationId;
-                EventData.LocationText = Event.LocationText;
-                var helpers = await _helperService.GetAll(Event.DepartmentId, Event.Id);
+                GroupId = Event.GroupId;
+                EventCategoryId = Event.EventCategoryId;
+                Date = Event.EventDate.Date;
+                Begin = Event.EventDate.TimeOfDay;
+                Latitude = Event.Latitude;
+                Longitude = Event.Longitude;
+                LocationId = Event.LocationId;
+                LocationText = Event.LocationText;
+                var requirements = await _requirementService.GetAll(Event.DepartmentId, Event.Id);
                     
-                foreach (var helper in helpers)
+                foreach (var requirement in requirements)
                 {
-                    var lockingTime = helper.LockingTime;
-                    var lockingPeriod = (int)Event.EventDate.Subtract(lockingTime).Days;
-                    AddCategoryToGame(helper.RoleId, (int)helper.RequiredAmount, lockingPeriod, helper.RequiredGroups, helper.RequiredQualifications);
+                    var lockingTime = requirement.LockingTime;
+                    var lockingPeriod = Event.EventDate.Subtract(lockingTime).Days;
+                    AddRequirementToEvent(false, requirement.RoleId, requirement.RequiredAmount, lockingPeriod, requirement.RequiredGroups, requirement.RequiredQualifications);
+                    AddRequirementToEvent(true, requirement.RoleId, requirement.RequiredAmount, lockingPeriod, requirement.RequiredGroups, requirement.RequiredQualifications);
                 }
             }
             else
             {
-                EventData.Date = DateTime.Today.AddDays(1);
+                Date = DateTime.Today.AddDays(1);
             }
             RequirementGroups = await requirementGroupsTask;
             IsEventLoading = false;
@@ -99,48 +109,155 @@ namespace Web.Views
         {
             if (value is LocationInfo locationInfo)
             {
-                EventData.LocationText = locationInfo.Text;
-                EventData.Latitude = locationInfo.Latitude;
-                EventData.Longitude = locationInfo.Longitude;
-                EventData.LocationId = null;
+                LocationText = locationInfo.Text;
+                Latitude = locationInfo.Latitude;
+                Longitude = locationInfo.Longitude;
+                LocationId = null;
             } 
             else if(value is Models.Location location)
             {
-                EventData.LocationText = null;
-                EventData.Latitude = null;
-                EventData.Longitude = null;
-                EventData.LocationId = location.Id;
+                LocationText = null;
+                Latitude = null;
+                Longitude = null;
+                LocationId = location.Id;
             }
         }
 
         public async Task SaveGame()
         {
             IsEventSaving = true;
-            var categoryData = new Dictionary<string, Tuple<int, DateTime, List<string>, Dictionary<string, int>>>();
-            var beginDatetimeToSave = EventData.Date.Value.Date + EventData.Begin.Value;
-            foreach (var helper in EventData.Helpers)
+
+            var beginDateTime = Date.Value.Date + Begin.Value;
+            var dateHasChanged = beginDateTime != Event?.EventDate;
+            var showRemoveMembersModal = IsUpdate && dateHasChanged;
+            
+            var removeMembers = false;
+            if (dateHasChanged)
             {
-                var lockingTime = beginDatetimeToSave.AddDays(-helper.LockingPeriod);
-                var requiredGroups = helper.RestrictGroups ? helper.RequiredGroups : new();
-                categoryData.Add(helper.RoleId, new(helper.RequiredAmount, lockingTime, requiredGroups, helper.RequiredQualifications));
+                var parameter = new DialogParameters<YesNoModal>()
+                {
+                    { nameof(YesNoModal.Text), "Das Datum des Events wird verändert. Sollen die Eintragungen zu verfügbaren und fest eingetragenen Helfern entfernt werden?" },
+                    { nameof(YesNoModal.TrueButtonText), "Entfernen" },
+                    { nameof(YesNoModal.FalseButtonText), "Einträge belassen" },
+                };
+                var dialog = await _dialogService.ShowAsync<YesNoModal>(title: "Eintragungen entfernen", parameter);
+                var res = await dialog.Result;
+                removeMembers = (bool)res.Data;
+            }            
+
+            await _eventService.CreateOrUpdate(new UpdateEventDTO
+            {
+                DepartmentId = DepartmentId,
+                EventId = Event?.Id,
+                GroupId = GroupId,
+                EventCategoryId = EventCategoryId,
+                Date = beginDateTime,
+                LocationId = LocationId,
+                Latitude = Latitude,
+                Longitude = Longitude,
+                LocationText = LocationText,
+                RemoveMembers = removeMembers
+            });
+
+            var currentRequiredRoles = RequirementForms.Select(requirement => requirement.RoleId);
+            var oldRequiredRoles = OldRequirementForms.Select(requirement => requirement.RoleId);
+            var rolesToAdd = currentRequiredRoles.Except(oldRequiredRoles);
+            var rolesToUpdate = currentRequiredRoles.Intersect(oldRequiredRoles);
+            var rolesToRemove = oldRequiredRoles.Except(currentRequiredRoles);
+
+            foreach(var requirement in RequirementForms.Where(requirement => rolesToAdd.Contains(requirement.RoleId)))
+            {
+                await _requirementService.CreateRequirement(new UpdateRequirementDTO
+                {
+                    DepartmentId = DepartmentId,
+                    EventId = Event.Id,
+                    RoleId = requirement.RoleId,
+                    RequiredAmount = requirement.RequiredAmount,
+                    RecommendedGroups = requirement.RequiredGroups,
+                    LockingTime = beginDateTime.AddDays(-requirement.LockingPeriod)
+                });
+
+                foreach(var qualification in requirement.RequiredQualifications)
+                {
+                    await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
+                    {
+                        DepartmentId = DepartmentId,
+                        EventId = Event.Id,
+                        RoleId = requirement.RoleId,
+                        QualificationId = qualification.Key,
+                        RequiredAmount = qualification.Value
+                    });
+                }
             }
 
-            var dateHasChanged = beginDatetimeToSave != Event?.EventDate;
-            var showRemoveMembersModal = IsUpdate && dateHasChanged;
-            await SaveEventFunc(
-                Event?.Id, 
-                EventData.GroupId, 
-                EventData.EventCategoryId, 
-                dateHasChanged ? beginDatetimeToSave : null,
-                EventData.LocationId,
-                EventData.Latitude,
-                EventData.Longitude,
-                EventData.LocationText,
-                categoryData,
-                showRemoveMembersModal);
-            if(!showRemoveMembersModal)
-                await CloseModal();
+            foreach (var requirement in RequirementForms.Where(requirement => rolesToRemove.Contains(requirement.RoleId)))
+            {
+                await _requirementService.DeleteRequirement(DepartmentId, Event.Id, requirement.RoleId);
+            }
+
+            foreach (var requirement in RequirementForms.Where(requirement => rolesToUpdate.Contains(requirement.RoleId)))
+            {
+                var oldRequirement = OldRequirementForms.FirstOrDefault(r => r.RoleId == requirement.RoleId);
+
+                var updateRequirementDTO = new UpdateRequirementDTO
+                {
+                    DepartmentId = DepartmentId,
+                    EventId = Event.Id,
+                    RoleId = requirement.RoleId
+                };
+                if (requirement.RequiredAmount != oldRequirement.RequiredAmount)
+                    updateRequirementDTO.RequiredAmount = requirement.RequiredAmount;
+                if (requirement.LockingPeriod != oldRequirement.LockingPeriod)
+                    updateRequirementDTO.LockingTime = beginDateTime.AddDays(-requirement.LockingPeriod);
+                if (!requirement.RequiredGroups.ToHashSet().SetEquals(oldRequirement.RequiredGroups))
+                    updateRequirementDTO.RecommendedGroups = requirement.RequiredGroups;
+
+                if(updateRequirementDTO.RequiredAmount != null || updateRequirementDTO.LockingTime != null || updateRequirementDTO.RecommendedGroups != null)
+                    await _requirementService.UpdateRequirement(updateRequirementDTO);
+
+                var currentRequiredQualifications = requirement.RequiredQualifications.Keys;
+                var oldRequiredQualifications = oldRequirement.RequiredQualifications.Keys;
+                var qualificationsToAdd = currentRequiredQualifications.Except(oldRequiredQualifications);
+                var qualificationsToUpdate = currentRequiredQualifications.Intersect(oldRequiredQualifications);
+                var qualificationsToRemove = oldRequiredQualifications.Except(currentRequiredQualifications);
+
+                foreach (var qualificationId in qualificationsToAdd)
+                {
+                    var requiredAmount = requirement.RequiredQualifications[qualificationId];
+                    await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
+                    {
+                        DepartmentId = DepartmentId,
+                        EventId = Event.Id,
+                        RoleId = requirement.RoleId,
+                        QualificationId = qualificationId,
+                        RequiredAmount = requiredAmount
+                    });
+                }
+
+                foreach (var qualificationId in qualificationsToRemove)
+                {
+                    await _requirementService.DeleteQualificationRequirement(DepartmentId, Event.Id, requirement.RoleId, qualificationId);
+                }
+
+                foreach (var qualificationId in qualificationsToUpdate)
+                {
+                    var newRequiredAmount = requirement.RequiredQualifications[qualificationId];
+                    var oldRequiredAmount = oldRequirement.RequiredQualifications[qualificationId];
+                    if (newRequiredAmount != oldRequiredAmount)
+                    {
+                        await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
+                        {
+                            DepartmentId = DepartmentId,
+                            EventId = Event.Id,
+                            RoleId = requirement.RoleId,
+                            QualificationId = qualificationId,
+                            RequiredAmount = newRequiredAmount
+                        });
+                    }
+                }
+            }                        
             IsEventSaving = false;
+            MudDialog.Close(removeMembers);
         }
 
         public async Task DeleteGame()
@@ -163,44 +280,47 @@ namespace Web.Views
                 .GroupBy(pair => pair.Key.RoleId);
             foreach (var requirement in helperCategoryGroup.RequirementsRoles)
             {
-                AddCategoryToGame(requirement.Key, requirement.Value, requiredQualifications: groupedQualificationRequirements.FirstOrDefault(group => group.Key == requirement.Key)?.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
+                AddRequirementToEvent(false, requirement.Key, requirement.Value, requiredQualifications: groupedQualificationRequirements.FirstOrDefault(group => group.Key == requirement.Key)?.ToDictionary(pair => pair.Key.Id, pair => pair.Value));
             }
         }
 
         public void ClearCategories()
         {
-            EventData.Helpers.Clear();
-        }
+            RequirementForms.Clear();
+        }        
 
-        public void AddCategoryToGame(string categoryId, int requiredAmount, int? lockingPeriod = null, List<string> requiredGroups = null, Dictionary<string, int> requiredQualifications = null)
+        public void AddRequirementToEvent(bool saveAsOld, string roleId, int requiredAmount, int? lockingPeriod = null, List<string> requiredGroups = null, Dictionary<string, int> requiredQualifications = null)
         {
-            var category = GetRoleById(categoryId);
-            var defaultLockingPeriod = category?.LockingPeriod ?? 0;
-            var newRequirement = new HelperFormModel
+            var role = GetRoleById(roleId);
+            var newRequirement = new RequirementForm
             {
-                RoleId = categoryId,
+                RoleId = roleId,
                 RequiredAmount = requiredAmount,
-                LockingPeriod = lockingPeriod ?? defaultLockingPeriod,
+                LockingPeriod = lockingPeriod ?? role?.LockingPeriod ?? 0,
                 RequiredGroups = requiredGroups ?? new(),
                 RequiredQualifications = requiredQualifications?.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
             };
             newRequirement.RestrictGroups = newRequirement.RequiredGroups.Any();
-            EventData.Helpers.Add(newRequirement);
+
+            if(saveAsOld)
+                OldRequirementForms.Add(newRequirement);
+            else
+                RequirementForms.Add(newRequirement);
         }
 
-        public void AddQualificationToRole(HelperFormModel helperForm, string qualificationId)
+        public void AddQualificationToRole(RequirementForm helperForm, string qualificationId)
         {
             helperForm.RequiredQualifications.Add(qualificationId, 1);
         }
 
-        public void RemoveQualificationFromRole(HelperFormModel helperForm, string qualificationId)
+        public void RemoveQualificationFromRole(RequirementForm helperForm, string qualificationId)
         {
             helperForm.RequiredQualifications.Remove(qualificationId);
         }        
 
-        public void RemoveCategoryFromGame(HelperFormModel helperForm)
+        public void RemoveCategoryFromGame(RequirementForm helperForm)
         {
-            EventData.Helpers.Remove(helperForm);
+            RequirementForms.Remove(helperForm);
         }
 
         public IEnumerable<Qualification> GetQualificationsOfRole(string roleId)
@@ -208,17 +328,17 @@ namespace Web.Views
             return Qualifications.Where(qualification => qualification.RoleId == roleId);
         }
 
-        public void SetLockingPeriod(HelperFormModel helperForm, int period)
+        public void SetLockingPeriod(RequirementForm helperForm, int period)
         {
             helperForm.LockingPeriod = period;
         }
 
-        public void SetRequiredAmount(HelperFormModel helperForm, int amount)
+        public void SetRequiredAmount(RequirementForm helperForm, int amount)
         {
             helperForm.RequiredAmount = amount;
         }
 
-        public void SetRequiredGroup(HelperFormModel helperForm, string groupId, bool toAdd)
+        public void SetRequiredGroup(RequirementForm helperForm, string groupId, bool toAdd)
         {            
             if (toAdd)
                 helperForm.RequiredGroups.Add(groupId);
@@ -226,36 +346,12 @@ namespace Web.Views
                 helperForm.RequiredGroups.Remove(groupId);
         }
 
-        public bool IsGroupSetForCategory(HelperFormModel helperForm, string groupId)
+        public bool IsGroupSetForCategory(RequirementForm helperForm, string groupId)
         {
             return helperForm.RequiredGroups.Contains(groupId);
         }
 
-        public class FormModel
-        {
-            private DateTime _date = DateTime.Now.Date;
-            public string GroupId { get; set; } = "";
-            public string EventCategoryId { get; set; } = "";
-            public DateTime? Date { 
-                get => _date.ToLocalTime(); 
-                set 
-                {
-                    var date = value;
-                    if(date.Value.Kind == DateTimeKind.Unspecified)
-                        date = new DateTime(date.Value.Ticks, DateTimeKind.Local);
-                    _date = date.Value;
-                } }
-
-            public TimeSpan? Begin { get; set; }
-            public TimeSpan? End { get; set; }
-            public string? LocationId { get; set; }
-            public double? Latitude { get; set; }
-            public double? Longitude { get; set; }
-            public string? LocationText { get; set; }
-            public List<HelperFormModel> Helpers { get; set; } = new();
-        }
-
-        public class HelperFormModel
+        public class RequirementForm
         {
             public string RoleId { get; set; }
             public int LockingPeriod { get; set; }

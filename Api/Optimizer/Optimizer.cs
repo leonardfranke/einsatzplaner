@@ -14,7 +14,7 @@ namespace Optimizer
             public List<string> AvailableMembers { get; set; }
         }
 
-        public static Dictionary<HelperDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<HelperDTO> allRequirements, List<RoleDTO> roles, List<GroupDTO> groups, List<QualificationDTO> qualifications)
+        public static Dictionary<RequirementDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<RequirementDTO> allRequirements, List<RoleDTO> roles, List<GroupDTO> groups, List<QualificationDTO> qualifications)
         {
             var eventsToOptimize = allEvents.Where(@event => @event.Date > DateTime.UtcNow);
             var requirementsToOptimize = allRequirements.Where(requirement => eventsToOptimize.Any(@event => @event.Id == requirement.EventId));
@@ -217,7 +217,7 @@ namespace Optimizer
             model.Minimize(max_D_additional * LinearExpr.Sum(V_erq_additional_list) + LinearExpr.Sum(D_mmr_list_additional));
             solver.Solve(model);
 
-            var filledHelpers = new Dictionary<HelperDTO, OptimizedAssignments>();
+            var filledHelpers = new Dictionary<RequirementDTO, OptimizedAssignments>();
             var X_mer_by_er_available = X_mer_dict_available.GroupBy(pair => (pair.Key.eventId, pair.Key.roleId));
             var X_mer_by_er_additional = X_mer_dict_additional .GroupBy(pair => (pair.Key.eventId, pair.Key.roleId));
             foreach (var requirement in requirementsToOptimize)

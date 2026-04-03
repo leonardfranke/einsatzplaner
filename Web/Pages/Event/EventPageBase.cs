@@ -1,4 +1,5 @@
 ﻿using BlazorBootstrap;
+using DTO;
 using LeafletForBlazor;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -9,7 +10,7 @@ using Web.Manager;
 using Web.Models;
 using Web.Services;
 using Web.Services.Locations;
-using Web.Views.MemberSelection;
+using Web.Views.EnteringsSelection;
 
 namespace Web.Pages
 {
@@ -30,7 +31,7 @@ namespace Web.Pages
 
         public Task<Models.Event> EventTask { get; private set; }
 
-        public List<Models.Helper> Helpers { get; private set; }
+        public List<Requirement> Helpers { get; private set; }
 
         public Location Location { get; private set; }
 
@@ -55,7 +56,7 @@ namespace Web.Pages
         private IEventCategoryService _eventCategoryService { get; set; }
 
         [Inject]
-        private IHelperService _helperService { get; set; }
+        private IRequirementService _helperService { get; set; }
 
         [Inject]
         private IMemberService _memberService { get; set; }
@@ -148,44 +149,59 @@ namespace Web.Pages
             return (string.Join(", ", groupIds.Select(id => Groups.FirstOrDefault(group => group.Id == id)?.Name ?? "Ohne Name")), false);
         }
 
-        protected async Task OpenLockedMembersSelected(Models.Helper helper)
+        protected async Task OpenLockedMembersSelected(Requirement requirement)
         {
-            var role = GetRoleById(helper.RoleId);
-            var lockedMembers = new List<string>(helper.LockedMembers);
+            var role = GetRoleById(requirement.RoleId);
             var permittedMembers = 
                 _members.Where(member => {
-                    if (helper.LockedMembers.Contains(member.Id))
+                    if (requirement.LockedMembers.Union(requirement.PreselectedMembers).Union(requirement.AvailableMembers).Union(requirement.FillMembers).Contains(member.Id))
                         return true;
-                    var requiredRole = _roles.Find(role => helper.RoleId == role.Id);
-                    if (!requiredRole.IsFree && !requiredRole.MemberIds.Contains(member.Id))
-                        return false;
-                    var requiredGroups = helper.RequiredGroups.Select(requiredGroup => Groups.Find(group => group.Id == requiredGroup));
-                    if (requiredGroups.Count() == 0)
-                        return true;
-                    return requiredGroups.SelectMany(group => group.MemberIds).Contains(member.Id);
+                    var requiredRole = _roles.Find(role => requirement.RoleId == role.Id);
+                    return requiredRole.IsFree || requiredRole.MemberIds.Contains(member.Id);                   
                 });
 
-            var groupingFunctions = new List<(string, Func<Models.Member, bool>)>()
-            {
-                { ("Bereits zugewiesen", member => helper.LockedMembers.Contains(member.Id)) },
-                { ("Vorausgewählt", member => helper.PreselectedMembers.Contains(member.Id)) },
-                { ("Verfügbar", member => helper.AvailableMembers.Contains(member.Id)) },
-                { ("Empfehlungen", member => helper.FillMembers.Contains(member.Id)) },
-            };
-            var parameter = new DialogParameters<MemberSelection>()
+            var parameter = new DialogParameters<EnteringsSelection>()
             {
                 { x => x.Members, permittedMembers },
-                { x => x.SelectedMembers, lockedMembers },
-                { x => x.GroupingFunctions, groupingFunctions }
+                { x => x.LockedMembers, requirement.LockedMembers},
+                { x => x.PreselectedMembers, requirement.PreselectedMembers},
+                { x => x.AvailableMembers, requirement.AvailableMembers},
+                { x => x.RecommendedMembers, requirement.FillMembers},
             };
-            var dialog = await _dialogService.ShowAsync<MemberSelection>($"{role.Name} ({helper.RequiredAmount})", parameter);
+            var dialog = await _dialogService.ShowAsync<EnteringsSelection>($"{role.Name} ({requirement.RequiredAmount})", parameter);
             var result = await dialog.Result;
             if(!result.Canceled)
             {
-                var newLockedMembers = result.Data as List<string>;
-                var lockedMembersToRemove = helper.LockedMembers.Except(newLockedMembers).ToList();
-                var lockedMembersToAdd = newLockedMembers.Except(helper.LockedMembers).ToList();
-                await _helperService.UpdateLockedMembers(_departmentId, helper.EventId, helper.Id, lockedMembersToRemove, lockedMembersToAdd);
+                var data = result.Data as (List<string> newLockedMembers, List<string> newAvailableMembers, List<string> removedMembers)?;
+                var tasks = new List<Task>();
+                if(data.Value.newLockedMembers.Count > 0)
+                {
+                    tasks.Add(_helperService.UpdateEnteringType(
+                        _departmentId, 
+                        requirement.EventId, 
+                        requirement.RoleId, 
+                        data.Value.newLockedMembers, 
+                        EnteringType.Locked));
+                }
+                if (data.Value.newAvailableMembers.Count > 0)
+                {
+                    tasks.Add(_helperService.UpdateEnteringType(
+                        _departmentId,
+                        requirement.EventId,
+                        requirement.RoleId,
+                        data.Value.newAvailableMembers,
+                        EnteringType.Available));
+                }
+                if (data.Value.removedMembers.Count > 0)
+                {
+                    tasks.Add(_helperService.UpdateEnteringType(
+                        _departmentId,
+                        requirement.EventId,
+                        requirement.RoleId,
+                        data.Value.removedMembers,
+                        null));
+                }
+                await Task.WhenAll(tasks);
                 await ReloadHelpers();
             }
         }
