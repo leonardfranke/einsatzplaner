@@ -32,12 +32,6 @@ namespace Web.Views
         public Event? Event { get; set; }
 
         [Parameter]
-        public Func<Task> CloseModalFunc { get; set; }
-
-        [Parameter]
-        public Func<string, Task> DeleteGameFunc { get; set; }
-
-        [Parameter]
         public List<Models.Location> Locations { get; set; }
 
         [Parameter]
@@ -72,6 +66,8 @@ namespace Web.Views
         public List<RequirementForm> OldRequirementForms { get; set; } = new();
 
         public bool IsUpdate => Event != null;
+
+        protected MudForm _form;
 
         protected override async Task OnParametersSetAsync()
         {
@@ -125,6 +121,10 @@ namespace Web.Views
 
         public async Task SaveGame()
         {
+            await _form.Validate();
+            if (!_form.IsValid)
+                return;
+
             IsEventSaving = true;
 
             var beginDateTime = Date.Value.Date + Begin.Value;
@@ -132,7 +132,7 @@ namespace Web.Views
             var showRemoveMembersModal = IsUpdate && dateHasChanged;
             
             var removeMembers = false;
-            if (dateHasChanged)
+            if (showRemoveMembersModal)
             {
                 var parameter = new DialogParameters<YesNoModal>()
                 {
@@ -190,7 +190,7 @@ namespace Web.Views
                 }
             }
 
-            foreach (var requirement in RequirementForms.Where(requirement => rolesToRemove.Contains(requirement.RoleId)))
+            foreach (var requirement in OldRequirementForms.Where(requirement => rolesToRemove.Contains(requirement.RoleId)))
             {
                 await _requirementService.DeleteRequirement(DepartmentId, Event.Id, requirement.RoleId);
             }
@@ -257,18 +257,16 @@ namespace Web.Views
                 }
             }                        
             IsEventSaving = false;
-            MudDialog.Close(removeMembers);
+            MudDialog.Close((true, removeMembers));
         }
 
         public async Task DeleteGame()
         {
             IsEventDeleting = true;
-            await DeleteGameFunc(Event.Id);
-            await CloseModal();
+            await _eventService.DeleteGame(DepartmentId, Event!.Id);
             IsEventDeleting = false;
+            MudDialog.Close(DialogResult.Ok((false, false)));
         }
-
-        public Task CloseModal() => CloseModalFunc();
 
         public Role GetRoleById(string id) => Roles.Find(role => role.Id == id);
 
@@ -297,7 +295,7 @@ namespace Web.Views
                 RoleId = roleId,
                 RequiredAmount = requiredAmount,
                 LockingPeriod = lockingPeriod ?? role?.LockingPeriod ?? 0,
-                RequiredGroups = requiredGroups ?? new(),
+                RequiredGroups = [.. requiredGroups ?? new()],
                 RequiredQualifications = requiredQualifications?.ToDictionary(pair => pair.Key, pair => (int)pair.Value) ?? new()
             };
             newRequirement.RestrictGroups = newRequirement.RequiredGroups.Any();

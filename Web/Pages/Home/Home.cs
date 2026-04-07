@@ -23,9 +23,6 @@ namespace Web.Pages
         private string _currentUserId;
         public List<Role> _roles;
 
-        [CascadingParameter]
-        public Modal Modal { get; set; }
-
         [Parameter]
         public string DepartmentUrl { get; set; }
 
@@ -273,8 +270,6 @@ namespace Web.Pages
             {
                 { nameof(ChangeEvent.DepartmentId), _departmentId },
                 { nameof(ChangeEvent.Event), @event },
-                { nameof(ChangeEvent.CloseModalFunc), Modal.HideAsync },
-                { nameof(ChangeEvent.DeleteGameFunc), DeleteGame },
                 { nameof(ChangeEvent.Roles), _roles },
                 { nameof(ChangeEvent.EventCategories), _eventCategories },
                 { nameof(ChangeEvent.Groups), Groups },
@@ -283,22 +278,26 @@ namespace Web.Pages
             };
             var dialog = await _dialogService.ShowAsync<ChangeEvent>(title: @event == null ? "Event erstellen" : "Event bearbeiten", parameter);
             var res = await dialog.Result;
-            var removeMembers = (bool)res.Data;
+            if(!res.Canceled)
+            {
+                var (saved, removeMembers) = ((bool, bool))res.Data;
 
-            if (string.IsNullOrEmpty(@event?.Id))
-                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
-            else if (removeMembers)
-                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert. Alle eingetragenen Helfer wurden entfernt."));
-            else
-                _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert."));
+                if(saved)
+                {
+                    if (string.IsNullOrEmpty(@event?.Id))
+                        _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde erstellt."));
+                    else if (removeMembers)
+                        _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert. Alle eingetragenen Helfer wurden entfernt."));
+                    else
+                        _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde aktualisiert."));
+                }
+                else
+                {
+                    _toastService.Notify(new ToastMessage(ToastType.Primary, $"Das Event wurde gelöscht."));
+                }
 
-            await LoadEventData();
-        }
-
-        private async Task DeleteGame(string gameId)
-        {
-            await _eventService.DeleteGame(_departmentId, gameId);
-            await LoadEventData();
+                await LoadEventData();
+            }
         }
     }
 }
