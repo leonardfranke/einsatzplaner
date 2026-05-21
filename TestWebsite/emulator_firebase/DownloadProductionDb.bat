@@ -1,6 +1,9 @@
 @echo off
 setlocal
 
+call gcloud storage rm --recursive gs://firestore-export-einsatzplaner/Export/**
+call gcloud firestore export gs://firestore-export-einsatzplaner/Export
+
 set DESTINATION=%~dp0Export/
 
 set AUTH_BACKUP=%DESTINATION%auth/
