@@ -9,7 +9,7 @@ namespace Api.Models
         [PrimaryKey(shouldInsert: true)]
         public string DepartmentId { get; set; }
 
-        [PrimaryKey(shouldInsert: true)]
+        [PrimaryKey(shouldInsert: false)]
         public string Id { get; set; }
 
         [Column]
