@@ -6,7 +6,7 @@ namespace Api.Models
     [Table("Groups")]
     public class Group : BaseModel
     {
-        [PrimaryKey(shouldInsert: true)]
+        [PrimaryKey(shouldInsert: false)]
         public string Id { get; set; }
 
         [Column]

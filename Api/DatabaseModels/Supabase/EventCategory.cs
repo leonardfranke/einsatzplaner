@@ -6,7 +6,7 @@ namespace Api.Models
     [Table("EventCategories")]
     public class EventCategory : BaseModel
     {
-        [PrimaryKey(shouldInsert: true)]
+        [PrimaryKey(shouldInsert: false)]
         public string Id { get; set; }
 
         [Column]
