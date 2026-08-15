@@ -46,7 +46,7 @@ namespace Api.Manager
                 Date = updateEventDTO.Date,
             };
 
-            if(string.IsNullOrEmpty(updateEventDTO.LocationId))
+            if(!string.IsNullOrEmpty(updateEventDTO.LocationId))
             {
                 newEvent.LocationId = updateEventDTO.LocationId;
             }
