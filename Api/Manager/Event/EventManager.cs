@@ -36,7 +36,7 @@ namespace Api.Manager
             _supabaseClient = supabaseClient;
         }
 
-        public Task CreateEvent(UpdateEventDTO updateEventDTO)
+        public async Task<string> CreateEvent(UpdateEventDTO updateEventDTO)
         {
             var newEvent = new Event
             {
@@ -57,7 +57,8 @@ namespace Api.Manager
                 newEvent.LocationLongitude = updateEventDTO.Longitude;
             }
 
-            return _supabaseClient.From<Event>().Insert(newEvent);
+            var @event = await _supabaseClient.From<Event>().Insert(newEvent);
+            return @event.Model!.Id;
         }
 
         public async Task UpdateEvent(UpdateEventDTO updateEventDTO)

@@ -145,7 +145,7 @@ namespace Web.Views
                 removeMembers = (bool)res.Data;
             }            
 
-            await _eventService.CreateOrUpdate(new UpdateEventDTO
+            var eventId = await _eventService.CreateOrUpdate(new UpdateEventDTO
             {
                 DepartmentId = DepartmentId,
                 EventId = Event?.Id,
@@ -170,7 +170,7 @@ namespace Web.Views
                 await _requirementService.CreateRequirement(new UpdateRequirementDTO
                 {
                     DepartmentId = DepartmentId,
-                    EventId = Event.Id,
+                    EventId = eventId,
                     RoleId = requirement.RoleId,
                     RequiredAmount = requirement.RequiredAmount,
                     RecommendedGroups = requirement.RequiredGroups,
@@ -182,7 +182,7 @@ namespace Web.Views
                     await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
                     {
                         DepartmentId = DepartmentId,
-                        EventId = Event.Id,
+                        EventId = eventId,
                         RoleId = requirement.RoleId,
                         QualificationId = qualification.Key,
                         RequiredAmount = qualification.Value
@@ -192,7 +192,7 @@ namespace Web.Views
 
             foreach (var requirement in OldRequirementForms.Where(requirement => rolesToRemove.Contains(requirement.RoleId)))
             {
-                await _requirementService.DeleteRequirement(DepartmentId, Event.Id, requirement.RoleId);
+                await _requirementService.DeleteRequirement(DepartmentId, eventId, requirement.RoleId);
             }
 
             foreach (var requirement in RequirementForms.Where(requirement => rolesToUpdate.Contains(requirement.RoleId)))
@@ -202,7 +202,7 @@ namespace Web.Views
                 var updateRequirementDTO = new UpdateRequirementDTO
                 {
                     DepartmentId = DepartmentId,
-                    EventId = Event.Id,
+                    EventId = eventId,
                     RoleId = requirement.RoleId
                 };
                 if (requirement.RequiredAmount != oldRequirement.RequiredAmount)
@@ -227,7 +227,7 @@ namespace Web.Views
                     await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
                     {
                         DepartmentId = DepartmentId,
-                        EventId = Event.Id,
+                        EventId = eventId,
                         RoleId = requirement.RoleId,
                         QualificationId = qualificationId,
                         RequiredAmount = requiredAmount
@@ -236,7 +236,7 @@ namespace Web.Views
 
                 foreach (var qualificationId in qualificationsToRemove)
                 {
-                    await _requirementService.DeleteQualificationRequirement(DepartmentId, Event.Id, requirement.RoleId, qualificationId);
+                    await _requirementService.DeleteQualificationRequirement(DepartmentId, eventId, requirement.RoleId, qualificationId);
                 }
 
                 foreach (var qualificationId in qualificationsToUpdate)
@@ -248,7 +248,7 @@ namespace Web.Views
                         await _requirementService.CreateOrUpdateQualificationRequirement(new UpdateQualificationRequirementDTO
                         {
                             DepartmentId = DepartmentId,
-                            EventId = Event.Id,
+                            EventId = eventId,
                             RoleId = requirement.RoleId,
                             QualificationId = qualificationId,
                             RequiredAmount = newRequiredAmount

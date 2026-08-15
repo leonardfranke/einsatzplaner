@@ -7,7 +7,7 @@ namespace Api.Manager
     {
         public Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate);
         public Task<EventDTO> GetEvent(string departmentId, string eventId);
-        public Task CreateEvent(UpdateEventDTO updateEventDTO);
+        public Task<string> CreateEvent(UpdateEventDTO updateEventDTO);
         public Task UpdateEvent(UpdateEventDTO updateEventDTO);
         public Task DeleteEvent(string departmentId, string eventId);
         public Task CreateRequirement(UpdateRequirementDTO updateRequirementDTO);

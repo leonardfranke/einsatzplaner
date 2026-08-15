@@ -6,7 +6,7 @@ namespace Web.Services
     {
         public Task<Models.Event?> GetEvent(string departmentId, string eventId);
         public Task<List<Models.Event>> GetAll(string departmentId);
-        public Task CreateOrUpdate(UpdateEventDTO updateEventDTO);
+        public Task<string> CreateOrUpdate(UpdateEventDTO updateEventDTO);
         public Task DeleteGame(string departmentId, string gameId);
     }
 }
