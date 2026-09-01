@@ -198,42 +198,50 @@ namespace Api.Manager
             if (roleId != null)
                 query = query.Where(requirement => requirement.RoleId == roleId);
 
-            var res = await query.Get();
-            foreach(var requirement in res.Models)
-            {
-                var enterings = await GetEnteringsOfRequirement(departmentId, requirement.EventId, requirement.RoleId);
-                var groupedEnterings = enterings.GroupBy(pair => pair.Value).ToDictionary(group => group.Key, group => group.Select(pair => pair.Key).ToList());
-                groupedEnterings.TryGetValue(EnteringType.Locked, out var lockedMembers);
-                groupedEnterings.TryGetValue(EnteringType.Preselected, out var preselectedMembers);
-                groupedEnterings.TryGetValue(EnteringType.Available, out var availableMembers);
-                groupedEnterings.TryGetValue(EnteringType.Recommended, out var recommendedMembers);
-                var qualificationRequirements = await GetQualificationRequirements(departmentId, requirement.EventId, requirement.RoleId);
-                yield return RequirementConverter.Convert(requirement, lockedMembers ?? [], preselectedMembers ?? [], availableMembers ?? [], recommendedMembers ?? [], qualificationRequirements);
-            }            
-        }
+            var requirementsResult = await query.Get();
 
-        private async Task<Dictionary<string, int>> GetQualificationRequirements(string departmentId, string eventId, string roleId)
-        {
-            var res = await _supabaseClient
-                .From<QualificationRequirement>()
-                .Select($"{nameof(QualificationRequirement.QualificationId)}, {nameof(QualificationRequirement.RequiredAmount)}")
-                .Filter(nameof(QualificationRequirement.DepartmentId), Operator.Equals, departmentId)
-                .Filter(nameof(QualificationRequirement.EventId), Operator.Equals, eventId)
-                .Filter(nameof(QualificationRequirement.RoleId), Operator.Equals, roleId)
-                .Get();
-            return res.Models.ToDictionary(qr => qr.QualificationId, qr => qr.RequiredAmount);
-        }
-
-        private async Task<Dictionary<string, EnteringType>> GetEnteringsOfRequirement(string departmentId, string eventId, string roleId)
-        {
-            var res = await _supabaseClient
+            var fetchedEventIds = requirementsResult.Models.Select(requirement => requirement.EventId).Distinct().ToList();
+            var fetchedRoleIds = requirementsResult.Models.Select(requirement => requirement.RoleId).Distinct().ToList();
+            var enteringsResult = await _supabaseClient
                 .From<Entering>()
                 .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
-                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
-                .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
-                .Select($"{nameof(Entering.MemberId)}, {nameof(Entering.EnteringType)}")
+                .Filter(nameof(Entering.EventId), Operator.In, fetchedEventIds)
+                .Filter(nameof(Entering.RoleId), Operator.In, fetchedRoleIds)
                 .Get();
-            return res.Models.ToDictionary(entering => entering.MemberId, entering => entering.EnteringType);
+
+            var qualiRequirementsResult = await _supabaseClient
+                .From<QualificationRequirement>()
+                .Filter(nameof(QualificationRequirement.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.In, fetchedEventIds)
+                .Filter(nameof(Entering.RoleId), Operator.In, fetchedRoleIds)
+                .Get();
+
+            foreach (var requirement in requirementsResult.Models)
+            {
+                var enteringsOfRequirement = enteringsResult.Models
+                    .Where(entering => entering.EventId == requirement.EventId && entering.RoleId == requirement.RoleId)
+                    .ToList();
+                var lockedMembers = enteringsOfRequirement
+                    .Where(entering => entering.EnteringType == EnteringType.Locked)
+                    .Select(entering => entering.MemberId)
+                    .ToList();
+                var preselectedMembers = enteringsOfRequirement
+                    .Where(entering => entering.EnteringType == EnteringType.Preselected)
+                    .Select(entering => entering.MemberId)
+                    .ToList();
+                var availableMembers = enteringsOfRequirement
+                    .Where(entering => entering.EnteringType == EnteringType.Available)
+                    .Select(entering => entering.MemberId)
+                    .ToList();
+                var recommendedMembers = enteringsOfRequirement
+                    .Where(entering => entering.EnteringType == EnteringType.Recommended)
+                    .Select(entering => entering.MemberId)
+                    .ToList();
+                var qualificationRequirements = qualiRequirementsResult.Models
+                    .Where(qualiRequirement => qualiRequirement.EventId == requirement.EventId && qualiRequirement.RoleId == requirement.RoleId)
+                    .ToDictionary(qualiRequirement => qualiRequirement.QualificationId, qualiRequirement => qualiRequirement.RequiredAmount);
+                yield return RequirementConverter.Convert(requirement, lockedMembers ?? [], preselectedMembers ?? [], availableMembers ?? [], recommendedMembers ?? [], qualificationRequirements);
+            }            
         }
 
         private Task<Entering> GetEntering(string departmentId, string eventId, string roleId, string memberId)
