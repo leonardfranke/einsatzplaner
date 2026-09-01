@@ -26,11 +26,17 @@ namespace Api.Manager
 
         public async IAsyncEnumerable<QualificationDTO> GetAll(string departmentId)
         {
-            var res = await _supabaseClient.From<Qualification>().Where(qual => qual.DepartmentId == departmentId).Get();
-            foreach (var qualification in res.Models)
+            var qualificationResults = await _supabaseClient.From<Qualification>().Where(qual => qual.DepartmentId == departmentId).Get();
+            var qualificationIds = qualificationResults.Models.Select(quali => quali.Id).ToList();
+            var memberQualificationJoinResult = await _supabaseClient
+                .From<MemberQualificationJoin>()
+                .Filter(nameof(MemberQualificationJoin.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(MemberQualificationJoin.QualificationId), Operator.In, qualificationIds)
+                .Get();
+            foreach (var quali in qualificationResults.Models)
             {
-                var members = await GetQualificationMembers(departmentId, qualification.Id);
-                yield return QualificationConverter.Convert(qualification, members);
+                var qualiMembers = memberQualificationJoinResult.Models.Where(join => join.QualificationId == quali.Id).Select(join => join.MemberId).ToList();
+                yield return QualificationConverter.Convert(quali, qualiMembers);
             }
         }
 
@@ -90,17 +96,6 @@ namespace Api.Manager
                 .Filter(nameof(MemberQualificationJoin.MemberId), Operator.In, updateMembersList.FormerMembers)
                 .Delete();
             }
-        }
-
-        public async Task<List<string>> GetQualificationMembers(string departmentId, string qualification)
-        {
-            var res = await _supabaseClient
-                .From<MemberQualificationJoin>()
-                .Select(nameof(MemberQualificationJoin.MemberId))
-                .Where(join => join.DepartmentId == departmentId && join.QualificationId == qualification)
-                .Get();
-
-            return res.Models.Select(join => join.MemberId).ToList();
         }
     }
 }

@@ -26,11 +26,17 @@ namespace Api.Manager
 
         public async IAsyncEnumerable<RoleDTO> GetAll(string departmentId)
         {
-            var res = await _supabaseClient.From<Role>().Where(role => role.DepartmentId == departmentId).Get();
-            foreach (var role in res.Models)
+            var roleResults = await _supabaseClient.From<Role>().Where(role => role.DepartmentId == departmentId).Get();
+            var roleIds = roleResults.Models.Select(role => role.Id).ToList();
+            var memberRoleJoinResults = await _supabaseClient
+                .From<MemberRoleJoin>()
+                .Filter(nameof(MemberRoleJoin.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(MemberRoleJoin.RoleId), Operator.In, roleIds)
+                .Get();
+            foreach (var role in roleResults.Models)
             {
-                var members = await GetRoleMembers(departmentId, role.Id);
-                yield return RoleConverter.Convert(role, members);
+                var roleMembers = memberRoleJoinResults.Models.Where(join => join.RoleId == role.Id).Select(join => join.MemberId).ToList();
+                yield return RoleConverter.Convert(role, roleMembers);
             }
         }
 
@@ -92,17 +98,6 @@ namespace Api.Manager
                     .Filter(nameof(MemberRoleJoin.MemberId), Operator.In, updateMembersList.FormerMembers)
                     .Delete();
             }
-        }
-
-        private async Task<List<string>> GetRoleMembers(string departmentId, string roleId)
-        {
-            var res = await _supabaseClient
-                .From<MemberRoleJoin>()
-                .Select(nameof(MemberRoleJoin.MemberId))
-                .Where(join => join.DepartmentId == departmentId && join.RoleId == roleId)
-                .Get();
-            
-            return res.Models.Select(join => join.MemberId).ToList();
         }
 
         public Task<Role?> GetRole(string departmentId, string roleId)
