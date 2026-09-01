@@ -26,23 +26,18 @@ namespace Api.Manager
 
         public async IAsyncEnumerable<GroupDTO> GetAll(string departmentId)
         {
-            var res = await _supabaseClient.From<Group>().Where(role => role.DepartmentId == departmentId).Get();
-            foreach (var group in res.Models)
-            {
-                var members = await GetGroupMembers(departmentId, group.Id);
-                yield return GroupConverter.Convert(group, members);
-            }
-        }
-
-        private async Task<List<string>> GetGroupMembers(string departmentId, string groupId)
-        {
-            var res = await _supabaseClient
+            var groupResults = await _supabaseClient.From<Group>().Where(role => role.DepartmentId == departmentId).Get();
+            var groupIds = groupResults.Models.Select(group => group.Id).ToList();
+            var memberGroupJoinResults = await _supabaseClient
                 .From<MemberGroupJoin>()
-                .Select(nameof(MemberGroupJoin.MemberId))
-                .Where(join => join.DepartmentId == departmentId && join.GroupId == groupId)
+                .Filter(nameof(MemberGroupJoin.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(MemberGroupJoin.GroupId), Operator.In, groupIds)
                 .Get();
-
-            return res.Models.Select(join => join.MemberId).ToList();
+            foreach (var group in groupResults.Models)
+            {
+                var groupMembers = memberGroupJoinResults.Models.Where(join => join.GroupId == group.Id).Select(join => join.MemberId).ToList();
+                yield return GroupConverter.Convert(group, groupMembers);
+            }
         }
 
         public Task UpdateOrCreate(string departmentId, string? groupId, string name)
