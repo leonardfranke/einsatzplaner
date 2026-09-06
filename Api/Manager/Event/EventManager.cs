@@ -294,7 +294,10 @@ namespace Api.Manager
 
         public Task SetMembersEntering(string departmentId, string eventId, string roleId, List<string> memberIds, EnteringType? type)
         {
-            if(type == null)
+            if(memberIds == null || !memberIds.Any())
+                return Task.CompletedTask;
+
+            if (type == null)
             {
                 return _supabaseClient
                     .From<Entering>()
