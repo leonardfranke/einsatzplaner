@@ -51,9 +51,9 @@ namespace Api.Controllers
                     calendarEvent.GeographicLocation = new GeographicLocation(location.Latitude, location.Longitude);
                     calendarEvent.Location = location.Name;
                 }
-                else if(@event.Latitude.HasValue && @event.Longitude.HasValue)
+                else if(@event.LocationLatitude.HasValue && @event.LocationLongitude.HasValue)
                 {
-                    calendarEvent.GeographicLocation = new GeographicLocation(@event.Latitude.Value, @event.Longitude.Value);
+                    calendarEvent.GeographicLocation = new GeographicLocation(@event.LocationLatitude.Value, @event.LocationLongitude.Value);
                     calendarEvent.Location = @event.LocationText;
                 }
                 calendarEvent.Categories = [role.Name];

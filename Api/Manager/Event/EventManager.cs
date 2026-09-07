@@ -59,6 +59,8 @@ namespace Api.Manager
 
         public async Task UpdateEvent(UpdateEventDTO updateEventDTO)
         {
+            var oldEvent = await GetEvent(updateEventDTO.DepartmentId, updateEventDTO.EventId);
+
             await _supabaseClient
                 .From<Event>()
                 .Filter(nameof(Event.DepartmentId), Operator.Equals, updateEventDTO.DepartmentId)
@@ -75,6 +77,13 @@ namespace Api.Manager
 
             if (updateEventDTO.RemoveMembers)
                 await RemoveMemberEnterings(updateEventDTO.DepartmentId, updateEventDTO.EventId);
+            else if(oldEvent.Date.UtcTicks != updateEventDTO.Date.UtcTicks)
+            {
+                var enterings = await GetEnteringsOfEvent(updateEventDTO.DepartmentId, updateEventDTO.EventId, [EnteringType.Locked, EnteringType.Preselected]);
+                var setMembers = enterings.Select(entering => entering.MemberId).Distinct().ToList();
+                await CreateEventNotification(updateEventDTO.DepartmentId, updateEventDTO.EventId, oldEvent.Date, updateEventDTO.Date, setMembers);
+
+            }
         }
 
         public Task CreateRequirement(UpdateRequirementDTO updateRequirementDTO)
@@ -145,6 +154,8 @@ namespace Api.Manager
         public async Task DeleteEvent(string departmentId, string eventId)
         {
             var @event = await GetEvent(departmentId, eventId);
+            if(@event == null)
+                return;
             var requirements = await GetRequirements(departmentId, eventId, null).ToListAsync();
             var allInvolvedMembers = requirements.SelectMany(requirement => requirement.LockedMembers.Union(requirement.PreselectedMembers)).Distinct().ToList();
 
@@ -158,24 +169,23 @@ namespace Api.Manager
                 await CreateEventDeletionNotification(@event, allInvolvedMembers);
         }
 
-        public async Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate)
+        public async Task<List<Event>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate)
         {
             var res = await _supabaseClient
                 .From<Event>()
                 .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
                 .Filter(nameof(Event.Date), Operator.GreaterThanOrEqual, fromDate.ToUniversalTime().ToString("O"))
                 .Filter(nameof(Event.Date), Operator.LessThanOrEqual, toDate.ToUniversalTime().ToString("O"))
-                .Get();            
-            return EventConverter.Convert(res.Models, departmentId);
+                .Get();
+            return res.Models;
         }
 
-        public async Task<EventDTO?> GetEvent(string departmentId, string eventId)
+        public Task<Event?> GetEvent(string departmentId, string eventId)
         {
-            var @event = await _supabaseClient
+            return _supabaseClient
                 .From<Event>()
                 .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
-                .Filter(nameof(Event.Id), Operator.Equals, eventId).Single();            
-            return EventConverter.Convert(@event, departmentId);            
+                .Filter(nameof(Event.Id), Operator.Equals, eventId).Single();
         }
 
         public async IAsyncEnumerable<RequirementDTO> GetEnteredMemberRequirements(string departmentId, string memberId)
@@ -210,8 +220,8 @@ namespace Api.Manager
             var qualiRequirementsResult = await _supabaseClient
                 .From<QualificationRequirement>()
                 .Filter(nameof(QualificationRequirement.DepartmentId), Operator.Equals, departmentId)
-                .Filter(nameof(Entering.EventId), Operator.In, fetchedEventIds)
-                .Filter(nameof(Entering.RoleId), Operator.In, fetchedRoleIds)
+                .Filter(nameof(QualificationRequirement.EventId), Operator.In, fetchedEventIds)
+                .Filter(nameof(QualificationRequirement.RoleId), Operator.In, fetchedRoleIds)
                 .Get();
 
             foreach (var requirement in requirementsResult.Models)
@@ -242,7 +252,7 @@ namespace Api.Manager
             }            
         }
 
-        private Task<Entering> GetEntering(string departmentId, string eventId, string roleId, string memberId)
+        private Task<Entering?> GetEntering(string departmentId, string eventId, string roleId, string memberId)
         {
             return _supabaseClient
                 .From<Entering>()
@@ -259,18 +269,7 @@ namespace Api.Manager
             if(entering == null)
             {
                 if(isAvailable)
-                {
-                    var newEntering = new Entering
-                    {
-                        DepartmentId = departmentId,
-                        EventId = eventId,
-                        RoleId = roleId,
-                        MemberId = memberId,
-                        EnteringType = EnteringType.Available
-                    };
-
-                    await _supabaseClient.From<Entering>().Insert(newEntering);
-                }
+                    await SetMembersEntering(departmentId, eventId, roleId, [memberId], EnteringType.Available);
                 return;
             }
 
@@ -279,35 +278,52 @@ namespace Api.Manager
                 || !isAvailable && entering.EnteringType == EnteringType.Recommended)
                 return;
 
-            
             if (isAvailable)
-            {
                 await SetMembersEntering(departmentId, eventId, roleId, [memberId], EnteringType.Available);
-            }
             else
-            {
                 await SetMembersEntering(departmentId, eventId, roleId, [memberId], null);
-            }
         }
 
-        public Task SetMembersEntering(string departmentId, string eventId, string roleId, List<string> memberIds, EnteringType? type)
+        private async Task<List<Entering>> GetEnteringsOfEvent(string departmentId, string eventId, List<EnteringType> enteringTypes)
+        {
+            var currentEnteringsResult = await _supabaseClient
+                .From<Entering>()
+                .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                .Filter(nameof(Entering.EnteringType), Operator.In, enteringTypes.Select(type => (int)type).ToList())
+                .Get();
+
+            return currentEnteringsResult.Models;
+        }
+
+        public async Task SetMembersEntering(string departmentId, string eventId, string roleId, List<string> memberIds, EnteringType? type)
         {
             if(memberIds == null || !memberIds.Any())
-                return Task.CompletedTask;
+                return;
+
+            var distinctMemberIds = memberIds.Distinct().ToList();
+            var currentEnteringsResult = await _supabaseClient
+                .From<Entering>()
+                .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
+                .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
+                .Filter(nameof(Entering.MemberId), Operator.In, distinctMemberIds)
+                .Get();
+            var currentEnterings = currentEnteringsResult.Models.ToDictionary(entering => entering.MemberId, entering => (EnteringType?)entering.EnteringType);
 
             if (type == null)
             {
-                return _supabaseClient
+                await _supabaseClient
                     .From<Entering>()
                     .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
                     .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
                     .Filter(nameof(Entering.RoleId), Operator.Equals, roleId)
-                    .Filter(nameof(Entering.MemberId), Operator.In, memberIds)
+                    .Filter(nameof(Entering.MemberId), Operator.In, distinctMemberIds)
                     .Delete();
             }
             else
             {
-                return _supabaseClient.From<Entering>().Upsert(memberIds.Select(memberId => new Entering
+                await _supabaseClient.From<Entering>().Upsert(distinctMemberIds.Select(memberId => new Entering
                 {
                     DepartmentId = departmentId,
                     EventId = eventId,
@@ -316,15 +332,61 @@ namespace Api.Manager
                     EnteringType = type.Value
                 }).ToList());
             }
+
+            var changedMembersByStatus = distinctMemberIds
+                .Select(memberId => new
+                {
+                    MemberId = memberId,
+                    PreviousEnteringType = currentEnterings.TryGetValue(memberId, out var currentType) ? currentType : null,
+                    NewEnteringType = type
+                })
+                .Where(change => change.PreviousEnteringType != change.NewEnteringType)
+                .Select(change => new
+                {
+                    change.MemberId,
+                    PreviousStatus = ConvertToHelperStatus(change.PreviousEnteringType),
+                    NewStatus = ConvertToHelperStatus(change.NewEnteringType)
+                })
+                .Where(change => change.PreviousStatus.HasValue && change.NewStatus.HasValue)
+                .GroupBy(change => new { PreviousStatus = change.PreviousStatus!.Value, NewStatus = change.NewStatus!.Value })
+                .ToList();
+
+            var updateTasks = changedMembersByStatus.Select(changeGroup => UpdateChangedStatus(
+                departmentId,
+                eventId,
+                roleId,
+                changeGroup.Select(change => change.MemberId),
+                changeGroup.Key.PreviousStatus,
+                changeGroup.Key.NewStatus));
+            await Task.WhenAll(updateTasks);
         }
 
-        private Task RemoveMemberEnterings(string departmentId, string eventId)
+        private async Task RemoveMemberEnterings(string departmentId, string eventId)
         {
-            return _supabaseClient
+            var allEnteringsResult = await _supabaseClient
                 .From<Entering>()
                 .Filter(nameof(Entering.DepartmentId), Operator.Equals, departmentId)
                 .Filter(nameof(Entering.EventId), Operator.Equals, eventId)
-                .Delete();
+                .Get();
+
+            var removeTasks = allEnteringsResult.Models
+                .GroupBy(entering => entering.RoleId)
+                .Select(group => SetMembersEntering(departmentId, eventId, group.Key, group.Select(entering => entering.MemberId).Distinct().ToList(), null));
+            await Task.WhenAll(removeTasks);
+        }
+
+        private static HelperStatus? ConvertToHelperStatus(EnteringType? enteringType)
+        {
+            if (enteringType == null)
+                return HelperStatus.NotAvailable;
+
+            return enteringType.Value switch
+            {
+                EnteringType.Locked => HelperStatus.Locked,
+                EnteringType.Preselected => HelperStatus.Preselected,
+                EnteringType.Available => HelperStatus.Available,
+                _ => null
+            };
         }
 
         public async Task UpdateChangedStatus(string departmentId, string eventId, string roleId, IEnumerable<string> memberIds, HelperStatus previousStatus, HelperStatus newStatus)
@@ -361,7 +423,7 @@ namespace Api.Manager
             await _supabaseClient.From<HelperNotification>().Upsert(notification);
         }
 
-        public async Task CreateEventDeletionNotification(EventDTO @event, List<string> members)
+        private async Task CreateEventDeletionNotification(Event @event, List<string> members)
         {
             if (!members.Any())
                 return;
@@ -372,8 +434,8 @@ namespace Api.Manager
             {
                 DepartmentId = @event.DepartmentId,
                 EventId = @event.Id,
-                GroupName = group?.Name,
-                EventCategoryName = eventCategory?.Name,
+                Group = group?.Id,
+                EventCategory = eventCategory?.Id,
                 Date = @event.Date.UtcDateTime,
                 Members = members,
             };
@@ -381,7 +443,7 @@ namespace Api.Manager
             await _supabaseClient.From<DeletionNotification>().Insert(notification);
         }
 
-        public async Task CreateEventNotification(string departmentId, string eventId, DateTime previousDate, DateTime newDate, List<string> members)
+        private async Task CreateEventNotification(string departmentId, string eventId, DateTimeOffset previousDate, DateTimeOffset newDate, List<string> members)
         {
             var notification = new EventNotification
             {
@@ -417,7 +479,7 @@ namespace Api.Manager
                 var eventNotifications = eventNotificationsResult.Models;
                 var deletionNotifications = deletionNotificationsResult.Models;
 
-                var releventEvents = new Dictionary<string, EventDTO>();
+                var releventEvents = new Dictionary<string, Event>();
                 var relevantRoles = new Dictionary<string, Role>();
 
                 var requirementNotificationDict = new Dictionary<string, Dictionary<string, List<(string, HelperStatus, HelperStatus)>>>();
@@ -442,7 +504,7 @@ namespace Api.Manager
                     }
                 }
 
-                var eventNotificationDict = new Dictionary<string, List<(string, DateTime, DateTime)>>();
+                var eventNotificationDict = new Dictionary<string, List<(string, DateTimeOffset, DateTimeOffset)>>();
                 foreach (var notification in eventNotifications)
                 {
                     if (!releventEvents.ContainsKey(notification.EventId))
@@ -466,7 +528,7 @@ namespace Api.Manager
                     {
                         if (!deletionNotificationDict.ContainsKey(memberId))
                             deletionNotificationDict.Add(memberId, []);
-                        deletionNotificationDict[memberId].Add((notification.GroupName, notification.EventCategoryName, notification.Date));
+                        deletionNotificationDict[memberId].Add((notification.Group, notification.EventCategory, notification.Date));
                         if (requirementNotificationDict.ContainsKey(memberId))
                         {
                             foreach (var requirementNotificationsOfRole in requirementNotificationDict[memberId].Values)
@@ -481,8 +543,21 @@ namespace Api.Manager
                     }
                 }
 
-                var relevantGroups = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value?.GroupId)).Select(pair => _groupManager.GetById(department.Id, pair.Value.GroupId)));
-                var relevantEventCategories = await Task.WhenAll(releventEvents.Where(pair => !string.IsNullOrEmpty(pair.Value?.EventCategoryId)).Select(pair => _eventCategoryManager.GetById(department.Id, pair.Value.EventCategoryId)));
+                var relevantGroupIds = releventEvents
+                    .Where(pair => !string.IsNullOrEmpty(pair.Value?.GroupId))
+                    .Select(pair => pair.Value.GroupId)
+                    .Union(deletionNotifications.Where(notification => !string.IsNullOrEmpty(notification.Group)).Select(notification => notification.Group))
+                    .Distinct()
+                    .ToList();
+                var relevantEventCategoryIds = releventEvents
+                    .Where(pair => !string.IsNullOrEmpty(pair.Value?.EventCategoryId))
+                    .Select(pair => pair.Value.EventCategoryId)
+                    .Union(deletionNotifications.Where(notification => !string.IsNullOrEmpty(notification.EventCategory)).Select(notification => notification.EventCategory))
+                    .Distinct()
+                    .ToList();
+
+                var relevantGroups = await Task.WhenAll(relevantGroupIds.Select(groupId => _groupManager.GetById(department.Id, groupId)));
+                var relevantEventCategories = await Task.WhenAll(relevantEventCategoryIds.Select(eventCategoryId => _eventCategoryManager.GetById(department.Id, eventCategoryId)));
 
                 var emails = new List<TransactionalEmail>();
                 foreach(var memberId in requirementNotificationDict.Keys.Union(eventNotificationDict.Keys).Union(deletionNotificationDict.Keys).Distinct())
@@ -539,21 +614,19 @@ namespace Api.Manager
                     if(eventNotificationDict.ContainsKey(memberId))
                     {
                         text.Append("Verschiebungen:<br /><ul>");
-                        var changesText = new SortedList<DateTime, string>(Comparer<DateTime>.Create((a, b) => a == b ? 1 : a.CompareTo(b)));
+                        var changesText = new SortedList<DateTimeOffset, string>(Comparer<DateTimeOffset>.Create((a, b) => a == b ? 1 : a.CompareTo(b)));
                         foreach (var change in eventNotificationDict[memberId])
                         {
                             var @event = releventEvents.Values.First(e => e?.Id == change.Item1);
-                            var previousLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item2, timeZoneOfMember);
-                            var newLocalDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item3, timeZoneOfMember);
 
                             var group = string.IsNullOrEmpty(@event.GroupId) ? null : relevantGroups.FirstOrDefault(group => group.Id == @event.GroupId);
                             var eventCategory = string.IsNullOrEmpty(@event.EventCategoryId) ? null : relevantEventCategories.FirstOrDefault(eventCategory => eventCategory.Id == @event.EventCategoryId);
 
-                            var previousDateInfo = previousLocalDateTime.ToString("dd.MM.yyyy HH:mm");
-                            var newDateInfo = newLocalDateTime.ToString("dd.MM.yyyy HH:mm");
+                            var previousDateInfo = change.Item2.ToString("dd.MM.yyyy HH:mm");
+                            var newDateInfo = change.Item3.ToString("dd.MM.yyyy HH:mm");
                             var groupInfo = group == null ? "<i>Sonstiges</i>" : group.Name;
                             var eventCategoryInfo = eventCategory == null ? "<i>Sonstiges</i>" : eventCategory.Name;                            
-                            changesText.Add(previousLocalDateTime, $"<li><a href=\"https://einsatzplaner.net/{department.URL}/event/{@event.Id}\" target=\"_blank\">{groupInfo} - {eventCategoryInfo}:</a> {previousDateInfo} -> {newDateInfo}</li>");
+                            changesText.Add(change.Item2, $"<li><a href=\"https://einsatzplaner.net/{department.URL}/event/{@event.Id}\" target=\"_blank\">{groupInfo} - {eventCategoryInfo}:</a> {previousDateInfo} -> {newDateInfo}</li>");
                         }
                         text.AppendJoin(string.Empty, changesText.Values);
                         text.Append("</ul> <br /><br />");
@@ -567,9 +640,12 @@ namespace Api.Manager
                         {
                             var localDateTime = TimeZoneInfo.ConvertTimeFromUtc(change.Item3, timeZoneOfMember);
 
+                            var group = string.IsNullOrEmpty(change.Item1) ? null : relevantGroups.FirstOrDefault(group => group?.Id == change.Item1);
+                            var eventCategory = string.IsNullOrEmpty(change.Item2) ? null : relevantEventCategories.FirstOrDefault(eventCategory => eventCategory?.Id == change.Item2);
+
                             var dateInfo = localDateTime.ToString("dd.MM.yyyy HH:mm");
-                            var groupInfo = string.IsNullOrEmpty(change.Item1) ? "<i>Sonstiges</i>" : change.Item1;
-                            var eventCategoryInfo = string.IsNullOrEmpty(change.Item2) ? "<i>Sonstiges</i>" : change.Item2;
+                            var groupInfo = group == null ? "<i>Sonstiges</i>" : group.Name;
+                            var eventCategoryInfo = eventCategory == null ? "<i>Sonstiges</i>" : eventCategory.Name;
                             changesText.Add(localDateTime, $"<li>{groupInfo} - {eventCategoryInfo}: {dateInfo}</li>");
                         }
                         text.AppendJoin(string.Empty, changesText.Values);

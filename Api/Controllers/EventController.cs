@@ -1,4 +1,5 @@
-﻿using Api.Manager;
+﻿using Api.Converter;
+using Api.Manager;
 using DTO;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,15 +17,17 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        public Task<List<EventDTO>> GetAll(string departmentId)
+        public async Task<List<EventDTO>> GetAll(string departmentId)
         {
-            return _eventManager.GetAllEvents(departmentId, DateTime.MinValue, DateTime.MaxValue);
+            var events = await _eventManager.GetAllEvents(departmentId, DateTime.MinValue, DateTime.MaxValue);
+            return EventConverter.Convert(events, departmentId);
         }
 
         [HttpGet("{departmentId}/{eventId}")]
-        public Task<EventDTO> GetEvent(string departmentId, string eventId)
+        public async Task<EventDTO> GetEvent(string departmentId, string eventId)
         {
-            return _eventManager.GetEvent(departmentId, eventId);
+            var @event = await _eventManager.GetEvent(departmentId, eventId);
+            return EventConverter.Convert(@event, departmentId);
         }
 
         [HttpPost()]

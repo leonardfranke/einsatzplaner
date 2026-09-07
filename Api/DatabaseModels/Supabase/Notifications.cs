@@ -41,10 +41,10 @@ namespace Api.Models
         public string EventId { get; set; }
 
         [Column]
-        public DateTime? PreviousDate { get; set; }
+        public DateTimeOffset? PreviousDate { get; set; }
 
         [Column]
-        public DateTime? NewDate { get; set; }
+        public DateTimeOffset? NewDate { get; set; }
 
         [Column]
         public List<string> Members { get; set; } = new();
@@ -60,10 +60,10 @@ namespace Api.Models
         public string EventId { get; set; }
 
         [Column]
-        public string GroupName { get; set; }
+        public string Group { get; set; }
 
         [Column]
-        public string EventCategoryName { get; set; }
+        public string EventCategory { get; set; }
 
         [Column]
         public DateTime Date { get; set; }

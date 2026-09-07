@@ -5,8 +5,8 @@ namespace Api.Manager
 {
     public interface IEventManager
     {
-        public Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate);
-        public Task<EventDTO> GetEvent(string departmentId, string eventId);
+        public Task<List<Event>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate);
+        public Task<Event> GetEvent(string departmentId, string eventId);
         public Task<string> CreateEvent(UpdateEventDTO updateEventDTO);
         public Task UpdateEvent(UpdateEventDTO updateEventDTO);
         public Task DeleteEvent(string departmentId, string eventId);
@@ -19,9 +19,6 @@ namespace Api.Manager
         public IAsyncEnumerable<RequirementDTO> GetEnteredMemberRequirements(string departmentId, string memberId);
         public Task SetIsAvailable(string departmentId, string eventId, string helperId, string memberId, bool isAvailable);
         public Task SetMembersEntering(string departmentId, string eventId, string roleId, List<string> memberIds, EnteringType? type);
-        public Task UpdateChangedStatus(string departmentId, string eventId, string roleId, IEnumerable<string> memberIds, HelperStatus previousStatus, HelperStatus newStatus);
-        public Task CreateEventDeletionNotification(EventDTO @event, List<string> members);
-        public Task CreateEventNotification(string departmentId, string eventId, DateTime previousDate, DateTime newDate, List<string> members);
         public Task SendHelperNotifications();
         public Task<IEnumerable<StatDTO>> GetStats(string departmentId, string roleId, DateTime fromDate, DateTime toDate);
     }

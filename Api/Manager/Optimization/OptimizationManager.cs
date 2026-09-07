@@ -50,52 +50,6 @@ namespace Api.Manager
                 var task5 = _eventManager.SetMembersEntering(departmentId, requirement.EventId, requirement.RoleId, newFillMembers, EnteringType.Recommended);
                 await Task.WhenAll(task1, task2, task3, task4, task5);
             }
-
-            var updateTasks = new List<Task>();
-            foreach (var (requirement, update) in optimizerDict)
-            {
-                var newLockedMembers = update.LockedMembers;
-                var newPreselectedMembers = update.PreselectedMembers;
-                var newAvailableMembers = update.AvailableMembers;
-
-                var oldLockedMembers = requirement.LockedMembers;
-                var oldPreselectedMembers = requirement.PreselectedMembers;
-                var oldAvailableMembers = requirement.AvailableMembers;
-
-                var lockedMembersToAdd = newLockedMembers.Except(oldLockedMembers);
-                var preselectedMembersToAdd = newPreselectedMembers.Except(oldPreselectedMembers);
-                var availableMembersToAdd = newAvailableMembers.Except(oldAvailableMembers);
-
-                updateTasks.Add(_eventManager.UpdateChangedStatus(
-                    departmentId,
-                    requirement.EventId,
-                    requirement.RoleId,
-                    lockedMembersToAdd.Except(oldPreselectedMembers),
-                    Models.HelperStatus.Available,
-                    Models.HelperStatus.Locked));
-                updateTasks.Add(_eventManager.UpdateChangedStatus(
-                    departmentId,
-                    requirement.EventId,
-                    requirement.RoleId,
-                    lockedMembersToAdd.Except(oldAvailableMembers),
-                    Models.HelperStatus.Preselected,
-                    Models.HelperStatus.Locked));
-                updateTasks.Add(_eventManager.UpdateChangedStatus(
-                    departmentId,
-                    requirement.EventId,
-                    requirement.RoleId,
-                    preselectedMembersToAdd,
-                    Models.HelperStatus.Available,
-                    Models.HelperStatus.Preselected));
-                updateTasks.Add(_eventManager.UpdateChangedStatus(
-                    departmentId,
-                    requirement.EventId,
-                    requirement.RoleId,
-                    availableMembersToAdd,
-                    Models.HelperStatus.Preselected,
-                    Models.HelperStatus.Available));
-            }
-            await Task.WhenAll(updateTasks);
         }
     }
 }

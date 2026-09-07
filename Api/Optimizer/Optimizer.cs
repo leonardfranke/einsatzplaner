@@ -1,4 +1,5 @@
-﻿using DTO;
+﻿using Api.Models;
+using DTO;
 using Google.OrTools.Sat;
 using NuGet.Packaging;
 
@@ -14,7 +15,7 @@ namespace Optimizer
             public List<string> AvailableMembers { get; set; }
         }
 
-        public static Dictionary<RequirementDTO, OptimizedAssignments> OptimizeAssignments(List<EventDTO> allEvents, List<RequirementDTO> allRequirements, List<RoleDTO> roles, List<GroupDTO> groups, List<QualificationDTO> qualifications)
+        public static Dictionary<RequirementDTO, OptimizedAssignments> OptimizeAssignments(List<Event> allEvents, List<RequirementDTO> allRequirements, List<RoleDTO> roles, List<GroupDTO> groups, List<QualificationDTO> qualifications)
         {
             var eventsToOptimize = allEvents.Where(@event => @event.Date > DateTime.UtcNow);
             var requirementsToOptimize = allRequirements.Where(requirement => eventsToOptimize.Any(@event => @event.Id == requirement.EventId));
