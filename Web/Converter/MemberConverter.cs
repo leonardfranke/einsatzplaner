@@ -20,7 +20,8 @@ namespace Web.Converter
                 Id = member.Id,
                 Name = member.Name,
                 IsAdmin = member.IsAdmin,
-                IsDummy = member.IsDummy
+                IsDummy = member.IsDummy,
+                CreatedAt = member.CreatedAt
             };
         }
     }

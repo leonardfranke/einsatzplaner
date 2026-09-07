@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public bool IsAdmin { get; set; }
         public bool IsDummy { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }

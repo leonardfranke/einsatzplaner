@@ -23,5 +23,8 @@ namespace Api.Models
 
         [Column()]
         public bool EmailNotificationActive { get; set; }
+
+        [Column(ignoreOnInsert: true, ignoreOnUpdate: true)]
+        public DateTimeOffset CreatedAt { get; set; }
     }
 }

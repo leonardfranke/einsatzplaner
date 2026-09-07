@@ -65,7 +65,7 @@ namespace Api.Manager
 
         public async Task<MemberDTO> GetMember(string departmentId, string memberId)
         {
-            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId && member.Id == memberId).Single();            
+            var res = await _supabaseClient.From<Member>().Where(member => member.DepartmentId == departmentId && member.Id == memberId).Single();
             return MemberConverter.Convert(res);
         }
 

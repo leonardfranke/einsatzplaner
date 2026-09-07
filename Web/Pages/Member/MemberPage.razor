@@ -17,11 +17,13 @@
     </ColGroup>
     <HeaderContent>
         <MudTh>Name</MudTh>
+        <MudTh>Registrierung</MudTh>
         <MudTh>Administrator</MudTh>
         <MudTh></MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd>@context.GetMemberName()</MudTd>
+        <MudTd>@context.CreatedAt.ToString("dd.MM.yyyy HH:mm")</MudTd>
         <MudTd><MudCheckBox Disabled Value="context.IsAdmin"/></MudTd>
         <MudTd></MudTd>
     </RowTemplate>

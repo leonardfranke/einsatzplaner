@@ -20,7 +20,8 @@ namespace Api.Converter
                 Name = member.Name,
                 IsAdmin = member.IsAdmin,
                 EmailNotificationActive = member.EmailNotificationActive,
-                IsDummy = member.IsDummy
+                IsDummy = member.IsDummy,
+                CreatedAt = member.CreatedAt
             };
         }
     }
