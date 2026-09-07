@@ -1,8 +1,6 @@
-ï»¿using Api.Converter;
-using Api.FirestoreModels;
+using Api.Converter;
 using Api.Models;
 using DTO;
-using Google.Cloud.Firestore;
 using Mailjet.Client;
 using Mailjet.Client.TransactionalEmails;
 using Supabase;
@@ -14,7 +12,6 @@ namespace Api.Manager
     public class EventManager : IEventManager
     {
         private Client _supabaseClient;
-        private FirestoreDb _firestoreDb;
         private IMailjetClient _mailjetClient;
         private IGroupManager _groupManager;
         private IRoleManager _roleManager;
@@ -23,9 +20,8 @@ namespace Api.Manager
         private IEventCategoryManager _eventCategoryManager;
         private IUserManager _userManager;
 
-        public EventManager(FirestoreDb firestoreDb, IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager, IUserManager userManager, Client supabaseClient)
+        public EventManager(IMailjetClient mailjetClient, IGroupManager groupManager, IRoleManager roleManager, IDepartmentManager departmentManager, IMemberManager memberManager, IEventCategoryManager eventCategoryManager, IUserManager userManager, Client supabaseClient)
         {
-            _firestoreDb = firestoreDb;
             _groupManager = groupManager;
             _roleManager = roleManager;
             _mailjetClient = mailjetClient;
@@ -146,18 +142,20 @@ namespace Api.Manager
                 .Delete();
         }
 
-        public Task DeleteEvent(string departmentId, string eventId)
+        public async Task DeleteEvent(string departmentId, string eventId)
         {
-            return _supabaseClient
+            var @event = await GetEvent(departmentId, eventId);
+            var requirements = await GetRequirements(departmentId, eventId, null).ToListAsync();
+            var allInvolvedMembers = requirements.SelectMany(requirement => requirement.LockedMembers.Union(requirement.PreselectedMembers)).Distinct().ToList();
+
+            await _supabaseClient
                 .From<Event>()
                 .Filter(nameof(Event.DepartmentId), Operator.Equals, departmentId)
                 .Filter(nameof(Event.Id), Operator.Equals, eventId)
                 .Delete();
 
-            //TODO Save notifications
-            //var requirements = await GetRequirementsOfEvent(departmentId, eventId);
-            //var allInvolvedMembers = requirements.SelectMany(requirement => requirement.LockedMembers.Union(requirement.PreselectedMembers)).Distinct().ToList();
-            //.ContinueWith(task => CreateEventDeletionNotification(@event, allInvolvedMembers), TaskContinuationOptions.NotOnFaulted).Unwrap();
+            if (@event != null)
+                await CreateEventDeletionNotification(@event, allInvolvedMembers);
         }
 
         public async Task<List<EventDTO>> GetAllEvents(string departmentId, DateTime fromDate, DateTime toDate)
@@ -334,38 +332,33 @@ namespace Api.Manager
             if (!memberIds.Any())
                 return;
 
-            var notificationCollection = GetNotificationsReference(departmentId);
+            var notification = await _supabaseClient
+                .From<HelperNotification>()
+                .Filter(nameof(HelperNotification.DepartmentId), Operator.Equals, departmentId)
+                .Filter(nameof(HelperNotification.EventId), Operator.Equals, eventId)
+                .Filter(nameof(HelperNotification.RoleId), Operator.Equals, roleId)
+                .Single();
 
-            var notificationSnapshots = await notificationCollection
-                .WhereEqualTo(nameof(HelperNotification.EventId), eventId)
-                .WhereEqualTo(nameof(HelperNotification.RoleId), roleId).GetSnapshotAsync();
-            var notificationSnapshot = notificationSnapshots?.FirstOrDefault();
-            var notificationReference = notificationSnapshot?.Reference;
-
-            var previousStatusDb = new Dictionary<string, HelperStatus>();
-            if (notificationSnapshot != null)
+            if (notification == null)
             {
-                var notification = notificationSnapshot.ConvertTo<HelperNotification>();
-                previousStatusDb = notification.PreviousStatus;
-            }
-
-            var updates = new Dictionary<string, object>();
-            if (notificationReference == null)
-            {
-                notificationReference = notificationCollection.Document();
-                await notificationReference.CreateAsync(new HelperNotification
+                notification = new HelperNotification
                 {
+                    DepartmentId = departmentId,
                     EventId = eventId,
-                    RoleId = roleId
-                });
+                    RoleId = roleId,
+                    PreviousStatus = new Dictionary<string, HelperStatus>(),
+                    NewStatus = new Dictionary<string, HelperStatus>()
+                };
             }
+
             foreach (var memberId in memberIds)
             {
-                if (!previousStatusDb.ContainsKey(memberId))
-                    updates.Add($"{nameof(HelperNotification.PreviousStatus)}.{memberId}", previousStatus);
-                updates.Add($"{nameof(HelperNotification.NewStatus)}.{memberId}", newStatus);
+                if (!notification.PreviousStatus.ContainsKey(memberId))
+                    notification.PreviousStatus[memberId] = previousStatus;
+                notification.NewStatus[memberId] = newStatus;
             }
-            await notificationReference.UpdateAsync(updates);
+
+            await _supabaseClient.From<HelperNotification>().Upsert(notification);
         }
 
         public async Task CreateEventDeletionNotification(EventDTO @event, List<string> members)
@@ -377,6 +370,7 @@ namespace Api.Manager
             var eventCategory = await _eventCategoryManager.GetById(@event.DepartmentId, @event.EventCategoryId);
             var notification = new DeletionNotification
             {
+                DepartmentId = @event.DepartmentId,
                 EventId = @event.Id,
                 GroupName = group?.Name,
                 EventCategoryName = eventCategory?.Name,
@@ -384,22 +378,21 @@ namespace Api.Manager
                 Members = members,
             };
             
-            var deletionReference = GetDeletionNotificationsReference(@event.DepartmentId).Document();
-            await deletionReference.CreateAsync(notification);
+            await _supabaseClient.From<DeletionNotification>().Insert(notification);
         }
 
         public async Task CreateEventNotification(string departmentId, string eventId, DateTime previousDate, DateTime newDate, List<string> members)
         {
             var notification = new EventNotification
             {
+                DepartmentId = departmentId,
                 EventId = eventId,
                 PreviousDate = previousDate,
                 NewDate = newDate,
                 Members = members
             };
 
-            var notificationReference = GetEventNotificationsReference(departmentId).Document();
-            await notificationReference.CreateAsync(notification);
+            await _supabaseClient.From<EventNotification>().Insert(notification);
         }
 
         public async Task SendHelperNotifications()
@@ -407,17 +400,29 @@ namespace Api.Manager
             var departments = await _departmentManager.GetAll();
             foreach(var department in departments)
             {
-                var requirementNotificationSnapshots = await GetNotificationsReference(department.Id).GetSnapshotAsync();
-                var eventNotificationSnapshots = await GetEventNotificationsReference(department.Id).GetSnapshotAsync();
-                var deletionNotificationSnapshots = await GetDeletionNotificationsReference(department.Id).GetSnapshotAsync();
+                var requirementNotificationsResult = await _supabaseClient
+                    .From<HelperNotification>()
+                    .Filter(nameof(HelperNotification.DepartmentId), Operator.Equals, department.Id)
+                    .Get();
+                var eventNotificationsResult = await _supabaseClient
+                    .From<EventNotification>()
+                    .Filter(nameof(EventNotification.DepartmentId), Operator.Equals, department.Id)
+                    .Get();
+                var deletionNotificationsResult = await _supabaseClient
+                    .From<DeletionNotification>()
+                    .Filter(nameof(DeletionNotification.DepartmentId), Operator.Equals, department.Id)
+                    .Get();
+
+                var requirementNotifications = requirementNotificationsResult.Models;
+                var eventNotifications = eventNotificationsResult.Models;
+                var deletionNotifications = deletionNotificationsResult.Models;
 
                 var releventEvents = new Dictionary<string, EventDTO>();
                 var relevantRoles = new Dictionary<string, Role>();
 
                 var requirementNotificationDict = new Dictionary<string, Dictionary<string, List<(string, HelperStatus, HelperStatus)>>>();
-                foreach (var snapshot in requirementNotificationSnapshots)
+                foreach (var notification in requirementNotifications)
                 {
-                    var notification = snapshot.ConvertTo<HelperNotification>();
                     if (!releventEvents.ContainsKey(notification.EventId))
                         releventEvents[notification.EventId] = await GetEvent(department.Id, notification.EventId);
                     if (releventEvents[notification.EventId] == null)
@@ -438,9 +443,8 @@ namespace Api.Manager
                 }
 
                 var eventNotificationDict = new Dictionary<string, List<(string, DateTime, DateTime)>>();
-                foreach (var snapshot in eventNotificationSnapshots)
+                foreach (var notification in eventNotifications)
                 {
-                    var notification = snapshot.ConvertTo<EventNotification>();
                     if (!releventEvents.ContainsKey(notification.EventId))
                         releventEvents[notification.EventId] = await GetEvent(department.Id, notification.EventId);
                     if (releventEvents[notification.EventId] == null)
@@ -456,9 +460,8 @@ namespace Api.Manager
                 }
 
                 var deletionNotificationDict = new Dictionary<string, List<(string, string, DateTime)>>();
-                foreach (var snapshot in deletionNotificationSnapshots)
+                foreach (var notification in deletionNotifications)
                 {
-                    var notification = snapshot.ConvertTo<DeletionNotification>();
                     foreach (var memberId in notification.Members)
                     {
                         if (!deletionNotificationDict.ContainsKey(memberId))
@@ -466,9 +469,9 @@ namespace Api.Manager
                         deletionNotificationDict[memberId].Add((notification.GroupName, notification.EventCategoryName, notification.Date));
                         if (requirementNotificationDict.ContainsKey(memberId))
                         {
-                            foreach (var requirementNotifications in requirementNotificationDict[memberId].Values)
+                            foreach (var requirementNotificationsOfRole in requirementNotificationDict[memberId].Values)
                             {
-                                requirementNotifications.RemoveAll(reqNotif => reqNotif.Item1 == notification.EventId);
+                                requirementNotificationsOfRole.RemoveAll(reqNotif => reqNotif.Item1 == notification.EventId);
                             }
                         }
                         if (eventNotificationDict.ContainsKey(memberId))
@@ -495,9 +498,9 @@ namespace Api.Manager
                     var emailBuilder = new TransactionalEmailBuilder()
                         .WithFrom(new SendContact("noreply@einsatzplaner.net", "Einsatzplaner"))
                         .WithTo(new SendContact(user.Email, user.Name))
-                        .WithSubject("Ã„nderungen Einsatzplaner")
+                        .WithSubject("Änderungen Einsatzplaner")
                         .WithBcc(new SendContact("leonard.franke@t-online.de"));
-                    var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Ã„nderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
+                    var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
                     
                     if(requirementNotificationDict.ContainsKey(memberId))
                     {
@@ -520,11 +523,11 @@ namespace Api.Manager
                                 var helperStatusInfo = (change.Item2, change.Item3) switch
                                 {
                                     (_, HelperStatus.Locked) => "Fest eingeplant",
-                                    (_, HelperStatus.Preselected) => "VorausgewÃ¤hlt",
-                                    (_, HelperStatus.Available) => "VerfÃ¼gbar",
+                                    (_, HelperStatus.Preselected) => "Vorausgewählt",
+                                    (_, HelperStatus.Available) => "Verfügbar",
                                     (_, HelperStatus.NotAvailable) => "Eintragung entfernt",
                                     (_, HelperStatus.RequirementDeleted) => "Bedarf an dieser Rolle entfernt",
-                                    _ => "<i>Unbekannte Ã„nderung</i>"
+                                    _ => "<i>Unbekannte Änderung</i>"
                                 };
                                 changesText.Add(localDateTime, $"<li><a href=\"https://einsatzplaner.net/{department.URL}/event/{@event.Id}\" target=\"_blank\">{dateInfo} - {groupInfo} - {eventCategoryInfo}:</a> {helperStatusInfo}</li>");
                             }
@@ -594,9 +597,30 @@ namespace Api.Manager
                     }
                 }
 
-                await Task.WhenAll(requirementNotificationSnapshots.Select(notification => notification.Reference.DeleteAsync()));
-                await Task.WhenAll(eventNotificationSnapshots.Select(notification => notification.Reference.DeleteAsync()));
-                await Task.WhenAll(deletionNotificationSnapshots.Select(notification => notification.Reference.DeleteAsync()));
+                if (requirementNotifications.Any())
+                {
+                    await _supabaseClient
+                        .From<HelperNotification>()
+                        .Filter(nameof(HelperNotification.DepartmentId), Operator.Equals, department.Id)
+                        .Filter(nameof(HelperNotification.EventId), Operator.In, requirementNotifications.Select(n => n.EventId).Distinct().ToList())
+                        .Delete();
+                }
+                if (eventNotifications.Any())
+                {
+                    await _supabaseClient
+                        .From<EventNotification>()
+                        .Filter(nameof(EventNotification.DepartmentId), Operator.Equals, department.Id)
+                        .Filter(nameof(EventNotification.EventId), Operator.In, eventNotifications.Select(n => n.EventId).Distinct().ToList())
+                        .Delete();
+                }
+                if (deletionNotifications.Any())
+                {
+                    await _supabaseClient
+                        .From<DeletionNotification>()
+                        .Filter(nameof(DeletionNotification.DepartmentId), Operator.Equals, department.Id)
+                        .Filter(nameof(DeletionNotification.EventId), Operator.In, deletionNotifications.Select(n => n.EventId).Distinct().ToList())
+                        .Delete();
+                }
             }
         }
 
@@ -629,26 +653,6 @@ namespace Api.Manager
                 countsTotal.GetValueOrDefault(memberId, 0), 
                 countsRecommendations.GetValueOrDefault(memberId, 0)));
             return counts;
-        }
-
-        private DocumentReference GetDepartmentReference(string departmentId)
-        {
-            return _firestoreDb.Collection(Paths.DEPARTMENT).Document(departmentId);
-        }
-
-        private CollectionReference GetNotificationsReference(string departmentId)
-        {
-            return GetDepartmentReference(departmentId).Collection(Paths.HelperNotification);
-        }
-
-        private CollectionReference GetDeletionNotificationsReference(string departmentId)
-        {
-            return GetDepartmentReference(departmentId).Collection(Paths.DeletionNotification);
-        }
-
-        private CollectionReference GetEventNotificationsReference(string departmentId)
-        {
-            return GetDepartmentReference(departmentId).Collection(Paths.EventNotification);
         }
     }
 }
