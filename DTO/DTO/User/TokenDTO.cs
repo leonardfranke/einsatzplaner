@@ -12,6 +12,7 @@
             EmailAlreadyExists,
             EmailNotFound,
             UserDisabled,
+            WeakPassword,
             Unknown
         }
     }

@@ -43,6 +43,8 @@ namespace Web.Manager
                     throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.EmailNotFound };
                 else if (tokenDTO.Error == TokenDTO.AuthError.UserDisabled)
                     throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.UserDisabled };
+                else if (tokenDTO.Error == TokenDTO.AuthError.WeakPassword)
+                    throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.WeakPassword };
                 else //if (tokenDTO.Error == TokenDTO.AuthError.Unknown)
                     throw new IAuthManager.AuthException() { Error = IAuthManager.AuthException.AuthError.Unknown };
             }

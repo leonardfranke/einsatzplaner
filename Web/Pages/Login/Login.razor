@@ -7,50 +7,56 @@
         <div class="container">
             <ul class="nav nav-pills justify-content-center" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="login" data-bs-toggle="tab" data-bs-target="#login-pane" type="button" role="tab">Einloggen</button>
+                    <button class="nav-link @(!IsRegisterTabActive ? "active" : null)" id="login" type="button" role="tab" @onclick="SetLoginTab">Einloggen</button>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link disabled" aria-disabled="true">oder</a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="register" data-bs-toggle="tab" data-bs-target="#register-pane" data-testid="registrieren-tab" type="button" role="tab">Registrieren</button>
+                    <button class="nav-link @(IsRegisterTabActive ? "active" : null)" id="register" data-testid="registrieren-tab" type="button" role="tab" @onclick="SetRegisterTab">Registrieren</button>
                 </li>
             </ul>
             <div class="tab-content mt-5" id="myTabContent">
-                <div class="tab-pane fade show active" id="login-pane" role="tabpanel" tabindex="0">
+                <div class="tab-pane fade @(!IsRegisterTabActive ? "show active" : null)" id="login-pane" role="tabpanel" tabindex="0">
                     <EditForm EditContext="@EditContextLogin" Context="editContext">
                         <div class="mb-3">
                             <label for="emailLogin" class="form-label">E-Mail-Adresse</label>
                             <InputText @bind-Value="@LoginData.Email" type="email" class="form-control" id="emailLogin" aria-describedby="emailHelp" />
+                            <ValidationMessage For="() => LoginData.Email" />
                         </div>
                         <div class="mb-3">
                             <label for="passwordLogin" class="form-label">Passwort</label>
                             <InputText @bind-Value="@LoginData.Password" type="password" class="form-control" id="passwordLogin" />
+                            <ValidationMessage For="() => LoginData.Password" />
                         </div>
-                        <a class="btn btn-link mb-2" onclick="@ForgotPassword">Password vergessen?</a>
+                        <a class="btn btn-link mb-2" @onclick="ForgotPassword">Password vergessen?</a>
                         <br/>
                         <BlazorBootstrap.Button @onclick="SubmitLogin" Loading="@AuthLoading" LoadingText="Einloggen" Color="BlazorBootstrap.ButtonColor.Primary">Einloggen</BlazorBootstrap.Button>
                     </EditForm>
                 </div>
-                <div class="tab-pane fade" id="register-pane" role="tabpanel" tabindex="0">
-                    <EditForm EditContext="@EditContextLogin" Context="editContext">
+                <div class="tab-pane fade @(IsRegisterTabActive ? "show active" : null)" id="register-pane" role="tabpanel" tabindex="0">
+                    <EditForm EditContext="@EditContextRegister" Context="editContext">
                         <div class="row mb-3">
                             <div class="col">
                                 <label for="surname" class="form-label">Vorname</label>
                                 <InputText @bind-Value="@RegisterData.FirstName" data-testid="registrieren-firstname" class="form-control" id="surname" aria-describedby="emailHelp" />
+                                <ValidationMessage For="() => RegisterData.FirstName" />
                             </div>
                             <div class="col">
                                 <label for="lastname" class="form-label">Nachname</label>
                                 <InputText @bind-Value="@RegisterData.LastName" data-testid="registrieren-lastname" class="form-control" id="lastname" aria-describedby="emailHelp" />
+                                <ValidationMessage For="() => RegisterData.LastName" />
                             </div>
                         </div>
                         <div class="mb-3">
                             <label for="emailRegistration" class="form-label">E-Mail-Adresse</label>
                             <InputText @bind-Value="@RegisterData.Email" data-testid="registrieren-email" type="email" class="form-control" id="emailRegistration" aria-describedby="emailHelp" />
+                            <ValidationMessage For="() => RegisterData.Email" />
                         </div>
                         <div class="mb-3">
                             <label for="passwordRegistration" class="form-label">Passwort</label>
                             <InputText @bind-Value="@RegisterData.Password" data-testid="registrieren-password" type="password" class="form-control" id="passwordRegistration" />
+                            <ValidationMessage For="() => RegisterData.Password" />
                         </div>
                         <BlazorBootstrap.Button data-testid="registrieren-send" @onclick="SubmitRegister" Loading="@AuthLoading" LoadingText="Registrieren" Color="BlazorBootstrap.ButtonColor.Primary">Registrieren</BlazorBootstrap.Button>
                     </EditForm>

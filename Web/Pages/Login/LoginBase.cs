@@ -35,6 +35,7 @@ namespace Web.Pages
         public EditContext EditContextRegister { get; set; }
 
         public bool AuthLoading { get; set; }
+        public bool IsRegisterTabActive { get; set; }
 
         [SupplyParameterFromForm]
         public LoginModel LoginData { get; set; }
@@ -119,22 +120,47 @@ namespace Web.Pages
 
         public async Task SubmitLogin()
         {
+            if (!EditContextLogin.Validate())
+                return;
+
             AuthLoading = true;
-            if (await LoginUser())
+            try
             {
-                NavigationManager.TryNavigateToReturnUrl();
+                if (await LoginUser())
+                    NavigationManager.TryNavigateToReturnUrl();
             }
-            AuthLoading = false;
+            finally
+            {
+                AuthLoading = false;
+            }
         }
 
         public async Task SubmitRegister()
         {
+            IsRegisterTabActive = true;
+            if (!EditContextRegister.Validate())
+                return;
+
             AuthLoading = true;
-            if (await RegisterUser())
+            try
             {
-                NavigationManager.TryNavigateToReturnUrl();
+                if (await RegisterUser())
+                    NavigationManager.TryNavigateToReturnUrl();
             }
-            AuthLoading = false;
+            finally
+            {
+                AuthLoading = false;
+            }
+        }
+
+        public void SetLoginTab()
+        {
+            IsRegisterTabActive = false;
+        }
+
+        public void SetRegisterTab()
+        {
+            IsRegisterTabActive = true;
         }
 
         public void SignOut()
@@ -159,7 +185,7 @@ namespace Web.Pages
                     AuthException.AuthError.UserDisabled => "Das Benutzerkonto wurde deaktiviert.",
                     _ => "Unbekannter Fehler"
                 };
-                _toastService.Notify(new ToastMessage(ToastType.Warning, "Registrierung fehlgeschlagen", message));
+                _toastService.Notify(new ToastMessage(ToastType.Warning, "Login fehlgeschlagen", message));
                 return false;
             }
         }
@@ -176,9 +202,10 @@ namespace Web.Pages
                 var message = ex.Error switch
                 {
                     AuthException.AuthError.EmailAlreadyExists => "Die E-Mail-Adresse ist bereits registriert.",
+                    AuthException.AuthError.WeakPassword => "Das Passwort muss mindestens 6 Zeichen lang sein.",
                     _ => "Unbekannter Fehler"
                 };
-                _toastService.Notify(new ToastMessage(ToastType.Warning, "Login fehlgeschlagen", message));
+                _toastService.Notify(new ToastMessage(ToastType.Warning, "Registrierung fehlgeschlagen", message));
                 return false;
             }
         }

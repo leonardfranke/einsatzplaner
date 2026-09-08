@@ -25,6 +25,7 @@ namespace Web.Manager
                 EmailAlreadyExists,
                 EmailNotFound,
                 UserDisabled,
+                WeakPassword,
                 Unknown
             }
         }

@@ -126,7 +126,15 @@ namespace Api.Manager
                     return new TokenDTO { Error = TokenDTO.AuthError.EmailAlreadyExists };
                 else
                     return new TokenDTO { Error = TokenDTO.AuthError.Unknown };
-            }            
+            }
+            catch (ArgumentException argExp)
+            {
+                return new TokenDTO { Error = TokenDTO.AuthError.WeakPassword };
+            }
+            catch
+            {
+                return new TokenDTO { Error = TokenDTO.AuthError.Unknown };
+            }
         }
     }
 }
