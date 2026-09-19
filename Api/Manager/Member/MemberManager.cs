@@ -37,6 +37,7 @@ namespace Api.Manager
         {
             var newMember = new Member
             {
+                Id = Guid.NewGuid().ToString(),
                 DepartmentId = departmentId,
                 Name = "Dummy-Nutzer",
                 IsAdmin = false,
