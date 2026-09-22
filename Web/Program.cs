@@ -43,6 +43,7 @@ builder.Services.AddScoped<IQualificationService, QualificationService>();
 builder.Services.AddScoped<IRequirementGroupService, RequirementsGroupService>();
 builder.Services.AddScoped<ILoginCheck, LoginCheck>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<ICalendarService, CalendarService>();
 builder.Services.AddScoped<ILocationsService, LocationsService>();
 builder.Services.AddScoped<IUserRepository, FileUserRepository>(serviceProvider => new FileUserRepository("localUser"));
 

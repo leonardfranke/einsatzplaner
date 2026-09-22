@@ -1,0 +1,21 @@
+﻿@page "/{departmentUrl}/settings"
+@inherits SettingsPageBase
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6">Kalender (ICS)</MudText>
+    <MudText Typo="Typo.body2" Class="mb-4">Abonniere deinen Einsatzkalender per persönlicher URL.</MudText>
+
+    @if (!string.IsNullOrEmpty(CalendarUrl))
+    {
+        <MudTextField T="string" Label="Kalender-URL" Value="CalendarUrl" ReadOnly="true" FullWidth="true" OnAdornmentClick="CopyToClipboard" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.ContentCopy" />
+        <MudStack Row Spacing="2" Class="mt-3">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="IsCalendarLoading" OnClick="GenerateCalendarToken">URL neu erstellen</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="IsCalendarLoading" OnClick="InvalidateCalendarToken">URL invalidieren</MudButton>
+        </MudStack>
+    }
+    else
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">Es ist aktuell kein Kalender-Token vorhanden.</MudAlert>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="IsCalendarLoading" Class="mt-3" OnClick="GenerateCalendarToken">URL generieren</MudButton>
+    }
+</MudPaper>

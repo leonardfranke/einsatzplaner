@@ -1,5 +1,6 @@
-﻿
-using Api.Manager;
+﻿using Api.Manager;
+using Api.Manager.Calendar;
+using DTO;
 using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
@@ -12,28 +13,76 @@ namespace Api.Controllers
     [ApiController]
     public class CalendarController : ControllerBase
     {
-        private IEventManager _eventManager;
-        private ILocationManager _locationManager;
-        private IGroupManager _groupManager;
-        private IRoleManager _roleManager;
-        private IDepartmentManager _departmentManager;
+        private readonly IEventManager _eventManager;
+        private readonly ILocationManager _locationManager;
+        private readonly IGroupManager _groupManager;
+        private readonly IRoleManager _roleManager;
+        private readonly IDepartmentManager _departmentManager;
+        private readonly ICalendarManager _calendarManager;
 
-        public CalendarController(IDepartmentManager departmentManager, IEventManager eventManager, ILocationManager locationManager, IGroupManager groupManager, IRoleManager roleManager)
+        public CalendarController(
+            IDepartmentManager departmentManager,
+            IEventManager eventManager,
+            ILocationManager locationManager,
+            IGroupManager groupManager,
+            IRoleManager roleManager,
+            ICalendarManager calendarManager)
         {
             _eventManager = eventManager;
             _locationManager = locationManager;
             _groupManager = groupManager;
             _roleManager = roleManager;
             _departmentManager = departmentManager;
+            _calendarManager = calendarManager;
         }
 
-        [HttpGet("{departmentId}/{memberId}")]
-        public async Task<IActionResult> GetCalendar([FromRoute] string departmentId, [FromRoute] string memberId)
+        [HttpGet("token/{departmentId}/{memberId}")]
+        public async Task<CalendarTokenDTO> GetToken([FromRoute] string departmentId, [FromRoute] string memberId)
+        {
+            var token = await _calendarManager.GetToken(departmentId, memberId);
+            return BuildTokenDTO(departmentId, token);
+        }
+
+        [HttpPost("token/{departmentId}/{memberId}")]
+        public async Task<CalendarTokenDTO> GenerateToken([FromRoute] string departmentId, [FromRoute] string memberId)
+        {
+            var token = await _calendarManager.GenerateToken(departmentId, memberId);
+            return BuildTokenDTO(departmentId, token);
+        }
+
+        private CalendarTokenDTO BuildTokenDTO(string departmentId, string? token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return new CalendarTokenDTO();
+
+            return new CalendarTokenDTO
+            {
+                Url = $"{Request.Scheme}://{Request.Host}/api/Calendar/{token}"
+            };
+        }
+
+        [HttpDelete("token/{departmentId}/{memberId}")]
+        public Task InvalidateToken([FromRoute] string departmentId, [FromRoute] string memberId)
+        {
+            return _calendarManager.InvalidateToken(departmentId, memberId);
+        }
+
+        [HttpGet("{token}")]
+        public async Task<IActionResult> GetCalendar([FromRoute] string token)
+        {
+            var (departmentId, memberId) = await _calendarManager.GetIdsByToken(token);
+            if (string.IsNullOrEmpty(departmentId) || string.IsNullOrEmpty(memberId))
+                return NotFound();
+
+            return await BuildCalendarFile(departmentId, memberId);
+        }
+
+        private async Task<IActionResult> BuildCalendarFile(string departmentId, string memberId)
         {
             var department = await _departmentManager.GetById(departmentId);
             var memberRequirements = _eventManager.GetEnteredMemberRequirements(departmentId, memberId);
             var calendar = new Calendar();
-            await foreach(var requirement in memberRequirements)
+            await foreach (var requirement in memberRequirements)
             {
                 var @event = await _eventManager.GetEvent(departmentId, requirement.EventId);
                 var role = await _roleManager.GetRole(departmentId, requirement.RoleId);
@@ -45,13 +94,13 @@ namespace Api.Controllers
                     Summary = role.Name + " " + group?.Name,
                     Uid = @event.Id
                 };
-                if(!string.IsNullOrEmpty(@event.LocationId))
+                if (!string.IsNullOrEmpty(@event.LocationId))
                 {
                     var location = await _locationManager.GetById(departmentId, @event.LocationId);
                     calendarEvent.GeographicLocation = new GeographicLocation(location.Latitude, location.Longitude);
                     calendarEvent.Location = location.Name;
                 }
-                else if(@event.LocationLatitude.HasValue && @event.LocationLongitude.HasValue)
+                else if (@event.LocationLatitude.HasValue && @event.LocationLongitude.HasValue)
                 {
                     calendarEvent.GeographicLocation = new GeographicLocation(@event.LocationLatitude.Value, @event.LocationLongitude.Value);
                     calendarEvent.Location = @event.LocationText;

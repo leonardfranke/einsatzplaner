@@ -1,6 +1,7 @@
 using Api.DataMigrations;
 using Api.Mailjet;
 using Api.Manager;
+using Api.Manager.Calendar;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
@@ -76,7 +77,7 @@ var supebaseOptions = new SupabaseOptions
 };
 var client = new Client(supabaseUrl, supabaseKey, supebaseOptions);
 await client.InitializeAsync();
-builder.Services.AddSingleton(serviceProvicer => client);
+builder.Services.AddSingleton(serviceProvider => client);
 
 builder.Services.AddSingleton<IUserManager, UserManager>();
 builder.Services.AddSingleton<IRequirementGroupManager, RequirementGroupManager>();
@@ -89,6 +90,7 @@ builder.Services.AddSingleton<IMemberManager, MemberManager>();
 builder.Services.AddSingleton<IEventManager, EventManager>();
 builder.Services.AddSingleton<IOptimizationManager, OptimizationManager>();
 builder.Services.AddSingleton<ILocationManager, LocationManager>();
+builder.Services.AddSingleton<ICalendarManager, CalendarManager>();
 builder.Services.AddSingleton<Migration, Migration>();
 builder.Services.AddHttpClient();
 
