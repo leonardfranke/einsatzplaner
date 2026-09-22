@@ -1,4 +1,4 @@
-using Api.Converter;
+ï»¿using Api.Converter;
 using Api.Models;
 using DTO;
 using Mailjet.Client;
@@ -573,10 +573,9 @@ namespace Api.Manager
                     var emailBuilder = new TransactionalEmailBuilder()
                         .WithFrom(new SendContact("noreply@einsatzplaner.net", "Einsatzplaner"))
                         .WithTo(new SendContact(user.Email, user.Name))
-                        .WithSubject("Änderungen Einsatzplaner")
+                        .WithSubject("Ã„nderungen Einsatzplaner")
                         .WithBcc(new SendContact("leonard.franke@t-online.de"));
-                    var text = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body>");
-                    text.Append($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
+                    var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Ã„nderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
                     
                     if(requirementNotificationDict.ContainsKey(memberId))
                     {
@@ -599,11 +598,11 @@ namespace Api.Manager
                                 var helperStatusInfo = (change.Item2, change.Item3) switch
                                 {
                                     (_, HelperStatus.Locked) => "Fest eingeplant",
-                                    (_, HelperStatus.Preselected) => "Vorausgewählt",
-                                    (_, HelperStatus.Available) => "Verfügbar",
+                                    (_, HelperStatus.Preselected) => "VorausgewÃ¤hlt",
+                                    (_, HelperStatus.Available) => "VerfÃ¼gbar",
                                     (_, HelperStatus.NotAvailable) => "Eintragung entfernt",
                                     (_, HelperStatus.RequirementDeleted) => "Bedarf an dieser Rolle entfernt",
-                                    _ => "<i>Unbekannte Änderung</i>"
+                                    _ => "<i>Unbekannte Ã„nderung</i>"
                                 };
                                 changesText.Add(localDateTime, $"<li><a href=\"https://einsatzplaner.net/{department.URL}/event/{@event.Id}\" target=\"_blank\">{dateInfo} - {groupInfo} - {eventCategoryInfo}:</a> {helperStatusInfo}</li>");
                             }
@@ -653,7 +652,6 @@ namespace Api.Manager
                         text.Append("</ul> <br /><br />");
                     }
 
-                    text.Append("</body></html>");
                     emailBuilder.WithHtmlPart(text.ToString());
                     var email = emailBuilder.Build();
                     emails.Add(email);
