@@ -18,15 +18,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-using var http = new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
-var configFile = $"appsettings.json";
-using var response = await http.GetAsync(configFile);
-using var stream = await response.Content.ReadAsStreamAsync();
-var config = new ConfigurationBuilder()
-    .AddJsonStream(stream)
-    .Build();
-builder.Configuration.AddConfiguration(config);
-
 builder.Services.AddScoped<IDepartmentUrlCheck, DepartmentUrlCheck>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<AuthManager>();
