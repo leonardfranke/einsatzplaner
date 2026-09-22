@@ -106,7 +106,9 @@ namespace Api.Controllers
                     calendarEvent.Location = @event.LocationText;
                 }
                 calendarEvent.Categories = [role.Name];
-                calendarEvent.Url = new Uri($"https://einsatzplaner.net/{department.URL}/event/{@event.Id}");
+                var eventUri = new Uri($"https://einsatzplaner.net/{department.URL}/event/{@event.Id}");
+                calendarEvent.Url = eventUri;
+                calendarEvent.Description = eventUri.ToString();
                 calendar.Events.Add(calendarEvent);
             }
 
