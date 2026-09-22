@@ -575,7 +575,8 @@ namespace Api.Manager
                         .WithTo(new SendContact(user.Email, user.Name))
                         .WithSubject("Änderungen Einsatzplaner")
                         .WithBcc(new SendContact("leonard.franke@t-online.de"));
-                    var text = new StringBuilder($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
+                    var text = new StringBuilder("<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body>");
+                    text.Append($"Hallo {user.Name},<br /><br />folgende Änderungen wurden vom System oder den Administratoren im Einsatzplaner eingetragen:<br /><br />");
                     
                     if(requirementNotificationDict.ContainsKey(memberId))
                     {
@@ -652,6 +653,7 @@ namespace Api.Manager
                         text.Append("</ul> <br /><br />");
                     }
 
+                    text.Append("</body></html>");
                     emailBuilder.WithHtmlPart(text.ToString());
                     var email = emailBuilder.Build();
                     emails.Add(email);
