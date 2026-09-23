@@ -193,7 +193,7 @@ namespace Api.Manager
             var requirements = GetRequirements(departmentId, null, null);
             await foreach (var requirement in requirements)
             {
-                if(requirement.PreselectedMembers.Contains(memberId) || requirement.LockedMembers.Contains(memberId))
+                if(requirement.LockedMembers.Contains(memberId) || requirement.PreselectedMembers.Contains(memberId) || requirement.AvailableMembers.Contains(memberId))
                     yield return requirement;
             }
         }

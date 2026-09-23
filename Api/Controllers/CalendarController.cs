@@ -19,6 +19,7 @@ namespace Api.Controllers
         private readonly IRoleManager _roleManager;
         private readonly IDepartmentManager _departmentManager;
         private readonly ICalendarManager _calendarManager;
+        private readonly IEventCategoryManager _eventCategoryManager;
 
         public CalendarController(
             IDepartmentManager departmentManager,
@@ -26,7 +27,8 @@ namespace Api.Controllers
             ILocationManager locationManager,
             IGroupManager groupManager,
             IRoleManager roleManager,
-            ICalendarManager calendarManager)
+            ICalendarManager calendarManager,
+            IEventCategoryManager eventCategoryManager)
         {
             _eventManager = eventManager;
             _locationManager = locationManager;
@@ -34,6 +36,7 @@ namespace Api.Controllers
             _roleManager = roleManager;
             _departmentManager = departmentManager;
             _calendarManager = calendarManager;
+            _eventCategoryManager = eventCategoryManager;
         }
 
         [HttpGet("token/{departmentId}/{memberId}")]
@@ -87,12 +90,16 @@ namespace Api.Controllers
                 var @event = await _eventManager.GetEvent(departmentId, requirement.EventId);
                 var role = await _roleManager.GetRole(departmentId, requirement.RoleId);
                 var group = await _groupManager.GetById(departmentId, @event.GroupId);
+                var category = await _eventCategoryManager.GetById(departmentId, @event.EventCategoryId);
+                var summary = string.Join(" ", new[] { role.Name, group?.Name, category?.Name }.Where(s => !string.IsNullOrEmpty(s)));
+                var status = requirement.AvailableMembers.Contains(memberId) ? "TENTATIVE" : "CONFIRMED";
                 var calendarEvent = new CalendarEvent
                 {
                     Start = new CalDateTime(@event.Date.UtcDateTime),
                     End = new CalDateTime(@event.Date.UtcDateTime.AddHours(1.5)),
-                    Summary = role.Name + " " + group?.Name,
-                    Uid = @event.Id
+                    Summary = summary,
+                    Uid = @event.Id,
+                    Status = status
                 };
                 if (!string.IsNullOrEmpty(@event.LocationId))
                 {
@@ -108,7 +115,8 @@ namespace Api.Controllers
                 calendarEvent.Categories = [role.Name];
                 var eventUri = new Uri($"https://einsatzplaner.net/{department.URL}/event/{@event.Id}");
                 calendarEvent.Url = eventUri;
-                calendarEvent.Description = eventUri.ToString();
+                var assigmentText = requirement.LockedMembers.Contains(memberId) ? "Du bist fest eingeplant." : requirement.PreselectedMembers.Contains(memberId) ? "Du bist für den Einsatz vorausgewählt." : "Du bist nur als verfügbar eingetragen, aber nicht für den Einsatz ausgewählt.";
+                calendarEvent.Description = $"{assigmentText}\n\n{eventUri}";
                 calendar.Events.Add(calendarEvent);
             }
 
